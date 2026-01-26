@@ -1,26 +1,446 @@
 @import "tailwindcss";
 
+/* ============================================
+   CUSTOM CSS VARIABLES
+   ============================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors */
+  --obsidian: #020204;
+  --obsidian-light: #0a0a0f;
+  --primary: #00f2ff;
+  --secondary: #a855f7;
+  --accent: #ff0080;
+  --glass: rgba(255, 255, 255, 0.02);
+  --glass-strong: rgba(10, 10, 15, 0.6);
+
+  /* Background */
+  --background: #020204;
+  --foreground: #e2e8f0;
+  --card-dark: #16181d;
+  --surface-dark: #0a0a0a;
 }
 
+/* ============================================
+   TAILWIND THEME EXTENSIONS
+   ============================================ */
 @theme inline {
+  /* Colors */
+  --color-obsidian: #020204;
+  --color-obsidian-light: #0a0a0f;
+  --color-primary: #00f2ff;
+  --color-secondary: #a855f7;
+  --color-accent: #ff0080;
+  --color-glass: rgba(255, 255, 255, 0.02);
+  --color-glass-strong: rgba(10, 10, 15, 0.6);
+  --color-card-dark: #16181d;
+  --color-surface-dark: #0a0a0a;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Fonts */
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================
+   BASE STYLES
+   ============================================ */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-display);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+::selection {
+  background-color: rgba(0, 242, 255, 0.3);
+  color: white;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020204;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ============================================
+   BACKGROUND EFFECTS
+   ============================================ */
+.aurora-bg {
+  background:
+    radial-gradient(
+      circle at 15% 50%,
+      rgba(168, 85, 247, 0.08),
+      transparent 25%
+    ),
+    radial-gradient(circle at 85% 30%, rgba(0, 242, 255, 0.08), transparent 25%);
+  filter: blur(60px);
+}
+
+.shimmer-bg {
+  background: linear-gradient(-45deg, #020204, #050508, #0f0b15, #050508);
+  background-size: 400% 400%;
+  animation: aurora 15s ease infinite;
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(#282e39 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, #1f2937 1px, transparent 1px),
+    linear-gradient(to bottom, #1f2937 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* ============================================
+   3D CARD EFFECTS
+   ============================================ */
+.card-3d-wrapper {
+  perspective: 1000px;
+}
+
+.card-3d {
+  transition:
+    transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d:hover {
+  transform: rotateX(2deg) rotateY(-2deg) translateZ(10px);
+  box-shadow: 0 20px 40px -5px rgba(0, 242, 255, 0.1);
+}
+
+/* ============================================
+   TYPEWRITER EFFECT
+   ============================================ */
+.typewriter-text {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid transparent;
+  width: 0;
+  animation:
+    typing 3s steps(30, end) forwards,
+    blink 0.75s step-end infinite;
+}
+
+/* ============================================
+   GLOW EFFECTS
+   ============================================ */
+.text-glow {
+  text-shadow:
+    0 0 10px rgba(0, 240, 255, 0.5),
+    0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.border-glow {
+  box-shadow:
+    0 0 10px rgba(0, 242, 255, 0.2),
+    inset 0 0 10px rgba(0, 242, 255, 0.1);
+}
+
+.shadow-primary-glow {
+  box-shadow: 0 0 40px rgba(0, 242, 255, 0.4);
+}
+
+.shadow-secondary-glow {
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: var(--primary);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes beam {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes reverse-orbit {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes meteor {
+  0% {
+    transform: rotate(215deg) translateX(0);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(215deg) translateX(-500px);
+    opacity: 0;
+  }
+}
+
+@keyframes gradient-xy {
+  0%,
+  100% {
+    background-size: 400% 400%;
+    background-position: left top;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right bottom;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.animate-aurora {
+  animation: aurora 20s linear infinite alternate;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out 3s infinite;
+}
+
+.animate-beam {
+  animation: beam 3s linear infinite;
+}
+
+.animate-orbit {
+  animation: orbit 20s linear infinite;
+}
+
+.animate-reverse-orbit {
+  animation: reverse-orbit 20s linear infinite;
+}
+
+.animate-meteor {
+  animation: meteor 5s linear infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-gradient-xy {
+  animation: gradient-xy 15s ease infinite;
+}
+
+.animate-typewriter {
+  animation:
+    typing 3s steps(30, end) forwards,
+    blink 0.75s step-end infinite;
+}
+
+/* ============================================
+   TIMELINE STYLES
+   ============================================ */
+.timeline-item {
+  position: relative;
+  padding-left: 2rem;
+  padding-bottom: 2rem;
+  border-left: 2px solid #1e293b;
+}
+
+.timeline-item:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -9px;
+  top: 0;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 50%;
+  background-color: var(--primary);
+  ring: 4px var(--background);
+}
+
+/* ============================================
+   GLASS MORPHISM
+   ============================================ */
+.glass {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-strong {
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   EVERVAULT CARD EFFECT
+   ============================================ */
+.evervault-card {
+  position: relative;
+}
+
+.evervault-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--x, 50%) var(--y, 50%),
+    rgba(0, 240, 255, 0.15) 0%,
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.evervault-card:hover::before {
+  opacity: 1;
+}
+
+/* ============================================
+   CODE RAIN EFFECT
+   ============================================ */
+.code-rain-bg {
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='10' y='20' fill='%2339ff14' font-family='monospace' font-size='10' opacity='0.2'%3E1%3C/text%3E%3Ctext x='30' y='40' fill='%2339ff14' font-family='monospace' font-size='10' opacity='0.3'%3E0%3C/text%3E%3Ctext x='50' y='10' fill='%2339ff14' font-family='monospace' font-size='10' opacity='0.4'%3E1%3C/text%3E%3Ctext x='70' y='60' fill='%2339ff14' font-family='monospace' font-size='10' opacity='0.2'%3E0%3C/text%3E%3Ctext x='90' y='30' fill='%2339ff14' font-family='monospace' font-size='10' opacity='0.5'%3E1%3C/text%3E%3Ctext x='20' y='80' fill='%2339ff14' font-family='monospace' font-size='10' opacity='0.3'%3E0%3C/text%3E%3C/svg%3E");
+}
+
+/* ============================================
+   NO SCROLLBAR
+   ============================================ */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
