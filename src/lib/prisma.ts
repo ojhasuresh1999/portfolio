@@ -1,22 +1,36 @@
-// Prisma client will be generated after running prisma generate
-// For now, using a placeholder that won't break the build
+import { PrismaClient } from "@/generated/prisma";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-// TODO: Uncomment after running `pnpm prisma generate`
-// import { PrismaClient } from "@/generated/prisma";
+// Create a connection pool for PostgreSQL
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({
+  connectionString,
+  ssl: { rejectUnauthorized: false },
+});
 
-// Placeholder for build
-const PrismaClient = class {
-  constructor() {}
-};
+console.log(
+  "🛠️  Prisma Adapter: Initialized with SSL rejectUnauthorized: false",
+);
+const adapter = new PrismaPg(pool);
 
-type PrismaClientType = InstanceType<typeof PrismaClient>;
-
+// Prevent multiple instances of Prisma Client in development
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientType | undefined;
+  prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+  });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
 
 export default prisma;
