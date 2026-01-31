@@ -10,8 +10,9 @@ export default function ApiDocPage() {
   return (
     <div className="bg-white dark:bg-gray-100 min-h-screen">
       <div className="container mx-auto py-10">
-        <SwaggerUI url="/api/docs" />
+        <SwaggerUI url="/swagger.json" />
       </div>
     </div>
   );
 }
+  

@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm docs:generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "docs:generate": "tsx scripts/generate-docs.ts",
     "db:start": "docker compose up -d",
     "db:stop": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up -d",
