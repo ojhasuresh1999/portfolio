@@ -26,13 +26,6 @@ const timelineEntries = [
   },
 ];
 
-const orbitTools = [
-  { icon: "cloud", color: "#FF9900", position: "top" },
-  { icon: "inventory_2", color: "#2496ED", position: "right" },
-  { icon: "hub", color: "#326CE5", position: "bottom" },
-  { icon: "account_tree", color: "#F05032", position: "left" },
-];
-
 export default function AboutPage() {
   return (
     <>

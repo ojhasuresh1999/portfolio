@@ -238,11 +238,11 @@ export default function BlogPage() {
                   </h4>
                 </div>
                 <p className="text-gray-400 mb-6 text-sm font-[family-name:var(--font-mono)] border-l-2 border-gray-800 pl-3">
-                  // Join the encrypted channel.
+                  {"// Join the encrypted channel."}
                   <br />
-                  // Weekly deep-dives.
+                  {"// Weekly deep-dives."}
                   <br />
-                  // No noise.
+                  {"// No noise."}
                 </p>
                 <div className="flex flex-col gap-4">
                   <input

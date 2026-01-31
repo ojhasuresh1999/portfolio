@@ -10,7 +10,7 @@ export default function AdminSettingsPage() {
     footerLatency: "12ms",
   });
 
-  const [socialLinks, setSocialLinks] = useState([
+  const [socialLinks] = useState([
     { platform: "GitHub", url: "https://github.com", icon: "code" },
     { platform: "LinkedIn", url: "https://linkedin.com", icon: "work" },
     { platform: "Email", url: "mailto:hello@example.com", icon: "mail" },

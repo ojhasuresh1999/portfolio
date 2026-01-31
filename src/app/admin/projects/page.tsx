@@ -49,7 +49,7 @@ const mockProjects: Project[] = [
 ];
 
 export default function AdminProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [projects] = useState<Project[]>(mockProjects);
 
   return (
     <div className="space-y-6">

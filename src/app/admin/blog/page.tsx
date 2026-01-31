@@ -44,7 +44,7 @@ const mockPosts: BlogPost[] = [
 ];
 
 export default function AdminBlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>(mockPosts);
+  const [posts] = useState<BlogPost[]>(mockPosts);
 
   return (
     <div className="space-y-6">

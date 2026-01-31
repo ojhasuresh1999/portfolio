@@ -119,7 +119,7 @@ export default function AdminLoginPage() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
             <p className="text-xs text-primary font-[family-name:var(--font-mono)] mb-2">
-              // Demo Credentials
+              {"// Demo Credentials"}
             </p>
             <p className="text-xs text-slate-400">
               Email: admin@example.com

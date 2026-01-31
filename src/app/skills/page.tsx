@@ -2,34 +2,6 @@ import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
 import { cn } from "@/lib/utils";
 
-const skillCards = [
-  {
-    title: "Core Runtime",
-    description:
-      "Deep understanding of the Event Loop, asynchronous patterns, and non-blocking I/O. Leveraging modern runtimes for maximum throughput.",
-    icon: "memory",
-    tags: ["Node.js v20+", "Deno", "Bun", "C++ Addons"],
-    gridSpan: "col-span-2",
-  },
-  {
-    title: "Databases",
-    description: "Relational & NoSQL mastery",
-    icon: "database",
-    tags: ["PostgreSQL", "Redis", "MongoDB"],
-    tagColors: [
-      "bg-blue-900/20 text-blue-200 border-blue-500/20",
-      "bg-red-900/20 text-red-200 border-red-500/20",
-      "bg-green-900/20 text-green-200 border-green-500/20",
-    ],
-  },
-  {
-    title: "DevOps & Cloud",
-    description: "CI/CD & Infrastructure",
-    icon: "cloud_sync",
-    tags: ["Docker", "K8s", "AWS", "Terraform"],
-  },
-];
-
 const languages = [
   { name: "TypeScript", proficiency: 95 },
   { name: "JavaScript (ESNext)", proficiency: 98 },

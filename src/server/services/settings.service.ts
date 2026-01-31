@@ -99,8 +99,12 @@ export class SettingsService {
     }
 
     // Remove internal fields
-    const { id, createdAt, updatedAt, ...publicSettings } =
-      result.data as Record<string, unknown>;
+    const {
+      id: _id,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      ...publicSettings
+    } = result.data as Record<string, unknown>;
     return { success: true, data: publicSettings };
   }
 }
