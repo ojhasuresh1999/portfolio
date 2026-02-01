@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import NextImage from "next/image";
 import type { MessageReaction } from "@/types/socket.types";
 
 // =============================================================================
@@ -71,10 +72,12 @@ export function MessageBubble({
           {media && (
             <div className="mb-2">
               {media.type === "image" ? (
-                <img
+                <NextImage
                   src={media.url}
                   alt={media.name}
-                  className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                  width={400}
+                  height={300}
+                  className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity w-auto h-auto"
                   onClick={() => window.open(media.url, "_blank")}
                 />
               ) : (

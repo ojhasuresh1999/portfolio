@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import NextImage from "next/image";
 import type { ConversationData } from "@/types/socket.types";
 
 // =============================================================================
@@ -93,11 +94,14 @@ export function ConversationList({
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             {conversation.participant.photo ? (
-              <img
-                src={conversation.participant.photo}
-                alt={conversation.participant.name}
-                className="w-12 h-12 rounded-full object-cover"
-              />
+              <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                <NextImage
+                  src={conversation.participant.photo}
+                  alt={conversation.participant.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                 <span className="text-lg font-semibold text-white">

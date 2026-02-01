@@ -1,7 +1,7 @@
 "use client";
-
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import NextImage from "next/image";
 import { MessageBubble, TypingIndicator } from "./MessageBubble";
 import {
   useSocket,
@@ -228,11 +228,14 @@ export function ChatWindow({
         <div className="flex items-center gap-3 flex-1">
           <div className="relative">
             {recipientPhoto ? (
-              <img
-                src={recipientPhoto}
-                alt={recipientName}
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                <NextImage
+                  src={recipientPhoto}
+                  alt={recipientName}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary">
@@ -327,11 +330,14 @@ export function ChatWindow({
           >
             <div className="flex items-center gap-3">
               {mediaFile?.type.startsWith("image/") ? (
-                <img
-                  src={mediaPreview}
-                  alt="Preview"
-                  className="w-16 h-16 object-cover rounded-lg"
-                />
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden">
+                  <NextImage
+                    src={mediaPreview}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center">
                   <span className="material-symbols-outlined text-2xl text-slate-400">

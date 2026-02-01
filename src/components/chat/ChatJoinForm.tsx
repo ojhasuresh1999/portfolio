@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
+import NextImage from "next/image";
 
 // =============================================================================
 // Premium Chat Join Form - Guest registration with stunning visuals
@@ -97,11 +98,14 @@ export function ChatJoinForm({ onJoin, isLoading = false }: ChatJoinFormProps) {
 
                 <div className="relative w-28 h-28 rounded-full bg-slate-800 border-2 border-white/20 flex items-center justify-center overflow-hidden">
                   {photo ? (
-                    <img
-                      src={photo}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
+                    <div className="relative w-full h-full">
+                      <NextImage
+                        src={photo}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   ) : (
                     <div className="text-center">
                       <motion.span

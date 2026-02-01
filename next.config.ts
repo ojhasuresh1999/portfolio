@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
     "pg",
     "pg-pool",
   ],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
