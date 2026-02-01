@@ -8,7 +8,7 @@ import {
 import { randomBytes } from "crypto";
 import type { ServiceResult } from "../types";
 import type { HydratedDocument } from "mongoose";
-import type { IUser } from "@/models/User";
+import type { IUser, IUserMethods } from "@/models/User";
 
 // =============================================================================
 // Auth Service
@@ -123,7 +123,7 @@ class AuthService {
    * Initiate 2FA verification
    */
   private async initiateTwoFactor(
-    user: HydratedDocument<IUser>,
+    user: HydratedDocument<IUser, IUserMethods>,
     _sessionId: string,
   ): Promise<ServiceResult<LoginResult>> {
     const requestId = `AUTH_${randomBytes(4).toString("hex").toUpperCase()}_X`;

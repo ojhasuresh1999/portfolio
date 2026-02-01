@@ -1,4 +1,4 @@
-import { User, IUser, Role } from "@/models/User";
+import { User, IUser, Role, IUserMethods } from "@/models/User";
 import { connectToDatabase } from "@/lib/mongodb";
 import { hashPassword, verifyPassword, needsRehash } from "./argon2.service";
 import type { ServiceResult } from "../types";
@@ -53,11 +53,14 @@ class UserService {
    */
   async findByEmail(
     email: string,
-  ): Promise<ServiceResult<HydratedDocument<IUser> | null>> {
+  ): Promise<ServiceResult<HydratedDocument<IUser, IUserMethods> | null>> {
     try {
       await this.ensureConnection();
       const user = await User.findOne({ email: email.toLowerCase() });
-      return { success: true, data: user };
+      return {
+        success: true,
+        data: user as HydratedDocument<IUser, IUserMethods> | null,
+      };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to find user";
@@ -70,11 +73,14 @@ class UserService {
    */
   async findById(
     id: string,
-  ): Promise<ServiceResult<HydratedDocument<IUser> | null>> {
+  ): Promise<ServiceResult<HydratedDocument<IUser, IUserMethods> | null>> {
     try {
       await this.ensureConnection();
       const user = await User.findById(id);
-      return { success: true, data: user };
+      return {
+        success: true,
+        data: user as HydratedDocument<IUser, IUserMethods> | null,
+      };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to find user";
@@ -135,7 +141,7 @@ class UserService {
    * Validate password and handle login attempts
    */
   async validatePassword(
-    user: HydratedDocument<IUser>,
+    user: HydratedDocument<IUser, IUserMethods>,
     password: string,
   ): Promise<ServiceResult<boolean>> {
     try {
