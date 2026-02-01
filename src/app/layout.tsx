@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ChatWidget } from "@/components/chat";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -53,6 +54,9 @@ export default function RootLayout({
         <div className="relative z-10 flex flex-col min-h-screen">
           {children}
         </div>
+
+        {/* Floating Chat Widget */}
+        <ChatWidget />
       </body>
     </html>
   );

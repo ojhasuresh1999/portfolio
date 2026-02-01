@@ -14,3 +14,13 @@ export {
   ContactSubmission,
   type IContactSubmission,
 } from "./ContactSubmission";
+
+// Chat models
+export { ChatUser, type IChatUser } from "./ChatUser";
+export { Conversation, type IConversation } from "./Conversation";
+export {
+  Message,
+  type IMessage,
+  type IMessageMedia,
+  type IMessageReaction,
+} from "./Message";

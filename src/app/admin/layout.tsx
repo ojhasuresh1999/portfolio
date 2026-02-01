@@ -10,6 +10,7 @@ const sidebarItems = [
   { label: "Projects", href: "/admin/projects", icon: "folder" },
   { label: "Skills", href: "/admin/skills", icon: "code" },
   { label: "Blog", href: "/admin/blog", icon: "article" },
+  { label: "Chat", href: "/admin/chat", icon: "chat" },
   { label: "Timeline", href: "/admin/timeline", icon: "timeline" },
   { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
