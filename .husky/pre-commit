@@ -1,0 +1,22 @@
+#!/bin/sh
+
+
+# ============================================
+# PRE-COMMIT HOOK
+# Runs before each commit to ensure code quality
+# ============================================
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged (linting + formatting on staged files)
+pnpm exec lint-staged
+
+# Exit with lint-staged's exit code
+exit_code=$?
+
+if [ $exit_code -ne 0 ]; then
+  echo "❌ Pre-commit checks failed. Please fix the errors above."
+  exit $exit_code
+fi
+
+echo "✅ Pre-commit checks passed!"

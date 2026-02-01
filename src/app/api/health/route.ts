@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import { connectToDatabase, getConnectionState } from "@/lib/mongodb";
 import type { HealthCheckResponse } from "@/server/types";
 import { NextResponse } from "next/server";
 
@@ -44,8 +44,9 @@ export async function GET(): Promise<NextResponse> {
 
   try {
     // Test database connectivity
-    await prisma.$queryRaw`SELECT 1`;
-    databaseStatus = "connected";
+    await connectToDatabase();
+    databaseStatus =
+      getConnectionState() === "connected" ? "connected" : "disconnected";
   } catch {
     databaseStatus = "disconnected";
   }

@@ -1,0 +1,67 @@
+#!/bin/sh
+
+
+# ============================================
+# PRE-PUSH HOOK
+# Runs before pushing to ensure code is production-ready
+# ============================================
+
+echo "🚀 Running pre-push checks..."
+
+# Get the current branch name
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+# List of protected branches that require extra checks
+protected_branches="main master production develop"
+
+# Check if we're pushing to a protected branch
+is_protected=false
+for protected in $protected_branches; do
+  if [ "$branch" = "$protected" ]; then
+    is_protected=true
+    break
+  fi
+done
+
+# Run TypeScript type check
+echo "📦 Checking TypeScript types..."
+pnpm exec tsc --noEmit
+tsc_exit_code=$?
+
+if [ $tsc_exit_code -ne 0 ]; then
+  echo "❌ TypeScript check failed. Please fix type errors before pushing."
+  exit $tsc_exit_code
+fi
+
+echo "✅ TypeScript check passed!"
+
+# If pushing to a protected branch, run additional checks
+if [ "$is_protected" = true ]; then
+  echo "🔒 Protected branch detected ($branch). Running additional checks..."
+  
+  # Run full lint check
+  echo "🔍 Running ESLint..."
+  pnpm lint
+  lint_exit_code=$?
+  
+  if [ $lint_exit_code -ne 0 ]; then
+    echo "❌ Lint check failed. Please fix linting errors before pushing to $branch."
+    exit $lint_exit_code
+  fi
+  
+  echo "✅ ESLint check passed!"
+  
+  # Run build to ensure it compiles
+  echo "🏗️  Building project..."
+  pnpm build
+  build_exit_code=$?
+  
+  if [ $build_exit_code -ne 0 ]; then
+    echo "❌ Build failed. Please fix build errors before pushing to $branch."
+    exit $build_exit_code
+  fi
+  
+  echo "✅ Build successful!"
+fi
+
+echo "✅ All pre-push checks passed! Pushing..."

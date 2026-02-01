@@ -158,8 +158,18 @@ export const projectSchema = z.object({
   image: z.string().url().optional(),
   codeSnippet: z.string().max(2000).optional(),
   technologies: z.array(z.string()).default([]),
-  liveUrl: z.string().url().optional().nullable(),
-  githubUrl: z.string().url().optional().nullable(),
+  liveUrl: z
+    .string()
+    .url()
+    .optional()
+    .nullable()
+    .transform((val) => val ?? undefined),
+  githubUrl: z
+    .string()
+    .url()
+    .optional()
+    .nullable()
+    .transform((val) => val ?? undefined),
   accentColor: z.enum(["primary", "secondary"]).default("primary"),
   order: z.number().int().default(0),
   isFeatured: z.boolean().default(false),

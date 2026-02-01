@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
 import * as z from "zod";
+import mongoose from "mongoose";
 import { HttpStatus, ApiMessages } from "../constants";
 import type { ApiResponse } from "../types";
-
-// Dynamic import for Prisma to avoid build errors before generation
-let Prisma: typeof import("@/generated/prisma").Prisma | undefined;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  Prisma = require("@/generated/prisma").Prisma;
-} catch {
-  // Prisma not generated yet
-}
 
 /**
  * Custom Application Error
@@ -66,39 +58,43 @@ export function formatZodErrors(error: z.ZodError): string[] {
 }
 
 /**
- * Handle Prisma errors and convert to AppError
+ * Handle MongoDB/Mongoose errors and convert to AppError
  */
-export function handlePrismaError(error: unknown): AppError {
-  if (!Prisma) {
-    return AppError.internal("Database not configured");
+export function handleMongoError(error: unknown): AppError {
+  // MongoDB duplicate key error
+  if (
+    error instanceof Error &&
+    "code" in error &&
+    (error as { code: number }).code === 11000
+  ) {
+    const mongoError = error as { keyPattern?: Record<string, unknown> };
+    const field = mongoError.keyPattern
+      ? Object.keys(mongoError.keyPattern).join(", ")
+      : "field";
+    return AppError.conflict(`Duplicate value for: ${field}`);
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    const prismaError = error as InstanceType<
-      typeof Prisma.PrismaClientKnownRequestError
-    >;
-    switch (prismaError.code) {
-      case "P2002": {
-        const target =
-          (prismaError.meta?.target as string[])?.join(", ") ?? "field";
-        return AppError.conflict(`Unique constraint failed on: ${target}`);
-      }
-      case "P2025":
-        return AppError.notFound("Record not found");
-      case "P2003":
-        return AppError.badRequest("Foreign key constraint failed");
-      case "P2014":
-        return AppError.badRequest("Required relation not found");
-      default:
-        return AppError.internal(`Database error: ${prismaError.code}`);
-    }
+  // Mongoose validation error
+  if (error instanceof mongoose.Error.ValidationError) {
+    const messages = Object.values(error.errors).map((e) => e.message);
+    return AppError.badRequest(messages.join(", "));
   }
 
-  if (error instanceof Prisma.PrismaClientValidationError) {
-    return AppError.badRequest("Invalid data provided");
+  // Mongoose CastError (invalid ObjectId)
+  if (error instanceof mongoose.Error.CastError) {
+    return AppError.badRequest(`Invalid ${error.path}: ${error.value}`);
   }
 
-  if (error instanceof Prisma.PrismaClientInitializationError) {
+  // Document not found
+  if (
+    error instanceof mongoose.Error.DocumentNotFoundError ||
+    (error instanceof Error && error.message === "Record not found")
+  ) {
+    return AppError.notFound("Record not found");
+  }
+
+  // Connection error
+  if (error instanceof mongoose.Error.MongooseServerSelectionError) {
     return AppError.internal("Database connection failed");
   }
 
@@ -106,15 +102,18 @@ export function handlePrismaError(error: unknown): AppError {
 }
 
 /**
- * Check if error is a Prisma error
+ * Check if error is a Mongoose/MongoDB error
  */
-function isPrismaError(error: unknown): boolean {
-  if (!Prisma) return false;
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError ||
-    error instanceof Prisma.PrismaClientValidationError ||
-    error instanceof Prisma.PrismaClientInitializationError
-  );
+function isMongoError(error: unknown): boolean {
+  if (error instanceof mongoose.Error) return true;
+  if (
+    error instanceof Error &&
+    "code" in error &&
+    typeof (error as { code: unknown }).code === "number"
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -139,9 +138,9 @@ export function handleError(error: unknown): NextResponse<ApiResponse<null>> {
     );
   }
 
-  // Prisma error
-  if (isPrismaError(error)) {
-    const appError = handlePrismaError(error);
+  // MongoDB/Mongoose error
+  if (isMongoError(error)) {
+    const appError = handleMongoError(error);
     return NextResponse.json(
       { success: false, error: appError.message },
       { status: appError.statusCode },

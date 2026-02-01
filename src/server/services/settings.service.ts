@@ -1,4 +1,5 @@
-import prisma from "@/lib/prisma";
+import { connectToDatabase } from "@/lib/mongodb";
+import { SiteSettings, type ISiteSettings } from "@/models";
 import type { ServiceResult } from "../types";
 
 /**
@@ -7,24 +8,32 @@ import type { ServiceResult } from "../types";
  */
 export class SettingsService {
   /**
+   * Ensure database connection before any operation
+   */
+  private async ensureConnection(): Promise<void> {
+    await connectToDatabase();
+  }
+
+  /**
    * Get current site settings
    * Returns the first settings record or creates default if none exists
    */
   async get(): Promise<ServiceResult<Record<string, unknown>>> {
     try {
-      let settings = await prisma.siteSettings.findFirst();
+      await this.ensureConnection();
+
+      let settings = await SiteSettings.findOne().lean<ISiteSettings>();
 
       // Create default settings if none exist
       if (!settings) {
-        settings = await prisma.siteSettings.create({
-          data: {
-            siteName: "DEV_IO",
-            siteTagline: "Backend Developer Portfolio",
-            logoText: "DEV_IO",
-            statusText: "System Online",
-            footerLatency: "12ms",
-          },
+        const created = await SiteSettings.create({
+          siteName: "DEV_IO",
+          siteTagline: "Backend Developer Portfolio",
+          logoText: "DEV_IO",
+          statusText: "System Online",
+          footerLatency: "12ms",
         });
+        settings = created.toObject();
       }
 
       return {
@@ -47,33 +56,26 @@ export class SettingsService {
     data: Record<string, unknown>,
   ): Promise<ServiceResult<Record<string, unknown>>> {
     try {
+      await this.ensureConnection();
+
       // Get existing settings first
-      const existing = await prisma.siteSettings.findFirst();
+      const existing = await SiteSettings.findOne().lean();
 
       if (!existing) {
         // Create if doesn't exist
-        const settings = await prisma.siteSettings.create({
-          data: data as {
-            siteName?: string;
-            siteTagline?: string;
-            logoText?: string;
-            statusText?: string;
-            footerLatency?: string;
-            metaTitle?: string;
-            metaDescription?: string;
-          },
-        });
+        const settings = await SiteSettings.create(data);
         return {
           success: true,
-          data: settings as unknown as Record<string, unknown>,
+          data: settings.toObject() as unknown as Record<string, unknown>,
         };
       }
 
       // Update existing
-      const settings = await prisma.siteSettings.update({
-        where: { id: existing.id },
+      const settings = await SiteSettings.findByIdAndUpdate(
+        existing._id,
         data,
-      });
+        { new: true, runValidators: true },
+      ).lean<ISiteSettings>();
 
       return {
         success: true,
@@ -100,11 +102,13 @@ export class SettingsService {
 
     // Remove internal fields
     const {
-      id: _id,
+      _id: _id,
       createdAt: _createdAt,
       updatedAt: _updatedAt,
+      __v: _v,
       ...publicSettings
     } = result.data as Record<string, unknown>;
+
     return { success: true, data: publicSettings };
   }
 }

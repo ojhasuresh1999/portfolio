@@ -1,5 +1,4 @@
 import { createSwaggerSpec } from "next-swagger-doc";
-import "server-only";
 
 export const getApiDocs = async () => {
   const spec = createSwaggerSpec({
@@ -13,7 +12,7 @@ export const getApiDocs = async () => {
         contact: {
           name: "API Support",
           url: "http://www.example.com/support",
-          email: "support@example.com",
+          email: "sureshojha12.dev@gmail.com",
         },
       },
       components: {
@@ -79,7 +78,7 @@ export const getApiDocs = async () => {
               technologies: {
                 type: "array",
                 items: { type: "string" },
-                example: ["Next.js", "TypeScript", "Prisma"],
+                example: ["Next.js", "TypeScript", "MongoDB"],
               },
               liveUrl: { type: "string", format: "uri" },
               githubUrl: { type: "string", format: "uri" },

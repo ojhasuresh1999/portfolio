@@ -1,0 +1,33 @@
+# Prettier Ignore
+# Files and directories that should not be formatted
+
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Package manager
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Generated files
+public/swagger.json
+*.min.js
+*.min.css
+
+# Environment files
+.env
+.env.*
+
+# IDE
+.idea/
+.vscode/
+
+# Misc
+*.log
+coverage/

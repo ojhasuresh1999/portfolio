@@ -1,12 +1,24 @@
-import prisma from "@/lib/prisma";
+import { connectToDatabase } from "@/lib/mongodb";
+import { ContactSubmission } from "@/models";
 import type { ServiceResult } from "../types";
 
-// Type definitions to avoid import from non-existent generated folder
+// Type definitions for contact form data
 interface ContactSubmissionData {
   name: string;
   email: string;
   subject?: string | null;
   message: string;
+}
+
+// Return type for lean queries
+interface ContactSubmissionDoc {
+  _id: string;
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+  isRead: boolean;
+  createdAt: Date;
 }
 
 /**
@@ -15,21 +27,29 @@ interface ContactSubmissionData {
  */
 export class ContactService {
   /**
+   * Ensure database connection before any operation
+   */
+  private async ensureConnection(): Promise<void> {
+    await connectToDatabase();
+  }
+
+  /**
    * Submit a new contact form
    */
   async submit(
     data: ContactSubmissionData,
   ): Promise<ServiceResult<{ id: string }>> {
     try {
-      const submission = await prisma.contactSubmission.create({
-        data: {
-          name: data.name,
-          email: data.email,
-          subject: data.subject ?? null,
-          message: data.message,
-        },
+      await this.ensureConnection();
+
+      const submission = await ContactSubmission.create({
+        name: data.name,
+        email: data.email,
+        subject: data.subject ?? undefined,
+        message: data.message,
       });
-      return { success: true, data: { id: submission.id } };
+
+      return { success: true, data: { id: submission._id.toString() } };
     } catch (error) {
       const message =
         error instanceof Error
@@ -46,22 +66,27 @@ export class ContactService {
     page?: number;
     limit?: number;
     unreadOnly?: boolean;
-  }): Promise<ServiceResult<{ items: unknown[]; total: number }>> {
+  }): Promise<ServiceResult<{ items: ContactSubmissionDoc[]; total: number }>> {
     try {
+      await this.ensureConnection();
+
       const page = options?.page ?? 1;
       const limit = Math.min(options?.limit ?? 10, 100);
       const skip = (page - 1) * limit;
 
-      const where = options?.unreadOnly ? { isRead: false } : {};
+      const where: Record<string, unknown> = {};
+      if (options?.unreadOnly) {
+        where.isRead = false;
+      }
 
       const [items, total] = await Promise.all([
-        prisma.contactSubmission.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: { createdAt: "desc" },
-        }),
-        prisma.contactSubmission.count({ where }),
+        ContactSubmission.find(where)
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .lean<ContactSubmissionDoc[]>()
+          .exec(),
+        ContactSubmission.countDocuments(where).exec(),
       ]);
 
       return { success: true, data: { items, total } };
@@ -75,12 +100,15 @@ export class ContactService {
   /**
    * Get unread submissions
    */
-  async getUnread(): Promise<ServiceResult<unknown[]>> {
+  async getUnread(): Promise<ServiceResult<ContactSubmissionDoc[]>> {
     try {
-      const submissions = await prisma.contactSubmission.findMany({
-        where: { isRead: false },
-        orderBy: { createdAt: "desc" },
-      });
+      await this.ensureConnection();
+
+      const submissions = await ContactSubmission.find({ isRead: false })
+        .sort({ createdAt: -1 })
+        .lean<ContactSubmissionDoc[]>()
+        .exec();
+
       return { success: true, data: submissions };
     } catch (error) {
       const message =
@@ -96,9 +124,11 @@ export class ContactService {
    */
   async getUnreadCount(): Promise<ServiceResult<number>> {
     try {
-      const count = await prisma.contactSubmission.count({
-        where: { isRead: false },
-      });
+      await this.ensureConnection();
+
+      const count = await ContactSubmission.countDocuments({
+        isRead: false,
+      }).exec();
       return { success: true, data: count };
     } catch (error) {
       const message =
@@ -110,12 +140,22 @@ export class ContactService {
   /**
    * Mark a submission as read
    */
-  async markAsRead(id: string): Promise<ServiceResult<unknown>> {
+  async markAsRead(id: string): Promise<ServiceResult<ContactSubmissionDoc>> {
     try {
-      const submission = await prisma.contactSubmission.update({
-        where: { id },
-        data: { isRead: true },
-      });
+      await this.ensureConnection();
+
+      const submission = await ContactSubmission.findByIdAndUpdate(
+        id,
+        { isRead: true },
+        { new: true },
+      )
+        .lean<ContactSubmissionDoc>()
+        .exec();
+
+      if (!submission) {
+        return { success: false, error: "Submission not found" };
+      }
+
       return { success: true, data: submission };
     } catch (error) {
       const message =
@@ -129,11 +169,14 @@ export class ContactService {
    */
   async markAllAsRead(): Promise<ServiceResult<{ count: number }>> {
     try {
-      const result = await prisma.contactSubmission.updateMany({
-        where: { isRead: false },
-        data: { isRead: true },
-      });
-      return { success: true, data: { count: result.count } };
+      await this.ensureConnection();
+
+      const result = await ContactSubmission.updateMany(
+        { isRead: false },
+        { isRead: true },
+      ).exec();
+
+      return { success: true, data: { count: result.modifiedCount } };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to mark all as read";
@@ -144,11 +187,18 @@ export class ContactService {
   /**
    * Delete a submission
    */
-  async delete(id: string): Promise<ServiceResult<unknown>> {
+  async delete(id: string): Promise<ServiceResult<ContactSubmissionDoc>> {
     try {
-      const submission = await prisma.contactSubmission.delete({
-        where: { id },
-      });
+      await this.ensureConnection();
+
+      const submission = await ContactSubmission.findByIdAndDelete(id)
+        .lean<ContactSubmissionDoc>()
+        .exec();
+
+      if (!submission) {
+        return { success: false, error: "Submission not found" };
+      }
+
       return { success: true, data: submission };
     } catch (error) {
       const message =

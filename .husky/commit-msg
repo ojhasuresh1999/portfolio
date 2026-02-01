@@ -1,0 +1,36 @@
+#!/bin/sh
+
+
+# ============================================
+# COMMIT-MSG HOOK
+# Validates commit messages follow Conventional Commits format
+# ============================================
+
+echo "📝 Validating commit message..."
+
+pnpm exec commitlint --edit "$1"
+
+exit_code=$?
+
+if [ $exit_code -ne 0 ]; then
+  echo ""
+  echo "❌ Commit message validation failed!"
+  echo ""
+  echo "📋 Conventional Commit Format:"
+  echo "  <type>(<scope>): <description>"
+  echo ""
+  echo "📌 Examples:"
+  echo "  feat(auth): add login functionality"
+  echo "  fix(api): resolve null pointer exception"
+  echo "  docs(readme): update installation guide"
+  echo "  style(css): format code with prettier"
+  echo "  refactor(db): optimize query performance"
+  echo "  test(unit): add tests for user service"
+  echo "  chore(deps): update dependencies"
+  echo ""
+  echo "📖 Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+  echo ""
+  exit $exit_code
+fi
+
+echo "✅ Commit message is valid!"

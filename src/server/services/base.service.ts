@@ -1,36 +1,28 @@
-import prisma from "@/lib/prisma";
+import { connectToDatabase } from "@/lib/mongodb";
+import type { Model, HydratedDocument } from "mongoose";
 import type { PaginationOptions, ServiceResult } from "../types";
 import { Pagination } from "../constants";
 
-// Type for Prisma model delegates
-type PrismaModelName =
-  | "user"
-  | "heroContent"
-  | "techStack"
-  | "project"
-  | "skill"
-  | "skillCard"
-  | "blogPost"
-  | "timelineEntry"
-  | "aboutContent"
-  | "socialLink"
-  | "siteSettings"
-  | "contactSubmission";
-
 /**
- * Base Service with common CRUD operations
+ * Base Service with common CRUD operations for MongoDB
  * Extend this class to create entity-specific services
+ *
+ * Note: This is a simplified base service. For more complex use cases,
+ * consider implementing entity-specific services directly.
  */
-export abstract class BaseService<T, CreateInput, UpdateInput> {
-  protected abstract readonly modelName: PrismaModelName;
-  protected abstract readonly defaultOrderBy: Record<string, "asc" | "desc">;
+export abstract class BaseService<
+  T,
+  CreateInput extends object,
+  UpdateInput extends object,
+> {
+  protected abstract getModel(): Model<T>;
+  protected abstract readonly defaultOrderBy: Record<string, 1 | -1>;
 
   /**
-   * Get the Prisma model delegate
+   * Ensure database connection before any operation
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected getModel(): any {
-    return (prisma as unknown as Record<string, unknown>)[this.modelName];
+  protected async ensureConnection(): Promise<void> {
+    await connectToDatabase();
   }
 
   /**
@@ -40,21 +32,25 @@ export abstract class BaseService<T, CreateInput, UpdateInput> {
     options?: PaginationOptions & { where?: Record<string, unknown> },
   ): Promise<ServiceResult<{ items: T[]; total: number }>> {
     try {
+      await this.ensureConnection();
+
       const page = options?.page ?? Pagination.DEFAULT_PAGE;
       const limit = Math.min(
         options?.limit ?? Pagination.DEFAULT_LIMIT,
         Pagination.MAX_LIMIT,
       );
       const skip = (page - 1) * limit;
+      const where = options?.where ?? {};
 
       const [items, total] = await Promise.all([
-        this.getModel().findMany({
-          where: options?.where,
-          skip,
-          take: limit,
-          orderBy: this.defaultOrderBy,
-        }),
-        this.getModel().count({ where: options?.where }),
+        this.getModel()
+          .find(where)
+          .skip(skip)
+          .limit(limit)
+          .sort(this.defaultOrderBy)
+          .lean<T[]>()
+          .exec(),
+        this.getModel().countDocuments(where).exec(),
       ]);
 
       return { success: true, data: { items, total } };
@@ -70,7 +66,8 @@ export abstract class BaseService<T, CreateInput, UpdateInput> {
    */
   async findById(id: string): Promise<ServiceResult<T | null>> {
     try {
-      const record = await this.getModel().findUnique({ where: { id } });
+      await this.ensureConnection();
+      const record = await this.getModel().findById(id).lean<T>().exec();
       return { success: true, data: record };
     } catch (error) {
       const message =
@@ -84,8 +81,11 @@ export abstract class BaseService<T, CreateInput, UpdateInput> {
    */
   async create(data: CreateInput): Promise<ServiceResult<T>> {
     try {
-      const record = await this.getModel().create({ data });
-      return { success: true, data: record };
+      await this.ensureConnection();
+      const model = this.getModel();
+      const doc = new model(data);
+      const record = (await doc.save()) as HydratedDocument<T>;
+      return { success: true, data: record.toObject() as T };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to create record";
@@ -98,10 +98,19 @@ export abstract class BaseService<T, CreateInput, UpdateInput> {
    */
   async update(id: string, data: UpdateInput): Promise<ServiceResult<T>> {
     try {
-      const record = await this.getModel().update({
-        where: { id },
-        data,
-      });
+      await this.ensureConnection();
+      const record = await this.getModel()
+        .findByIdAndUpdate(id, data as Record<string, unknown>, {
+          new: true,
+          runValidators: true,
+        })
+        .lean<T>()
+        .exec();
+
+      if (!record) {
+        return { success: false, error: "Record not found" };
+      }
+
       return { success: true, data: record };
     } catch (error) {
       const message =
@@ -115,7 +124,16 @@ export abstract class BaseService<T, CreateInput, UpdateInput> {
    */
   async delete(id: string): Promise<ServiceResult<T>> {
     try {
-      const record = await this.getModel().delete({ where: { id } });
+      await this.ensureConnection();
+      const record = await this.getModel()
+        .findByIdAndDelete(id)
+        .lean<T>()
+        .exec();
+
+      if (!record) {
+        return { success: false, error: "Record not found" };
+      }
+
       return { success: true, data: record };
     } catch (error) {
       const message =
@@ -128,7 +146,8 @@ export abstract class BaseService<T, CreateInput, UpdateInput> {
    * Check if a record exists
    */
   async exists(id: string): Promise<boolean> {
-    const count = await this.getModel().count({ where: { id } });
+    await this.ensureConnection();
+    const count = await this.getModel().countDocuments({ _id: id }).exec();
     return count > 0;
   }
 }

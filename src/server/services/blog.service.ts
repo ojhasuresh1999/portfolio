@@ -1,5 +1,23 @@
-import prisma from "@/lib/prisma";
+import { connectToDatabase } from "@/lib/mongodb";
+import { BlogPost } from "@/models";
 import type { ServiceResult } from "../types";
+
+// Return type for lean queries
+interface BlogPostDoc {
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
+  category: string;
+  tags: string[];
+  readTime: number;
+  isPublished: boolean;
+  publishedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 /**
  * Blog Service
@@ -7,31 +25,40 @@ import type { ServiceResult } from "../types";
  */
 export class BlogService {
   /**
+   * Ensure database connection before any operation
+   */
+  private async ensureConnection(): Promise<void> {
+    await connectToDatabase();
+  }
+
+  /**
    * Get all published posts with pagination
    */
   async getPublished(options?: {
     page?: number;
     limit?: number;
     category?: string;
-  }): Promise<ServiceResult<{ items: unknown[]; total: number }>> {
+  }): Promise<ServiceResult<{ items: BlogPostDoc[]; total: number }>> {
     try {
+      await this.ensureConnection();
+
       const page = options?.page ?? 1;
       const limit = Math.min(options?.limit ?? 10, 100);
       const skip = (page - 1) * limit;
 
-      const where = {
-        isPublished: true,
-        ...(options?.category && { category: options.category }),
-      };
+      const where: Record<string, unknown> = { isPublished: true };
+      if (options?.category) {
+        where.category = options.category;
+      }
 
       const [items, total] = await Promise.all([
-        prisma.blogPost.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: { publishedAt: "desc" },
-        }),
-        prisma.blogPost.count({ where }),
+        BlogPost.find(where)
+          .skip(skip)
+          .limit(limit)
+          .sort({ publishedAt: -1 })
+          .lean<BlogPostDoc[]>()
+          .exec(),
+        BlogPost.countDocuments(where).exec(),
       ]);
 
       return { success: true, data: { items, total } };
@@ -48,19 +75,22 @@ export class BlogService {
   async getAll(options?: {
     page?: number;
     limit?: number;
-  }): Promise<ServiceResult<{ items: unknown[]; total: number }>> {
+  }): Promise<ServiceResult<{ items: BlogPostDoc[]; total: number }>> {
     try {
+      await this.ensureConnection();
+
       const page = options?.page ?? 1;
       const limit = Math.min(options?.limit ?? 10, 100);
       const skip = (page - 1) * limit;
 
       const [items, total] = await Promise.all([
-        prisma.blogPost.findMany({
-          skip,
-          take: limit,
-          orderBy: { createdAt: "desc" },
-        }),
-        prisma.blogPost.count(),
+        BlogPost.find()
+          .skip(skip)
+          .limit(limit)
+          .sort({ createdAt: -1 })
+          .lean<BlogPostDoc[]>()
+          .exec(),
+        BlogPost.countDocuments().exec(),
       ]);
 
       return { success: true, data: { items, total } };
@@ -77,11 +107,16 @@ export class BlogService {
   async getBySlug(
     slug: string,
     publishedOnly = true,
-  ): Promise<ServiceResult<unknown | null>> {
+  ): Promise<ServiceResult<BlogPostDoc | null>> {
     try {
-      const where = publishedOnly ? { slug, isPublished: true } : { slug };
+      await this.ensureConnection();
 
-      const post = await prisma.blogPost.findFirst({ where });
+      const where: Record<string, unknown> = { slug };
+      if (publishedOnly) {
+        where.isPublished = true;
+      }
+
+      const post = await BlogPost.findOne(where).lean<BlogPostDoc>().exec();
       return { success: true, data: post };
     } catch (error) {
       const message =
@@ -93,11 +128,10 @@ export class BlogService {
   /**
    * Get a post by ID
    */
-  async getById(id: string): Promise<ServiceResult<unknown | null>> {
+  async getById(id: string): Promise<ServiceResult<BlogPostDoc | null>> {
     try {
-      const post = await prisma.blogPost.findUnique({
-        where: { id },
-      });
+      await this.ensureConnection();
+      const post = await BlogPost.findById(id).lean<BlogPostDoc>().exec();
       return { success: true, data: post };
     } catch (error) {
       const message =
@@ -109,12 +143,15 @@ export class BlogService {
   /**
    * Get posts by category
    */
-  async getByCategory(category: string): Promise<ServiceResult<unknown[]>> {
+  async getByCategory(category: string): Promise<ServiceResult<BlogPostDoc[]>> {
     try {
-      const posts = await prisma.blogPost.findMany({
-        where: { isPublished: true, category },
-        orderBy: { publishedAt: "desc" },
-      });
+      await this.ensureConnection();
+
+      const posts = await BlogPost.find({ isPublished: true, category })
+        .sort({ publishedAt: -1 })
+        .lean<BlogPostDoc[]>()
+        .exec();
+
       return { success: true, data: posts };
     } catch (error) {
       const message =
@@ -130,18 +167,16 @@ export class BlogService {
     ServiceResult<{ category: string; count: number }[]>
   > {
     try {
-      const categories = await prisma.blogPost.groupBy({
-        by: ["category"],
-        where: { isPublished: true },
-        _count: { category: true },
-      });
+      await this.ensureConnection();
 
-      const result = categories.map((c) => ({
-        category: c.category,
-        count: c._count.category,
-      }));
+      const categories = await BlogPost.aggregate([
+        { $match: { isPublished: true } },
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $project: { category: "$_id", count: 1, _id: 0 } },
+        { $sort: { count: -1 } },
+      ]).exec();
 
-      return { success: true, data: result };
+      return { success: true, data: categories };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to fetch categories";
@@ -163,10 +198,15 @@ export class BlogService {
     readTime?: number;
     isPublished?: boolean;
     publishedAt?: Date;
-  }): Promise<ServiceResult<unknown>> {
+  }): Promise<ServiceResult<BlogPostDoc>> {
     try {
-      const post = await prisma.blogPost.create({ data });
-      return { success: true, data: post };
+      await this.ensureConnection();
+      const post = await BlogPost.create(data);
+      const doc = post.toObject();
+      return {
+        success: true,
+        data: { ...doc, _id: doc._id.toString() } as BlogPostDoc,
+      };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to create blog post";
@@ -180,12 +220,21 @@ export class BlogService {
   async update(
     id: string,
     data: Record<string, unknown>,
-  ): Promise<ServiceResult<unknown>> {
+  ): Promise<ServiceResult<BlogPostDoc>> {
     try {
-      const post = await prisma.blogPost.update({
-        where: { id },
-        data,
-      });
+      await this.ensureConnection();
+
+      const post = await BlogPost.findByIdAndUpdate(id, data, {
+        new: true,
+        runValidators: true,
+      })
+        .lean<BlogPostDoc>()
+        .exec();
+
+      if (!post) {
+        return { success: false, error: "Blog post not found" };
+      }
+
       return { success: true, data: post };
     } catch (error) {
       const message =
@@ -197,11 +246,18 @@ export class BlogService {
   /**
    * Delete a blog post
    */
-  async delete(id: string): Promise<ServiceResult<unknown>> {
+  async delete(id: string): Promise<ServiceResult<BlogPostDoc>> {
     try {
-      const post = await prisma.blogPost.delete({
-        where: { id },
-      });
+      await this.ensureConnection();
+
+      const post = await BlogPost.findByIdAndDelete(id)
+        .lean<BlogPostDoc>()
+        .exec();
+
+      if (!post) {
+        return { success: false, error: "Blog post not found" };
+      }
+
       return { success: true, data: post };
     } catch (error) {
       const message =
@@ -213,7 +269,7 @@ export class BlogService {
   /**
    * Publish a blog post
    */
-  async publish(id: string): Promise<ServiceResult<unknown>> {
+  async publish(id: string): Promise<ServiceResult<BlogPostDoc>> {
     return this.update(id, {
       isPublished: true,
       publishedAt: new Date(),
@@ -223,7 +279,7 @@ export class BlogService {
   /**
    * Unpublish a blog post
    */
-  async unpublish(id: string): Promise<ServiceResult<unknown>> {
+  async unpublish(id: string): Promise<ServiceResult<BlogPostDoc>> {
     return this.update(id, {
       isPublished: false,
     });
