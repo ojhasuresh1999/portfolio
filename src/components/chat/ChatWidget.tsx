@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +12,7 @@ import {
   useTypingIndicator,
 } from "@/lib/socket-client";
 import type { ChatUserData, MessageData } from "@/types/socket.types";
+import { ChatClientService } from "@/services/chat-client";
 
 // =============================================================================
 // Terminal-Style Floating Chat Widget with Modal Support
@@ -291,6 +293,7 @@ function ChatContent({
 }
 
 export function ChatWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -322,20 +325,35 @@ export function ChatWidget() {
     resolver: zodResolver(joinSchema),
   });
 
-  // Check existing session
+  // Check existing session using ChatClientService (Axios)
   useEffect(() => {
-    const sessionToken = localStorage.getItem(SESSION_KEY);
-    const userData = localStorage.getItem(USER_KEY);
-    if (sessionToken && userData) {
+    const checkSession = async () => {
+      const sessionToken = localStorage.getItem(SESSION_KEY);
+      if (!sessionToken) return;
+
       try {
-        const parsed = JSON.parse(userData);
-        setUser(parsed);
-        setConversationId(parsed.conversationId);
+        const result = await ChatClientService.verifySession(sessionToken);
+        if (result.success && result.user) {
+          setUser({
+            _id: result.user._id,
+            name: result.user.name,
+            email: result.user.email,
+            photo: result.user.photo,
+            isOnline: result.user.isOnline,
+            lastSeen: new Date(result.user.lastSeen),
+          });
+          setConversationId(result.user.conversationId || null);
+          localStorage.setItem(USER_KEY, JSON.stringify(result.user));
+        } else {
+          localStorage.removeItem(SESSION_KEY);
+          localStorage.removeItem(USER_KEY);
+        }
       } catch {
         localStorage.removeItem(SESSION_KEY);
         localStorage.removeItem(USER_KEY);
       }
-    }
+    };
+    checkSession();
   }, []);
 
   // Listen for open-chat-widget event
@@ -345,20 +363,26 @@ export function ChatWidget() {
     return () => window.removeEventListener("open-chat-widget", handleOpenChat);
   }, []);
 
-  // Load messages when conversation changes
+  // Load messages when conversation changes using ChatClientService (Axios)
   useEffect(() => {
-    if (conversationId && (isOpen || isModalOpen)) {
-      fetch(`/api/chat/messages?conversationId=${conversationId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) setMessages(data.messages);
-        });
+    const loadMessages = async () => {
+      if (!conversationId || !(isOpen || isModalOpen)) return;
+
+      try {
+        const result = await ChatClientService.getMessages(conversationId);
+        if (result.success && result.messages) {
+          setMessages(result.messages);
+        }
+      } catch (err) {
+        console.error("Failed to load messages:", err);
+      }
 
       if (isConnected) {
         joinConversation(conversationId);
         markAsRead(conversationId);
       }
-    }
+    };
+    loadMessages();
   }, [
     conversationId,
     isOpen,
@@ -397,25 +421,27 @@ export function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Join chat
+  // Join chat using ChatClientService (Axios)
   const onJoin = async (data: JoinFormData) => {
     setIsJoining(true);
     try {
-      const res = await fetch("/api/chat/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const result = await res.json();
-      if (result.success) {
+      const result = await ChatClientService.joinChat(data);
+      if (result.success && result.user) {
         localStorage.setItem(SESSION_KEY, result.user.sessionToken);
         localStorage.setItem(USER_KEY, JSON.stringify(result.user));
-        setUser(result.user);
-        setConversationId(result.user.conversationId);
+        setUser({
+          _id: result.user._id,
+          name: result.user.name,
+          email: result.user.email,
+          photo: result.user.photo,
+          isOnline: true,
+          lastSeen: new Date(),
+        });
+        setConversationId(result.user.conversationId || null);
         if (isConnected) joinAsUser(result.user.sessionToken);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to join chat:", err);
     } finally {
       setIsJoining(false);
     }
@@ -516,6 +542,11 @@ export function ChatWidget() {
       </div>
     </div>
   );
+
+  // Hide widget on admin routes
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>

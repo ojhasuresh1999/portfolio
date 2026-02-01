@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  AdminAuthProvider,
+  useAdminAuth,
+} from "@/providers/admin-auth-provider";
 
 const sidebarItems = [
   { label: "Dashboard", href: "/admin", icon: "dashboard" },
@@ -15,16 +19,53 @@ const sidebarItems = [
   { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
+// Routes that don't need the sidebar layout
+const NO_LAYOUT_ROUTES = [
+  "/admin/login",
+  "/admin/verify-2fa",
+  "/admin/reset-password",
+  "/admin/unauthorized",
+];
 
-  // Skip layout for login page
-  if (pathname === "/admin/login") {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { user, isLoading, isAuthenticated, logout } = useAdminAuth();
+
+  // Skip layout for auth pages
+  if (NO_LAYOUT_ROUTES.some((route) => pathname === route)) {
     return <>{children}</>;
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined text-4xl text-primary animate-spin">
+            progress_activity
+          </span>
+          <p className="text-slate-400 font-[family-name:var(--font-mono)]">
+            Verifying session...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated and not on auth page, the provider will redirect
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined text-4xl text-red-500">
+            gpp_bad
+          </span>
+          <p className="text-slate-400 font-[family-name:var(--font-mono)]">
+            Redirecting to login...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -84,7 +125,10 @@ export default function AdminLayout({
             </span>
             View Site
           </Link>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 transition-colors w-full">
+          <button
+            onClick={() => logout()}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 transition-colors w-full"
+          >
             <span className="material-symbols-outlined text-lg">logout</span>
             Logout
           </button>
@@ -112,6 +156,9 @@ export default function AdminLayout({
 
             {/* User */}
             <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400">
+                {user?.name || user?.email}
+              </span>
               <div className="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
                 <span className="material-symbols-outlined text-lg">
                   person
@@ -125,5 +172,17 @@ export default function AdminLayout({
         <div className="p-8">{children}</div>
       </main>
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AdminAuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AdminAuthProvider>
   );
 }
