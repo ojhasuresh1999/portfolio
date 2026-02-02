@@ -57,7 +57,8 @@ export default function AdminChatPage() {
   // Join as admin when connected
   useEffect(() => {
     if (isConnected) {
-      joinAsAdmin();
+      const token = localStorage.getItem("admin-token") || "";
+      joinAsAdmin(token);
     }
   }, [isConnected, joinAsAdmin]);
 
