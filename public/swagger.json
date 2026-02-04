@@ -51,6 +51,63 @@
           }
         }
       },
+      "AdminLogin": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "admin@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "securePassword123"
+          },
+          "stayLinked": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
       "Project": {
         "type": "object",
         "required": [
@@ -219,6 +276,81 @@
   },
   "security": [],
   "paths": {
+    "/api/admin/auth/2fa/setup": {
+      "post": {
+        "summary": "Generate 2FA secret",
+        "description": "Generates a new TOTP secret for the authenticated user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "summary": "Verify and Enable 2FA",
+        "description": "Verifies the TOTP code against the secret and enables 2FA"
+      }
+    },
+    "/api/admin/auth/login": {
+      "post": {
+        "summary": "Authenticate admin user",
+        "description": "Login with email and password to receive access and refresh tokens",
+        "tags": [
+          "Admin Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts"
+          }
+        }
+      }
+    },
+    "/api/admin/auth/recover": {
+      "post": {
+        "summary": "Verify 2FA for Recovery",
+        "description": "Verify TOTP code to receive a password reset token"
+      }
+    },
     "/api/blog": {
       "get": {
         "summary": "List Blog Posts",
