@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ChatWidget } from "@/components/chat";
 import { QueryProvider } from "@/providers/query-provider";
+import { SocketHealthProvider } from "@/providers/socket-health-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,18 +48,20 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} bg-obsidian font-[family-name:var(--font-display)] text-slate-300 antialiased`}
       >
         <QueryProvider>
-          {/* Background Effects */}
-          <div className="fixed inset-0 z-0 pointer-events-none shimmer-bg" />
-          <div className="fixed inset-0 z-0 pointer-events-none aurora-bg animate-pulse opacity-50" />
-          <div className="fixed inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
+          <SocketHealthProvider>
+            {/* Background Effects */}
+            <div className="fixed inset-0 z-0 pointer-events-none shimmer-bg" />
+            <div className="fixed inset-0 z-0 pointer-events-none aurora-bg animate-pulse opacity-50" />
+            <div className="fixed inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
 
-          {/* Main Content */}
-          <div className="relative z-10 flex flex-col min-h-screen">
-            {children}
-          </div>
+            {/* Main Content */}
+            <div className="relative z-10 flex flex-col min-h-screen">
+              {children}
+            </div>
 
-          {/* Floating Chat Widget */}
-          <ChatWidget />
+            {/* Floating Chat Widget */}
+            <ChatWidget />
+          </SocketHealthProvider>
         </QueryProvider>
       </body>
     </html>
