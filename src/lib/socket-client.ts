@@ -82,6 +82,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     }
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+    console.log("🔍 Attempting socket connection to:", socketUrl || "MISSING");
 
     if (!socketUrl) {
       console.error(
