@@ -137,7 +137,7 @@ async function handleConnection(socket: TypedSocket) {
   // -------------------------------------------------------------------------
   // Admin Join Event
   // -------------------------------------------------------------------------
-  socket.on("admin:join", async (callback) => {
+  socket.on("admin:join", async (data, callback) => {
     try {
       socket.data.userType = "admin";
       socket.data.userId = "admin";

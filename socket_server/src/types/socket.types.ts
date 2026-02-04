@@ -1,5 +1,3 @@
-import type { Types } from "mongoose";
-
 // =============================================================================
 // Socket.IO Type Definitions
 // Production-level type-safe socket events for chat feature
@@ -188,6 +186,4 @@ export interface SocketData {
 // Utility Types
 // -----------------------------------------------------------------------------
 
-export type ChatUserId = string | Types.ObjectId;
-export type ConversationId = string | Types.ObjectId;
-export type MessageId = string | Types.ObjectId;
+export type UserType = "admin" | "user";

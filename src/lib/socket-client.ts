@@ -37,7 +37,7 @@ interface UseSocketReturn {
   joinAsUser: (
     sessionToken: string,
   ) => Promise<{ success: boolean; user?: ChatUserData; error?: string }>;
-  joinAsAdmin: () => Promise<{ success: boolean; error?: string }>;
+  joinAsAdmin: (token: string) => Promise<{ success: boolean; error?: string }>;
   // Conversation methods
   joinConversation: (conversationId: string) => void;
   leaveConversation: (conversationId: string) => void;
@@ -162,21 +162,26 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   // -------------------------------------------------------------------------
   // Admin Join
   // -------------------------------------------------------------------------
-  const joinAsAdmin = useCallback((): Promise<{
-    success: boolean;
-    error?: string;
-  }> => {
-    return new Promise((resolve) => {
-      if (!socketRef.current?.connected) {
-        resolve({ success: false, error: "Not connected" });
-        return;
-      }
+  const joinAsAdmin = useCallback(
+    (
+      token: string,
+    ): Promise<{
+      success: boolean;
+      error?: string;
+    }> => {
+      return new Promise((resolve) => {
+        if (!socketRef.current?.connected) {
+          resolve({ success: false, error: "Not connected" });
+          return;
+        }
 
-      socketRef.current.emit("admin:join", (response) => {
-        resolve(response);
+        socketRef.current.emit("admin:join", { token }, (response) => {
+          resolve(response);
+        });
       });
-    });
-  }, []);
+    },
+    [],
+  );
 
   // -------------------------------------------------------------------------
   // Join Conversation

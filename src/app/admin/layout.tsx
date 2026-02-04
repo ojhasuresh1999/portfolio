@@ -92,7 +92,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           {sidebarItems.map((item) => {
             const isActive =
               pathname === item.href ||
-              (item.href !== "/admin" && pathname.startsWith(item.href));
+              (item.href !== "/admin" && pathname?.startsWith(item.href));
 
             return (
               <Link
@@ -143,7 +143,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             {sidebarItems.find(
               (item) =>
                 pathname === item.href ||
-                (item.href !== "/admin" && pathname.startsWith(item.href)),
+                (item.href !== "/admin" && pathname?.startsWith(item.href)),
             )?.label || "Dashboard"}
           </h1>
 

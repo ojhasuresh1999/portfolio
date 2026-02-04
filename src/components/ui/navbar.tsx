@@ -36,7 +36,7 @@ export function Navbar() {
               className={cn(
                 "px-4 py-1.5 text-xs font-medium rounded-full transition-all",
                 pathname === item.href ||
-                  (item.href !== "/" && pathname.startsWith(item.href))
+                  (item.href !== "/" && pathname?.startsWith(item.href))
                   ? "bg-white/10 text-white"
                   : "text-slate-300 hover:bg-white/10 hover:text-white",
               )}
