@@ -14,6 +14,42 @@ const loginSchema = z.object({
   stayLinked: z.boolean().optional().default(false),
 });
 
+/**
+ * @swagger
+ * /api/admin/auth/login:
+ *   post:
+ *     summary: Authenticate admin user
+ *     description: Login with email and password to receive access and refresh tokens
+ *     tags: [Admin Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AdminLogin'
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TokenResponse'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         description: Too many attempts
+ */
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting: 5 attempts per minute per IP

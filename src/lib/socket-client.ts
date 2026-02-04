@@ -81,7 +81,14 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
       return;
     }
 
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "";
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+
+    if (!socketUrl) {
+      console.error(
+        "⚠️ NEXT_PUBLIC_SOCKET_URL is not configured. Socket connection disabled.",
+      );
+      return;
+    }
 
     globalSocket = io(socketUrl, {
       transports: ["websocket", "polling"],

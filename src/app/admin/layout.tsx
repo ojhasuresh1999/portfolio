@@ -24,6 +24,8 @@ const NO_LAYOUT_ROUTES = [
   "/admin/login",
   "/admin/verify-2fa",
   "/admin/reset-password",
+  "/admin/recover",
+  "/admin/settings/2fa",
   "/admin/unauthorized",
 ];
 

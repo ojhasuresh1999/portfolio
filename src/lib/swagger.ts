@@ -53,6 +53,43 @@ export const getApiDocs = async () => {
               },
             },
           },
+          AdminLogin: {
+            type: "object",
+            required: ["email", "password"],
+            properties: {
+              email: {
+                type: "string",
+                format: "email",
+                example: "admin@example.com",
+              },
+              password: {
+                type: "string",
+                example: "securePassword123",
+              },
+              stayLinked: {
+                type: "boolean",
+                default: false,
+              },
+            },
+          },
+          TokenResponse: {
+            type: "object",
+            properties: {
+              success: { type: "boolean", example: true },
+              accessToken: { type: "string" },
+              refreshToken: { type: "string" },
+              expiresIn: { type: "integer" },
+              user: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  email: { type: "string" },
+                  name: { type: "string" },
+                  role: { type: "string" },
+                },
+              },
+            },
+          },
           Project: {
             type: "object",
             required: ["title", "slug", "description"],

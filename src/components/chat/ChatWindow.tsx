@@ -65,6 +65,11 @@ export function ChatWindow({
 
   const { isTyping, typingUser } = useTypingIndicator(conversationId);
 
+  // Sync messages when initialMessages prop changes
+  useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
+
   // Join conversation on mount
   useEffect(() => {
     if (isConnected && conversationId) {
@@ -303,6 +308,7 @@ export function ChatWindow({
                 timestamp={message.createdAt}
                 media={message.media}
                 reactions={message.reactions}
+                isDelivered={true}
                 isRead={!!message.readAt}
                 onReact={handleReact}
                 currentUserId={currentUser._id}

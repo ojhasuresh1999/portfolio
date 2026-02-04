@@ -54,9 +54,8 @@ export async function POST(request: NextRequest) {
 
     // Verify the 2FA code
     const result = await authService.verifyTwoFactor(
-      requestId,
-      code,
       tokenPayload.userId,
+      code,
       tokenPayload.email,
     );
 
@@ -77,7 +76,7 @@ export async function POST(request: NextRequest) {
       expiresIn: tokens.expiresIn,
     });
   } catch (error) {
-    console.error("[Auth Verify 2FA Error]", error);
+    console.log("🚀 ~ POST ~ error:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },

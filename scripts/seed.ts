@@ -19,7 +19,9 @@ async function seedAdminUser() {
     console.log("✓ Connected to MongoDB\n");
 
     // Check if admin already exists
-    const existingAdmin = await User.findOne({ email: "admin@example.com" });
+    const existingAdmin = await User.findOne({
+      email: "sureshojha12dev@gmail.com",
+    });
     if (existingAdmin) {
       console.log("⚠️  Admin user already exists, skipping creation.");
       console.log(`   Email: ${existingAdmin.email}`);
@@ -31,11 +33,11 @@ async function seedAdminUser() {
 
     // Create admin user with hashed password
     console.log("🔐 Hashing password with Argon2...");
-    const hashedPassword = await hashPassword("Admin@123456");
+    const hashedPassword = await hashPassword("Admin@123");
 
     console.log("👤 Creating admin user...");
     const admin = new User({
-      email: "admin@example.com",
+      email: "sureshojha12dev@gmail.com",
       password: hashedPassword,
       name: "System Admin",
       role: Role.SUPER_ADMIN,
@@ -49,8 +51,8 @@ async function seedAdminUser() {
     console.log("─────────────────────────────────────");
     console.log("   LOGIN CREDENTIALS");
     console.log("─────────────────────────────────────");
-    console.log("   Email:    admin@example.com");
-    console.log("   Password: Admin@123456");
+    console.log("   Email:    sureshojha12dev@gmail.com");
+    console.log("   Password: Admin@123");
     console.log("   Role:     SUPER_ADMIN");
     console.log("─────────────────────────────────────\n");
 

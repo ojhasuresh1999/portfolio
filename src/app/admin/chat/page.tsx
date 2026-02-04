@@ -23,8 +23,7 @@ export default function AdminChatPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileView, setIsMobileView] = useState(false);
 
-  const { isConnected, joinAsAdmin, joinConversation, leaveConversation } =
-    useSocket();
+  const { isConnected, joinConversation, leaveConversation } = useSocket();
 
   // Responsive check
   useEffect(() => {
@@ -38,7 +37,11 @@ export default function AdminChatPage() {
   useEffect(() => {
     const loadConversations = async () => {
       try {
-        const response = await fetch("/api/chat/conversations");
+        const response = await fetch("/api/chat/conversations", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
+          },
+        });
         const data = await response.json();
 
         if (data.success) {
@@ -54,13 +57,8 @@ export default function AdminChatPage() {
     loadConversations();
   }, []);
 
-  // Join as admin when connected
-  useEffect(() => {
-    if (isConnected) {
-      const token = localStorage.getItem("admin-token") || "";
-      joinAsAdmin(token);
-    }
-  }, [isConnected, joinAsAdmin]);
+  // Join as admin handled globally by AdminAuthProvider
+  // We just wait for connection (handled by useSocket hook auto-connect)
 
   // Handle online/offline status updates
   useOnlineStatus(
@@ -180,6 +178,11 @@ export default function AdminChatPage() {
     try {
       const response = await fetch(
         `/api/chat/messages?conversationId=${conversation._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
+          },
+        },
       );
       const data = await response.json();
 

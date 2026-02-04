@@ -45,6 +45,7 @@ export function generateTokenPair(
   sessionId: string,
 ): TokenPair {
   const accessPayload: Omit<AdminTokenPayload, "iat" | "exp"> = {
+    sub: userId,
     userId,
     email,
     role,
@@ -53,6 +54,7 @@ export function generateTokenPair(
   };
 
   const refreshPayload: Omit<AdminTokenPayload, "iat" | "exp"> = {
+    sub: userId,
     userId,
     email,
     role,

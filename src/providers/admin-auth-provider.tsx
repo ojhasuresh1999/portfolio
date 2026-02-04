@@ -9,6 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useSocket } from "@/lib/socket-client";
 
 // =============================================================================
 // Admin Auth Context
@@ -39,6 +40,7 @@ const PUBLIC_ROUTES = [
   "/admin/login",
   "/admin/verify-2fa",
   "/admin/reset-password",
+  "/admin/recover",
   "/admin/unauthorized",
 ];
 
@@ -47,6 +49,9 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Socket integration
+  const { isConnected, joinAsAdmin } = useSocket();
 
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname === route);
 
@@ -167,6 +172,22 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
     verifySession();
   }, [pathname, isPublicRoute, router, refreshSession]);
+
+  // Connect socket when user is authenticated
+  useEffect(() => {
+    if (user && isConnected) {
+      const token = localStorage.getItem("admin-token");
+      if (token) {
+        joinAsAdmin(token).then((res) => {
+          if (res.success) {
+            console.log("🔌 Admin socket connected successfully");
+          } else {
+            console.error("❌ Failed to join socket as admin:", res.error);
+          }
+        });
+      }
+    }
+  }, [user, isConnected, joinAsAdmin]);
 
   const value: AdminAuthContextValue = {
     user,

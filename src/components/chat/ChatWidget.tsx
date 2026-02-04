@@ -10,6 +10,7 @@ import {
   useSocket,
   useNewMessage,
   useTypingIndicator,
+  useMessageReaction,
 } from "@/lib/socket-client";
 import type { ChatUserData, MessageData } from "@/types/socket.types";
 import { ChatClientService } from "@/services/chat-client";
@@ -68,6 +69,7 @@ function ChatContent({
   onSend,
   onLeave,
   onJoin,
+  onReact,
   conversationId,
   startTyping,
   stopTyping,
@@ -87,6 +89,7 @@ function ChatContent({
   onSend: () => void;
   onLeave: () => void;
   onJoin: (data: JoinFormData) => void;
+  onReact?: (messageId: string, emoji: string) => void;
   conversationId: string | null;
   startTyping: (id: string) => void;
   stopTyping: (id: string) => void;
@@ -201,25 +204,65 @@ function ChatContent({
               messages.map((msg) => (
                 <div
                   key={msg._id}
-                  className={`flex ${
+                  className={`group flex ${
                     msg.senderType === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <div
-                    className={`max-w-[80%] ${
-                      msg.senderType === "user"
-                        ? "bg-primary/10 border-primary/20"
-                        : "bg-slate-800/80 border-slate-700"
-                    } border rounded-lg px-3 py-2`}
-                  >
-                    <p
-                      className={`${isModal ? "text-base" : "text-sm"} text-white break-words`}
+                  <div className="relative">
+                    <div
+                      className={`max-w-[80%] ${
+                        msg.senderType === "user"
+                          ? "bg-primary/10 border-primary/20"
+                          : "bg-slate-800/80 border-slate-700"
+                      } border rounded-lg px-3 py-2`}
                     >
-                      {msg.content}
-                    </p>
-                    <p className="text-[10px] font-mono text-slate-500 mt-1">
-                      {formatTime(msg.createdAt)}
-                    </p>
+                      <p
+                        className={`${isModal ? "text-base" : "text-sm"} text-white break-words`}
+                      >
+                        {msg.content}
+                      </p>
+                      <div className="flex items-center justify-end gap-1 mt-1">
+                        <span className="text-[10px] font-mono text-slate-500">
+                          {formatTime(msg.createdAt)}
+                        </span>
+                        {msg.senderType === "user" && (
+                          <span
+                            className={`material-symbols-outlined text-xs ${
+                              msg.readAt ? "text-primary" : "text-slate-500"
+                            }`}
+                          >
+                            {msg.readAt ? "done_all" : "done_all"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Reactions display */}
+                    {msg.reactions && msg.reactions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {msg.reactions.map((r) => (
+                          <span
+                            key={r.emoji}
+                            className="text-xs bg-slate-700/50 px-1 py-0.5 rounded"
+                          >
+                            {r.emoji} {r.usersIds.length}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {/* Reaction picker on hover */}
+                    {onReact && (
+                      <div className="absolute -top-6 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5 bg-slate-800 rounded-full px-1 py-0.5 border border-slate-700">
+                        {["👍", "❤️", "😂", "😮", "😢"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            onClick={() => onReact(msg._id, emoji)}
+                            className="hover:scale-110 transition-transform text-xs"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
@@ -313,6 +356,7 @@ export function ChatWidget() {
     startTyping,
     stopTyping,
     markAsRead,
+    addReaction,
   } = useSocket();
 
   const { isTyping } = useTypingIndicator(conversationId || "");
@@ -414,6 +458,17 @@ export function ChatWidget() {
       },
       [conversationId, isOpen, isModalOpen, markAsRead],
     ),
+  );
+
+  // Handle reactions in real-time
+  useMessageReaction(
+    useCallback((messageId: string, reactions) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, reactions } : msg,
+        ),
+      );
+    }, []),
   );
 
   // Scroll to bottom
@@ -609,6 +664,7 @@ export function ChatWidget() {
                     onSend={handleSend}
                     onLeave={handleLeave}
                     onJoin={onJoin}
+                    onReact={async (msgId, emoji) => addReaction(msgId, emoji)}
                     conversationId={conversationId}
                     startTyping={startTyping}
                     stopTyping={stopTyping}
@@ -657,6 +713,7 @@ export function ChatWidget() {
                 onSend={handleSend}
                 onLeave={handleLeave}
                 onJoin={onJoin}
+                onReact={async (msgId, emoji) => addReaction(msgId, emoji)}
                 conversationId={conversationId}
                 startTyping={startTyping}
                 stopTyping={stopTyping}

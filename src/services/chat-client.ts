@@ -65,10 +65,15 @@ class ChatClientServiceClass {
     page = 1,
     limit = 50,
   ): Promise<GetMessagesResponse> {
+    const sessionToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("chat-session-token")
+        : null;
     const response = await apiClient.get<GetMessagesResponse>(
       "/chat/messages",
       {
         params: { conversationId, page, limit },
+        headers: sessionToken ? { "X-Session-Token": sessionToken } : {},
       },
     );
     return response.data;

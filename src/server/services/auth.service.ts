@@ -7,8 +7,7 @@ import {
 } from "../utils/jwt.util";
 import { randomBytes } from "crypto";
 import type { ServiceResult } from "../types";
-import type { HydratedDocument } from "mongoose";
-import type { IUser, IUserMethods } from "@/models/User";
+import { generateSecret, generateURI, verify } from "otplib";
 
 // =============================================================================
 // Auth Service
@@ -28,9 +27,6 @@ export interface SessionInfo {
   sessionId: string;
   expiresAt: Date;
 }
-
-// In-memory store for 2FA codes (use Redis in production)
-const twoFactorCodes = new Map<string, { code: string; expires: number }>();
 
 class AuthService {
   /**
@@ -81,7 +77,39 @@ class AuthService {
 
       // Check if 2FA is enabled
       if (user.twoFactorEnabled) {
-        return this.initiateTwoFactor(user, sessionId);
+        // Generate a temporary 2FA token to allow verification step
+        const requestId = "TOTP_VERIFICATION";
+
+        // Use dynamically imported generateTwoFactorToken to avoid circular dependency if needed,
+        // or just use the imported one.
+        // Note: verifyTwoFactor uses generateTokenPair which is imported.
+        const twoFactorToken = generateTwoFactorToken(
+          user._id.toString(),
+          user.email,
+          requestId,
+        );
+
+        const safeUser: UserSafeData = {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          role: user.role,
+          twoFactorEnabled: user.twoFactorEnabled,
+          lastLoginAt: user.lastLoginAt,
+          createdAt: user.createdAt,
+        };
+
+        return {
+          success: true,
+          data: {
+            user: safeUser,
+            tokens: { accessToken: "", refreshToken: "", expiresIn: 0 },
+            requiresTwoFactor: true,
+            twoFactorToken,
+            requestId,
+          },
+        };
       }
 
       // Generate tokens
@@ -120,112 +148,162 @@ class AuthService {
   }
 
   /**
-   * Initiate 2FA verification
+   * Generate a 2FA secret for setup
    */
-  private async initiateTwoFactor(
-    user: HydratedDocument<IUser, IUserMethods>,
-    _sessionId: string,
-  ): Promise<ServiceResult<LoginResult>> {
-    const requestId = `AUTH_${randomBytes(4).toString("hex").toUpperCase()}_X`;
-    const otpCode = this.generateOtpCode();
-
-    // Store OTP code (5 minute expiry)
-    twoFactorCodes.set(requestId, {
-      code: otpCode,
-      expires: Date.now() + 5 * 60 * 1000,
-    });
-
-    // Generate 2FA token for verification step
-    const twoFactorToken = generateTwoFactorToken(
-      user._id.toString(),
-      user.email,
-      requestId,
-    );
-
-    // In production, send OTP via email/SMS here
-    console.log(`[2FA] Code for ${user.email}: ${otpCode}`);
-
-    const safeUser: UserSafeData = {
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      image: user.image,
-      role: user.role,
-      twoFactorEnabled: user.twoFactorEnabled,
-      lastLoginAt: user.lastLoginAt,
-      createdAt: user.createdAt,
-    };
-
-    return {
-      success: true,
-      data: {
-        user: safeUser,
-        tokens: { accessToken: "", refreshToken: "", expiresIn: 0 },
-        requiresTwoFactor: true,
-        twoFactorToken,
-        requestId,
-      },
-    };
+  async generateTwoFactorSecret(
+    email: string,
+  ): Promise<ServiceResult<{ secret: string; otpauth: string }>> {
+    try {
+      const secret = generateSecret();
+      const otpauth = generateURI({
+        secret,
+        label: email,
+        issuer: "Portfolio Admin",
+      });
+      return { success: true, data: { secret, otpauth } };
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to generate 2FA secret";
+      return { success: false, error: message };
+    }
   }
 
   /**
-   * Verify 2FA code
+   * Verify 2FA token during setup
    */
-  async verifyTwoFactor(
-    requestId: string,
-    code: string,
+  async verifyTwoFactorSetup(
     userId: string,
-    email: string,
-  ): Promise<ServiceResult<LoginResult>> {
+    token: string,
+    secret: string,
+  ): Promise<ServiceResult<boolean>> {
     try {
-      // Get stored code
-      const storedData = twoFactorCodes.get(requestId);
-      if (!storedData) {
-        return {
-          success: false,
-          error: "Invalid or expired verification request",
-        };
-      }
+      const isValid = await verify({ token, secret });
 
-      // Check expiry
-      if (Date.now() > storedData.expires) {
-        twoFactorCodes.delete(requestId);
-        return { success: false, error: "Verification code expired" };
-      }
-
-      // Verify code
-      if (storedData.code !== code) {
+      if (!isValid) {
         return { success: false, error: "Invalid verification code" };
       }
 
-      // Clean up
-      twoFactorCodes.delete(requestId);
-
-      // Get user
-      const userResult = await userService.getSafeUserById(userId);
+      // Save secret to user
+      const userResult = await userService.findById(userId);
       if (!userResult.success || !userResult.data) {
         return { success: false, error: "User not found" };
       }
 
+      await userResult.data.updateOne({
+        twoFactorEnabled: true,
+        twoFactorSecret: secret,
+      });
+
+      return { success: true, data: true };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Verification failed";
+      return { success: false, error: message };
+    }
+  }
+
+  /**
+   * Verify 2FA token for login
+   */
+  async verifyTwoFactor(
+    userId: string,
+    token: string,
+    email: string,
+  ): Promise<ServiceResult<LoginResult>> {
+    try {
+      // Get user to retrieve secret
+      const userResult = await userService.findById(userId);
+      if (!userResult.success || !userResult.data) {
+        return { success: false, error: "User not found" };
+      }
+
+      const user = userResult.data;
+
+      if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+        return { success: false, error: "2FA is not enabled for this user" };
+      }
+
+      const isValid = await verify({
+        token,
+        secret: user.twoFactorSecret,
+      });
+
+      if (!isValid) {
+        return { success: false, error: "Invalid verification code" };
+      }
+
       // Generate tokens
       const sessionId = this.generateSessionId();
-      const tokens = generateTokenPair(
-        userId,
-        email,
-        userResult.data.role,
-        sessionId,
-      );
+      const tokens = generateTokenPair(userId, email, user.role, sessionId);
+
+      // Return safe user data
+      const safeUser: UserSafeData = {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        role: user.role,
+        twoFactorEnabled: user.twoFactorEnabled,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+      };
 
       return {
         success: true,
         data: {
-          user: userResult.data,
+          user: safeUser,
           tokens,
         },
       };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Verification failed";
+      return { success: false, error: message };
+    }
+  }
+
+  /**
+   * Verify 2FA for password recovery
+   */
+  async verifyTwoFactorRecovery(
+    email: string,
+    token: string,
+  ): Promise<ServiceResult<{ resetToken: string }>> {
+    try {
+      // Find user by email
+      const userResult = await userService.findByEmail(email);
+      if (!userResult.success || !userResult.data) {
+        return { success: false, error: "User not found" };
+      }
+
+      const user = userResult.data;
+
+      if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+        return { success: false, error: "2FA is not enabled for this user" };
+      }
+
+      const isValid = await verify({
+        token,
+        secret: user.twoFactorSecret,
+      });
+
+      if (!isValid) {
+        return { success: false, error: "Invalid verification code" };
+      }
+
+      // Generate a short-lived reset token (signed JWT)
+      const { generateResetToken } = await import("../utils/jwt.util");
+      const resetToken = generateResetToken(user._id.toString(), user.email);
+
+      return {
+        success: true,
+        data: { resetToken },
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Recovery verification failed";
       return { success: false, error: message };
     }
   }
@@ -302,25 +380,6 @@ class AuthService {
   }
 
   /**
-   * Enable 2FA for user
-   */
-  async enableTwoFactor(userId: string): Promise<ServiceResult<boolean>> {
-    try {
-      const userResult = await userService.findById(userId);
-      if (!userResult.success || !userResult.data) {
-        return { success: false, error: "User not found" };
-      }
-
-      await userResult.data.updateOne({ twoFactorEnabled: true });
-      return { success: true, data: true };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to enable 2FA";
-      return { success: false, error: message };
-    }
-  }
-
-  /**
    * Disable 2FA for user
    */
   async disableTwoFactor(userId: string): Promise<ServiceResult<boolean>> {
@@ -340,30 +399,6 @@ class AuthService {
         error instanceof Error ? error.message : "Failed to disable 2FA";
       return { success: false, error: message };
     }
-  }
-
-  /**
-   * Resend 2FA code
-   */
-  resendTwoFactorCode(requestId: string): ServiceResult<{ expiresIn: number }> {
-    const storedData = twoFactorCodes.get(requestId);
-    if (!storedData || Date.now() > storedData.expires) {
-      return { success: false, error: "Invalid or expired request" };
-    }
-
-    // Generate new code
-    const newCode = this.generateOtpCode();
-    const newExpires = Date.now() + 5 * 60 * 1000;
-
-    twoFactorCodes.set(requestId, { code: newCode, expires: newExpires });
-
-    // In production, send via email/SMS
-    console.log(`[2FA] Resent code: ${newCode}`);
-
-    return {
-      success: true,
-      data: { expiresIn: 300 }, // 5 minutes
-    };
   }
 }
 

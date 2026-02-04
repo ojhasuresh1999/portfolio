@@ -20,12 +20,13 @@ interface MessageBubbleProps {
     name: string;
   };
   reactions: MessageReaction[];
+  isDelivered?: boolean;
   isRead?: boolean;
   onReact?: (messageId: string, emoji: string) => void;
   currentUserId?: string;
 }
 
-const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢"];
 
 export function MessageBubble({
   id,
@@ -35,6 +36,7 @@ export function MessageBubble({
   timestamp,
   media,
   reactions,
+  isDelivered,
   isRead,
   onReact,
   currentUserId,
@@ -52,7 +54,7 @@ export function MessageBubble({
       exit={{ opacity: 0, y: -10 }}
       className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-3 group`}
     >
-      <div className={`max-w-[75%] ${isOwn ? "order-2" : "order-1"}`}>
+      <div className={`relative max-w-[75%] ${isOwn ? "order-2" : "order-1"}`}>
         {/* Message Bubble */}
         <div
           className={`relative rounded-2xl px-4 py-2.5 ${
@@ -99,7 +101,7 @@ export function MessageBubble({
           {/* Content */}
           <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
 
-          {/* Timestamp and read status */}
+          {/* Timestamp and status */}
           <div
             className={`flex items-center gap-1 mt-1 text-xs ${
               isOwn ? "text-black/60 justify-end" : "text-slate-400"
@@ -107,8 +109,12 @@ export function MessageBubble({
           >
             <span>{formattedTime}</span>
             {isOwn && (
-              <span className="material-symbols-outlined text-sm">
-                {isRead ? "done_all" : "done"}
+              <span
+                className={`material-symbols-outlined text-sm ${
+                  isRead ? "text-primary" : ""
+                }`}
+              >
+                {isRead ? "done_all" : isDelivered ? "done_all" : "done"}
               </span>
             )}
           </div>
@@ -143,11 +149,9 @@ export function MessageBubble({
         {/* Reaction Picker (on hover) */}
         <AnimatePresence>
           <div
-            className={`opacity-0 group-hover:opacity-100 transition-opacity absolute ${
-              isOwn
-                ? "left-0 -translate-x-full pr-2"
-                : "right-0 translate-x-full pl-2"
-            } top-1/2 -translate-y-1/2`}
+            className={`opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 ${
+              isOwn ? "right-0" : "left-0"
+            }`}
           >
             <div className="flex items-center gap-0.5 bg-card-dark/90 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
               {REACTION_EMOJIS.map((emoji) => (

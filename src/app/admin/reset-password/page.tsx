@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 // =============================================================================
 // Password Reset Page
@@ -159,58 +160,86 @@ export default function ResetPasswordPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 py-12 relative overflow-hidden">
         {/* Background Effects */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute inset-0 shimmer-bg opacity-50" />
-          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-[#3b82f6]/5 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[10%] left-[10%] w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] animate-pulse delay-1000" />
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]" />
         </div>
 
         {/* Reset Card */}
         <div className="relative z-10 w-full max-w-md">
-          <div className="bg-[#0c0e14]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="bg-[#0c0e14]/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden"
+          >
+            {/* Top Highlight Line */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+
             {/* Title */}
-            <h1 className="text-3xl font-bold text-white mb-2 text-center">
-              Secure Reset
-            </h1>
-            <p className="text-slate-400 text-sm mb-8 text-center">
-              Backend developer panel credential update.
-            </p>
+            <div className="mb-8 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 mb-4 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                <span className="material-symbols-outlined text-3xl text-emerald-500">
+                  lock_reset
+                </span>
+              </div>
+              <h1 className="text-2xl font-bold text-white font-[family-name:var(--font-mono)] tracking-tight">
+                SECURE RESET
+              </h1>
+              <p className="text-slate-400 text-xs mt-2 font-[family-name:var(--font-mono)]">
+                CREDENTIAL UPDATE PROTOCOL
+              </p>
+            </div>
 
             {success ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#22c55e]/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#22c55e] text-3xl">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-8"
+              >
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                  <span className="material-symbols-outlined text-emerald-500 text-4xl">
                     check_circle
                   </span>
                 </div>
-                <p className="text-[#22c55e] font-medium mb-2">
-                  Password Updated Successfully
+                <h3 className="text-xl font-bold text-white mb-2 font-[family-name:var(--font-mono)]">
+                  SUCCESS
+                </h3>
+                <p className="text-emerald-400 font-medium mb-4 text-sm font-[family-name:var(--font-mono)]">
+                  CREDENTIALS UPDATED
                 </p>
-                <p className="text-slate-400 text-sm">
-                  Redirecting to login...
+                <p className="text-slate-500 text-xs font-[family-name:var(--font-mono)]">
+                  Redirecting to secure gateway...
                 </p>
-              </div>
+              </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* New Password Field */}
-                <div>
-                  <label className="block text-sm text-slate-300 mb-2">
-                    New Password
+                <div className="group">
+                  <label className="block text-[10px] text-slate-500 font-[family-name:var(--font-mono)] uppercase tracking-wider mb-2 ml-1">
+                    New_Credential
                   </label>
-                  <div className="relative">
+                  <div className="relative transform transition-all duration-200 group-focus-within:scale-[1.02]">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors">
+                      <span className="material-symbols-outlined text-lg">
+                        vpn_key
+                      </span>
+                    </span>
                     <input
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password"
                       required
-                      className="w-full px-4 py-4 pr-12 bg-[#1a1d25] border border-white/10 rounded-xl text-white placeholder-slate-600 focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50 outline-none transition-all"
+                      className="w-full px-12 py-3.5 bg-[#1a1d25]/50 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all font-[family-name:var(--font-mono)] text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors p-1"
                     >
                       <span className="material-symbols-outlined text-lg">
                         {showNewPassword ? "visibility_off" : "visibility"}
@@ -220,9 +249,9 @@ export default function ResetPasswordPage() {
                 </div>
 
                 {/* Entropy Score */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-500 font-[family-name:var(--font-mono)] uppercase tracking-wider">
+                <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] text-slate-500 font-[family-name:var(--font-mono)] uppercase tracking-wider">
                       Entropy Score
                     </span>
                     <span
@@ -232,103 +261,119 @@ export default function ResetPasswordPage() {
                       {Math.round(entropy)}%
                     </span>
                   </div>
-                  <div className="h-1.5 bg-[#1a1d25] rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
+                  <div className="h-1.5 bg-[#1a1d25] rounded-full overflow-hidden mb-2">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{
                         width: `${strengthInfo.percentage}%`,
                         backgroundColor: strengthInfo.color,
                       }}
+                      transition={{ duration: 0.3 }}
+                      className="h-full rounded-full"
                     />
                   </div>
                   {newPassword && (
-                    <div className="flex items-center gap-2 mt-2">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-2"
+                    >
                       <span
-                        className="w-2 h-2 rounded-full"
+                        className="w-1.5 h-1.5 rounded-full"
                         style={{ backgroundColor: strengthInfo.color }}
                       />
                       <span
-                        className="text-xs"
+                        className="text-[10px] uppercase tracking-wider font-bold"
                         style={{ color: strengthInfo.color }}
                       >
                         {strengthInfo.label}
                       </span>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
 
                 {/* Confirm Password Field */}
-                <div>
-                  <label className="block text-sm text-slate-300 mb-2">
-                    Confirm Password
+                <div className="group">
+                  <label className="block text-[10px] text-slate-500 font-[family-name:var(--font-mono)] uppercase tracking-wider mb-2 ml-1">
+                    Confirm_Credential
                   </label>
-                  <div className="relative">
+                  <div className="relative transform transition-all duration-200 group-focus-within:scale-[1.02]">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors">
+                      <span className="material-symbols-outlined text-lg">
+                        lock
+                      </span>
+                    </span>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-type password"
                       required
-                      className="w-full px-4 py-4 pr-12 bg-[#1a1d25] border border-white/10 rounded-xl text-white placeholder-slate-600 focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/50 outline-none transition-all"
+                      className="w-full px-12 py-3.5 bg-[#1a1d25]/50 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all font-[family-name:var(--font-mono)] text-sm"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">
-                      <span className="material-symbols-outlined text-lg">
-                        lock
-                      </span>
-                    </span>
                   </div>
                 </div>
 
                 {/* Error Message */}
-                {error && (
-                  <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
-                    <span className="material-symbols-outlined text-lg">
-                      error
-                    </span>
-                    {error}
-                  </div>
-                )}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        warning
+                      </span>
+                      {error}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-4 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/90 hover:to-teal-600/90 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-[family-name:var(--font-mono)] text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 relative overflow-hidden group"
                 >
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                   {isLoading ? (
                     <>
-                      <span className="material-symbols-outlined animate-spin">
+                      <span className="material-symbols-outlined animate-spin text-lg">
                         progress_activity
                       </span>
-                      Updating...
+                      <span>Processing...</span>
                     </>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined">sync</span>
-                      Update Credentials
+                      <span className="material-symbols-outlined text-lg group-hover:rotate-180 transition-transform duration-500">
+                        sync
+                      </span>
+                      <span>Update Credentials</span>
                     </>
                   )}
                 </button>
 
                 {/* Back Link */}
-                <div className="text-center">
+                <div className="text-center pt-2">
                   <Link
                     href="/admin/login"
-                    className="text-slate-500 hover:text-slate-300 text-sm transition-colors inline-flex items-center gap-2"
+                    className="text-slate-500 hover:text-slate-300 text-xs transition-colors inline-flex items-center gap-2 font-[family-name:var(--font-mono)] group"
                   >
-                    <span className="material-symbols-outlined text-lg">
+                    <span className="material-symbols-outlined text-base group-hover:-translate-x-1 transition-transform">
                       arrow_back
                     </span>
-                    Return to security vault
+                    RETURN_TO_VAULT
                   </Link>
                 </div>
               </form>
             )}
-          </div>
+          </motion.div>
 
           {/* Decorative Line */}
-          <div className="mt-8 flex justify-center">
-            <div className="h-px w-64 bg-gradient-to-r from-transparent via-[#3b82f6]/50 to-transparent" />
+          <div className="mt-8 flex justify-center opacity-30">
+            <div className="h-px w-32 bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
           </div>
         </div>
       </main>

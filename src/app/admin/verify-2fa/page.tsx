@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 // =============================================================================
 // 2FA Verification Page
@@ -110,6 +111,12 @@ export default function Verify2FAPage() {
       localStorage.setItem("admin-token", data.accessToken);
       localStorage.setItem("admin-refresh-token", data.refreshToken);
 
+      // If 2FA not set up (shouldn't happen here, but safety check), redirect to setup page
+      if (!data.user?.twoFactorEnabled) {
+        router.push("/admin/settings/2fa");
+        return;
+      }
+
       // Redirect to admin dashboard
       router.push("/admin");
     } catch {
@@ -141,52 +148,70 @@ export default function Verify2FAPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020204] flex flex-col">
+    <div className="min-h-screen bg-[#020204] flex flex-col font-sans">
       {/* Background Effects */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 shimmer-bg opacity-50" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#3b82f6]/10 rounded-full blur-[100px]" />
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[20%] left-[30%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[10%] right-[20%] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] animate-pulse delay-1000" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03]" />
       </div>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12 relative z-10">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#3b82f6]/20 border border-[#3b82f6]/30 mb-6">
-          <span className="w-2 h-2 rounded-full bg-[#3b82f6] animate-pulse" />
-          <span className="text-xs text-[#3b82f6] font-[family-name:var(--font-mono)] uppercase tracking-wider">
-            Auth Protocol 0.2
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 backdrop-blur-md"
+        >
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-[10px] text-primary font-[family-name:var(--font-mono)] uppercase tracking-wider">
+            Secure Channel Established
           </span>
-        </div>
-
-        {/* Title */}
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 text-center">
-          SECURITY VERIFICATION
-        </h1>
-        <p className="text-slate-400 text-center mb-12 max-w-md">
-          Multi-factor authentication required for admin level access
-        </p>
+        </motion.div>
 
         {/* Verification Card */}
-        <div className="w-full max-w-lg bg-[#0c0e14]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
-          {/* Shield Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-xl bg-[#3b82f6]/20 border border-[#3b82f6]/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#3b82f6] text-3xl">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="w-full max-w-lg bg-[#0c0e14]/80 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden"
+        >
+          {/* Top Highlight Line */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+
+          {/* Icon & Title */}
+          <div className="mb-8 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 mb-6 border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+              <span className="material-symbols-outlined text-4xl text-primary">
                 shield_lock
               </span>
             </div>
+            <h1 className="text-2xl font-bold text-white font-[family-name:var(--font-mono)] tracking-tight">
+              2FA VERIFICATION
+            </h1>
+            <p className="text-slate-400 text-xs mt-2 font-[family-name:var(--font-mono)]">
+              ENTER AUTHENTICATION CODE
+            </p>
           </div>
 
           {/* Instruction */}
-          <p className="text-center text-slate-400 mb-8">
-            A verification code has been sent to your registered device.
+          <p className="text-center text-slate-400 mb-8 text-sm max-w-xs mx-auto">
+            We sent a code to your registered device. Enter it below to verify
+            your identity.
           </p>
 
           {/* OTP Inputs */}
-          <div className="flex justify-center gap-3 mb-6" onPaste={handlePaste}>
+          <div
+            className="flex justify-center gap-2 md:gap-3 mb-8"
+            onPaste={handlePaste}
+          >
             {code.map((digit, index) => (
-              <input
+              <motion.input
                 key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + index * 0.05 }}
                 ref={(el) => {
                   inputRefs.current[index] = el;
                 }}
@@ -196,92 +221,99 @@ export default function Verify2FAPage() {
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold bg-[#1a1d25] border border-white/10 rounded-xl text-white focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6] outline-none transition-all"
+                className="w-10 h-14 md:w-14 md:h-16 text-center text-2xl font-bold bg-[#1a1d25]/50 border border-white/10 rounded-xl text-white focus:border-primary focus:ring-1 focus:ring-primary focus:bg-primary/5 outline-none transition-all font-[family-name:var(--font-mono)]"
               />
             ))}
           </div>
 
           {/* Request ID & Resend */}
-          <div className="flex items-center justify-between text-sm mb-8">
-            <span className="text-slate-500 font-[family-name:var(--font-mono)]">
-              REQUEST_ID: {requestId || "AUTH_0921_X"}
+          <div className="flex items-center justify-between text-[10px] md:text-xs mb-8 px-2">
+            <span className="text-slate-500 font-[family-name:var(--font-mono)] tracking-wider">
+              ID: {requestId || "AUTH_0921_X"}
             </span>
             <button
               onClick={handleResend}
               disabled={resendTimer > 0}
               className={`flex items-center gap-2 ${
                 resendTimer > 0
-                  ? "text-[#3b82f6]/50 cursor-not-allowed"
-                  : "text-[#3b82f6] hover:text-[#60a5fa] cursor-pointer"
-              } transition-colors font-[family-name:var(--font-mono)]`}
+                  ? "text-slate-500 cursor-not-allowed"
+                  : "text-primary hover:text-primary/80 cursor-pointer"
+              } transition-colors font-[family-name:var(--font-mono)] uppercase tracking-wider`}
             >
-              <span className="material-symbols-outlined text-lg">refresh</span>
-              RESEND IN {formatTime(resendTimer)}
+              <span className="material-symbols-outlined text-base">
+                refresh
+              </span>
+              {resendTimer > 0
+                ? `Resend (${formatTime(resendTimer)})`
+                : "Resend Code"}
             </button>
           </div>
 
           {/* Error Message */}
-          {error && (
-            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 mb-6">
-              <span className="material-symbols-outlined text-lg">error</span>
-              {error}
-            </div>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 mb-6"
+              >
+                <span className="material-symbols-outlined text-base">
+                  error
+                </span>
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Verify Button */}
           <button
             onClick={handleSubmit}
             disabled={isLoading || code.some((d) => !d)}
-            className="w-full py-4 bg-[#3b82f6] hover:bg-[#2563eb] text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+            className="w-full py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-[family-name:var(--font-mono)] text-sm uppercase tracking-wider shadow-lg shadow-primary/20 relative overflow-hidden group"
           >
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             {isLoading ? (
               <>
-                <span className="material-symbols-outlined animate-spin">
+                <span className="material-symbols-outlined animate-spin text-lg">
                   progress_activity
                 </span>
-                Verifying...
+                <span>Verifying...</span>
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined">verified_user</span>
-                Verify Identity
+                <span className="material-symbols-outlined text-lg">
+                  verified_user
+                </span>
+                <span>Verify Identity</span>
               </>
             )}
           </button>
 
           {/* Back Link */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-6 pt-6 border-t border-white/5">
             <Link
               href="/admin/login"
-              className="text-slate-500 hover:text-slate-300 text-sm transition-colors inline-flex items-center gap-2"
+              className="text-slate-500 hover:text-white text-xs transition-colors inline-flex items-center gap-2 font-[family-name:var(--font-mono)] uppercase tracking-wider group"
             >
-              <span className="material-symbols-outlined text-lg">
+              <span className="material-symbols-outlined text-base group-hover:-translate-x-1 transition-transform">
                 arrow_back
               </span>
-              Back to Authentication
+              Abort Verification
             </Link>
           </div>
-        </div>
+        </motion.div>
 
         {/* Footer Info */}
-        <div className="mt-8 flex flex-wrap justify-center gap-8 text-xs text-slate-600 font-[family-name:var(--font-mono)]">
-          <span>ENC: AES_256_GCM</span>
+        <div className="mt-8 flex flex-wrap justify-center gap-8 text-[10px] text-slate-600 font-[family-name:var(--font-mono)]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
+            <span>ENC: AES_256_GCM</span>
+          </div>
           <span>NODE: ADMIN_CLSTR_01</span>
           <span>VER_TYPE: OTP_SMS</span>
         </div>
       </main>
-
-      {/* Bottom Footer */}
-      <footer className="flex items-center justify-between px-6 py-4 border-t border-white/5 text-xs font-[family-name:var(--font-mono)]">
-        <div className="flex items-center gap-2 text-[#22c55e]">
-          <span className="w-2 h-2 rounded-full bg-[#22c55e] animate-pulse" />
-          ENCRYPTED LINK ACTIVE
-        </div>
-        <span className="text-slate-600">HASH: 7F28A...3D</span>
-        <span className="text-slate-600">
-          © 2024 DEV_PORTFOLIO, SECURITY PROTOCOL
-        </span>
-      </footer>
     </div>
   );
 }
