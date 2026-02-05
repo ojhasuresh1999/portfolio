@@ -19,6 +19,7 @@ import type {
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 let globalSocket: TypedSocket | null = null;
+let storedAdminToken: string | null = null;
 
 // =============================================================================
 // Socket Client Hook
@@ -78,6 +79,23 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
           setIsConnected(true);
         }, 0);
       }
+      // Re-authenticate if we have a stored token but this is a new component using the socket
+      const adminToken =
+        storedAdminToken ||
+        (typeof window !== "undefined"
+          ? localStorage.getItem("admin-token")
+          : null);
+      if (adminToken) {
+        console.log("🔄 Re-authenticating existing socket as admin...");
+        globalSocket.emit("admin:join", { token: adminToken }, (response) => {
+          if (response.success) {
+            storedAdminToken = adminToken; // Update global state
+            console.log("✅ Admin re-authenticated on existing socket");
+          } else {
+            console.error("❌ Admin re-auth failed:", response.error);
+          }
+        });
+      }
       return;
     }
 
@@ -105,6 +123,25 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     globalSocket.on("connect", () => {
       console.log("🔌 Socket connected:", globalSocket?.id);
       setIsConnected(true);
+
+      // Re-authenticate as admin if we have a stored token
+      const adminToken =
+        storedAdminToken ||
+        (typeof window !== "undefined"
+          ? localStorage.getItem("admin-token")
+          : null);
+      if (adminToken && globalSocket) {
+        console.log("🔄 Re-authenticating as admin after reconnect...");
+        globalSocket.emit("admin:join", { token: adminToken }, (response) => {
+          if (response.success) {
+            storedAdminToken = adminToken;
+            console.log("✅ Admin re-authenticated successfully");
+          } else {
+            console.error("❌ Admin re-authentication failed:", response.error);
+            storedAdminToken = null; // Clear invalid token
+          }
+        });
+      }
     });
 
     globalSocket.on("disconnect", (reason) => {
@@ -184,6 +221,11 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
         }
 
         socketRef.current.emit("admin:join", { token }, (response) => {
+          if (response.success) {
+            // Store token for re-authentication on reconnect
+            storedAdminToken = token;
+            console.log("🔐 Admin token stored for re-authentication");
+          }
           resolve(response);
         });
       });
@@ -213,12 +255,18 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
       data: SendMessagePayload,
     ): Promise<{ success: boolean; message?: MessageData; error?: string }> => {
       return new Promise((resolve) => {
+        console.log(
+          "📤 sendMessage called | connected:",
+          socketRef.current?.connected,
+        );
         if (!socketRef.current?.connected) {
+          console.error("📤 sendMessage failed: Not connected");
           resolve({ success: false, error: "Not connected" });
           return;
         }
 
         socketRef.current.emit("message:send", data, (response) => {
+          console.log("📤 sendMessage response:", response);
           resolve(response);
         });
       });
@@ -246,7 +294,12 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
       error?: string;
     }> => {
       return new Promise((resolve) => {
+        console.log(
+          "🎭 addReaction called | connected:",
+          socketRef.current?.connected,
+        );
         if (!socketRef.current?.connected) {
+          console.error("🎭 addReaction failed: Not connected");
           resolve({ success: false, error: "Not connected" });
           return;
         }
@@ -255,6 +308,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
           "message:react",
           { messageId, emoji },
           (response) => {
+            console.log("🎭 addReaction response:", response);
             resolve(response);
           },
         );
