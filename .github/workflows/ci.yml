@@ -102,10 +102,10 @@ jobs:
       - name: Build application
         run: pnpm build
 
-      - name: "notify vercel"
-        uses: "vercel/repository-dispatch/actions/status@v1"
-        with:
-          name: "Vercel - portfolio: check"
+      # - name: "notify vercel"
+      #   uses: "vercel/repository-dispatch/actions/status@v1"
+      #   with:
+      #     name: "Vercel - portfolio: check"
 
   # ==========================================
   # Commitlint (for PRs only)
