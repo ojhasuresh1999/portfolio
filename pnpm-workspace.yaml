@@ -6,4 +6,10 @@ ignoredBuiltDependencies:
   - unrs-resolver
 
 onlyBuiltDependencies:
+  - "@scarf/scarf"
+  - "@tree-sitter-grammars/tree-sitter-yaml"
   - argon2
+  - core-js-pure
+  - esbuild
+  - tree-sitter
+  - tree-sitter-json
