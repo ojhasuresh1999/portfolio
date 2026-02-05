@@ -9,7 +9,7 @@ const navItems = [
   { label: "Stack", href: "/skills" },
   { label: "Insights", href: "/blog" },
   { label: "About", href: "/about" },
-  { label: "Suresh", href: "suresh" },
+  // { label: "Suresh", href: "suresh" },
 ];
 
 export function Navbar() {
