@@ -1,4 +1,8 @@
 import mongoose, { Schema, Model, Types } from "mongoose";
+import {
+  slugGeneratorPlugin,
+  type SlugModel,
+} from "@/lib/mongoose-plugins/slugGenerator";
 
 // ============================================
 // Project Model
@@ -23,10 +27,11 @@ export interface IProject {
   updatedAt: Date;
 }
 
+export interface IProjectModel extends Model<IProject>, SlugModel<IProject> {}
+
 const ProjectSchema = new Schema<IProject>(
   {
     title: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
     description: { type: String, required: true },
     longDescription: { type: String },
     image: { type: String },
@@ -42,9 +47,14 @@ const ProjectSchema = new Schema<IProject>(
   { timestamps: true },
 );
 
-// Note: unique: true on slug already creates an index
+// ── Plugins ────────────────────────────────
+ProjectSchema.plugin(slugGeneratorPlugin, { sourceField: "title" });
+
+// ── Indexes ────────────────────────────────
+// Note: slug unique index is created by the plugin
 ProjectSchema.index({ isVisible: 1, isFeatured: 1 });
 ProjectSchema.index({ order: 1 });
 
-export const Project: Model<IProject> =
-  mongoose.models.Project || mongoose.model<IProject>("Project", ProjectSchema);
+export const Project: IProjectModel =
+  (mongoose.models.Project as IProjectModel) ||
+  mongoose.model<IProject, IProjectModel>("Project", ProjectSchema);

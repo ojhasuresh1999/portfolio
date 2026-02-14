@@ -2,10 +2,10 @@
 export { User, type IUser, Role } from "./User";
 export { HeroContent, type IHeroContent } from "./HeroContent";
 export { TechStack, type ITechStack } from "./TechStack";
-export { Project, type IProject } from "./Project";
+export { Project, type IProject, type IProjectModel } from "./Project";
 export { Skill, type ISkill, SkillCategory } from "./Skill";
 export { SkillCard, type ISkillCard } from "./SkillCard";
-export { BlogPost, type IBlogPost } from "./BlogPost";
+export { BlogPost, type IBlogPost, type IBlogPostModel } from "./BlogPost";
 export { TimelineEntry, type ITimelineEntry } from "./TimelineEntry";
 export { AboutContent, type IAboutContent } from "./AboutContent";
 export { SocialLink, type ISocialLink } from "./SocialLink";

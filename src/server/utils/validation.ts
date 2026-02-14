@@ -151,8 +151,8 @@ export const projectSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
   slug: z
     .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format"),
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format")
+    .optional(),
   description: z.string().min(1, "Description is required").max(500),
   longDescription: z.string().max(5000).optional(),
   image: z.string().url().optional(),
@@ -185,8 +185,8 @@ export const blogPostSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
   slug: z
     .string()
-    .min(1, "Slug is required")
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format"),
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid slug format")
+    .optional(),
   excerpt: z.string().min(1, "Excerpt is required").max(500),
   content: z.string().min(1, "Content is required"),
   coverImage: z.string().url().optional(),

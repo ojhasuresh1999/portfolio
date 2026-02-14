@@ -66,6 +66,16 @@ export const RateLimit = {
 } as const;
 
 /**
+ * Auth-Specific Rate Limits
+ */
+export const AuthRateLimit = {
+  LOGIN_MAX: 5, // 5 login attempts per window
+  LOGIN_WINDOW_MS: 60 * 1000, // 1 minute
+  ADMIN_API_MAX: 30, // 30 admin API calls per window
+  ADMIN_API_WINDOW_MS: 60 * 1000, // 1 minute
+} as const;
+
+/**
  * Cache TTL (Time To Live) in seconds
  */
 export const CacheTTL = {

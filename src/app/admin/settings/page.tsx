@@ -7,7 +7,6 @@ export default function AdminSettingsPage() {
     siteName: "DEV_IO",
     siteTagline: "Backend Developer Portfolio",
     statusText: "System Online",
-    footerLatency: "12ms",
   });
 
   const [socialLinks] = useState([
@@ -65,20 +64,6 @@ export default function AdminSettingsPage() {
               value={settings.statusText}
               onChange={(e) =>
                 setSettings({ ...settings, statusText: e.target.value })
-              }
-              className="w-full px-4 py-3 bg-obsidian border border-white/10 rounded-lg text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">
-              Footer Latency
-            </label>
-            <input
-              type="text"
-              value={settings.footerLatency}
-              onChange={(e) =>
-                setSettings({ ...settings, footerLatency: e.target.value })
               }
               className="w-full px-4 py-3 bg-obsidian border border-white/10 rounded-lg text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
             />

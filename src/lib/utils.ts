@@ -30,16 +30,6 @@ export function calculateReadTime(text: string): number {
 }
 
 /**
- * Generate a slug from text
- */
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w ]+/g, "")
-    .replace(/ +/g, "-");
-}
-
-/**
  * Truncate text to a specified length
  */
 export function truncate(text: string, length: number): string {

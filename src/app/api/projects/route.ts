@@ -8,6 +8,8 @@ import {
   projectSchema,
 } from "@/server/utils/validation";
 import { projectService } from "@/server/services/project.service";
+import { withAdmin } from "@/server/utils/auth-middleware";
+import { auditLog } from "@/server/utils/audit-logger";
 
 /**
  * @swagger
@@ -129,14 +131,8 @@ export async function GET(request: NextRequest) {
  *       422:
  *         description: Validation Error
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdmin(async (request, { admin, ip }) => {
   try {
-    // TODO: Add authentication check here
-    // const session = await auth();
-    // if (!session?.user) {
-    //   return Api.unauthorized();
-    // }
-
     // Validate request body
     const bodyResult = await validateBody(request, projectSchema);
     if (!bodyResult.success) {
@@ -149,8 +145,19 @@ export async function POST(request: NextRequest) {
       return Api.internalError(result.error);
     }
 
+    // Audit log
+    auditLog.create(
+      admin,
+      "project",
+      result.data._id.toString(),
+      {
+        title: bodyResult.data.title,
+      },
+      ip,
+    );
+
     return Api.created(result.data);
   } catch (error) {
     return handleError(error);
   }
-}
+});

@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import CloudinaryUpload, {
+  type UploadResult,
+} from "@/components/ui/cloudinary-upload";
 
 interface BlogPost {
   id: string;
   title: string;
   slug: string;
   category: string;
+  coverImage?: string;
+  coverImagePublicId?: string;
   isPublished: boolean;
   publishedAt: string | null;
   updatedAt: string;
@@ -44,7 +50,33 @@ const mockPosts: BlogPost[] = [
 ];
 
 export default function AdminBlogPage() {
-  const [posts] = useState<BlogPost[]>(mockPosts);
+  const [posts, setPosts] = useState<BlogPost[]>(mockPosts);
+  const [uploadingPostId, setUploadingPostId] = useState<string | null>(null);
+
+  const handleCoverUpload = (postId: string, result: UploadResult) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              coverImage: result.secureUrl,
+              coverImagePublicId: result.publicId,
+            }
+          : p,
+      ),
+    );
+    setUploadingPostId(null);
+  };
+
+  const handleCoverRemove = (postId: string) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, coverImage: undefined, coverImagePublicId: undefined }
+          : p,
+      ),
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -100,25 +132,79 @@ export default function AdminBlogPage() {
             key={post.id}
             className="bg-card-dark border border-white/5 rounded-xl overflow-hidden hover:border-primary/30 transition-all group"
           >
-            {/* Image Placeholder */}
-            <div className="h-40 bg-gradient-to-br from-primary/10 to-secondary/10 relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-5xl text-white/10">
-                  article
-                </span>
-              </div>
-              {/* Status Badge */}
-              <div className="absolute top-3 right-3">
-                <span
-                  className={`px-2 py-1 text-xs font-bold rounded ${
-                    post.isPublished
-                      ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                      : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                  }`}
-                >
-                  {post.isPublished ? "Published" : "Draft"}
-                </span>
-              </div>
+            {/* Cover Image Area */}
+            <div className="relative">
+              {uploadingPostId === post.id ? (
+                <div className="p-3">
+                  <CloudinaryUpload
+                    value={post.coverImage}
+                    publicId={post.coverImagePublicId}
+                    folder="blog"
+                    label=""
+                    onUpload={(result) => handleCoverUpload(post.id, result)}
+                    onRemove={() => handleCoverRemove(post.id)}
+                  />
+                </div>
+              ) : post.coverImage ? (
+                <div className="h-40 relative">
+                  <Image
+                    src={post.coverImage}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      onClick={() => setUploadingPostId(post.id)}
+                      className="p-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors border border-white/20"
+                      title="Change cover image"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        photo_camera
+                      </span>
+                    </button>
+                  </div>
+                  {/* Status Badge */}
+                  <div className="absolute top-3 right-3">
+                    <span
+                      className={`px-2 py-1 text-xs font-bold rounded ${
+                        post.isPublished
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                      }`}
+                    >
+                      {post.isPublished ? "Published" : "Draft"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-40 bg-gradient-to-br from-primary/10 to-secondary/10 relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button
+                      onClick={() => setUploadingPostId(post.id)}
+                      className="flex flex-col items-center gap-1.5 text-white/30 hover:text-primary/60 transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-4xl">
+                        add_photo_alternate
+                      </span>
+                      <span className="text-xs font-medium">Add Cover</span>
+                    </button>
+                  </div>
+                  {/* Status Badge */}
+                  <div className="absolute top-3 right-3">
+                    <span
+                      className={`px-2 py-1 text-xs font-bold rounded ${
+                        post.isPublished
+                          ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                          : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                      }`}
+                    >
+                      {post.isPublished ? "Published" : "Draft"}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Content */}

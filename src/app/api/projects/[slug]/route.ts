@@ -1,7 +1,14 @@
 import { Api } from "@/server/utils/api-response";
 import { handleError } from "@/server/utils/error-handler";
-import { validateParams, slugParamSchema } from "@/server/utils/validation";
+import {
+  validateParams,
+  validateBody,
+  slugParamSchema,
+  projectSchema,
+} from "@/server/utils/validation";
 import { projectService } from "@/server/services/project.service";
+import { withAdmin } from "@/server/utils/auth-middleware";
+import { auditLog } from "@/server/utils/audit-logger";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -9,7 +16,7 @@ interface RouteParams {
 
 /**
  * GET /api/projects/[slug]
- * Get a single project by slug
+ * Get a single project by slug (Public)
  */
 export async function GET(_request: Request, { params }: RouteParams) {
   try {
@@ -36,3 +43,91 @@ export async function GET(_request: Request, { params }: RouteParams) {
     return handleError(error);
   }
 }
+
+/**
+ * PUT /api/projects/[slug]
+ * Update a project by slug (Admin only)
+ */
+export const PUT = withAdmin(async (request, { admin, ip, params }) => {
+  try {
+    const slug = params?.slug;
+    if (!slug) {
+      return Api.badRequest("Slug parameter is required");
+    }
+
+    // Validate slug
+    const paramsResult = validateParams({ slug }, slugParamSchema);
+    if (!paramsResult.success) {
+      return Api.validationError(paramsResult.errors);
+    }
+
+    // Find project by slug first to get its ID
+    const existing = await projectService.getBySlug(slug);
+    if (!existing.success || !existing.data) {
+      return Api.notFound("Project not found");
+    }
+
+    // Validate request body (partial update)
+    const bodyResult = await validateBody(request, projectSchema.partial());
+    if (!bodyResult.success) {
+      return Api.validationError(bodyResult.errors);
+    }
+
+    const result = await projectService.update(
+      existing.data._id.toString(),
+      bodyResult.data,
+    );
+
+    if (!result.success) {
+      return Api.internalError(result.error);
+    }
+
+    // Audit log
+    auditLog.update(
+      admin,
+      "project",
+      existing.data._id.toString(),
+      {
+        slug,
+        updatedFields: Object.keys(bodyResult.data),
+      },
+      ip,
+    );
+
+    return Api.success(result.data);
+  } catch (error) {
+    return handleError(error);
+  }
+});
+
+/**
+ * DELETE /api/projects/[slug]
+ * Delete a project by slug (Admin only)
+ */
+export const DELETE = withAdmin(async (_request, { admin, ip, params }) => {
+  try {
+    const slug = params?.slug;
+    if (!slug) {
+      return Api.badRequest("Slug parameter is required");
+    }
+
+    // Find project by slug first to get its ID
+    const existing = await projectService.getBySlug(slug);
+    if (!existing.success || !existing.data) {
+      return Api.notFound("Project not found");
+    }
+
+    const result = await projectService.delete(existing.data._id.toString());
+
+    if (!result.success) {
+      return Api.internalError(result.error);
+    }
+
+    // Audit log
+    auditLog.delete(admin, "project", existing.data._id.toString(), ip);
+
+    return Api.success(null, "Project deleted successfully");
+  } catch (error) {
+    return handleError(error);
+  }
+});

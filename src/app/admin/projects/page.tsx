@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import CloudinaryUpload, {
+  type UploadResult,
+} from "@/components/ui/cloudinary-upload";
 
 interface Project {
   id: string;
   title: string;
   slug: string;
   description: string;
+  image?: string;
+  imagePublicId?: string;
   technologies: string[];
   isFeatured: boolean;
   isVisible: boolean;
@@ -49,7 +55,31 @@ const mockProjects: Project[] = [
 ];
 
 export default function AdminProjectsPage() {
-  const [projects] = useState<Project[]>(mockProjects);
+  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [uploadingProjectId, setUploadingProjectId] = useState<string | null>(
+    null,
+  );
+
+  const handleImageUpload = (projectId: string, result: UploadResult) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? { ...p, image: result.secureUrl, imagePublicId: result.publicId }
+          : p,
+      ),
+    );
+    setUploadingProjectId(null);
+  };
+
+  const handleImageRemove = (projectId: string) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? { ...p, image: undefined, imagePublicId: undefined }
+          : p,
+      ),
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -77,6 +107,9 @@ export default function AdminProjectsPage() {
             <tr>
               <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">
                 Project
+              </th>
+              <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">
+                Image
               </th>
               <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">
                 Technologies
@@ -110,6 +143,52 @@ export default function AdminProjectsPage() {
                       <p className="text-xs text-slate-500">/{project.slug}</p>
                     </div>
                   </div>
+                </td>
+                <td className="px-6 py-4">
+                  {uploadingProjectId === project.id ? (
+                    <div className="w-48">
+                      <CloudinaryUpload
+                        value={project.image}
+                        publicId={project.imagePublicId}
+                        folder="projects"
+                        label=""
+                        onUpload={(result) =>
+                          handleImageUpload(project.id, result)
+                        }
+                        onRemove={() => handleImageRemove(project.id)}
+                      />
+                    </div>
+                  ) : project.image ? (
+                    <div className="relative group/img w-20 h-14 rounded-lg overflow-hidden border border-white/10">
+                      <Image
+                        src={project.image}
+                        alt={project.title}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          onClick={() => setUploadingProjectId(project.id)}
+                          className="p-1 bg-white/10 rounded text-white hover:bg-white/20 transition-colors"
+                          title="Change image"
+                        >
+                          <span className="material-symbols-outlined text-sm">
+                            edit
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setUploadingProjectId(project.id)}
+                      className="w-20 h-14 rounded-lg border border-dashed border-white/15 flex items-center justify-center text-slate-500 hover:text-primary hover:border-primary/40 transition-colors"
+                      title="Add image"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        add_photo_alternate
+                      </span>
+                    </button>
+                  )}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">

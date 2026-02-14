@@ -131,7 +131,7 @@ export class ProjectService {
    */
   async create(data: {
     title: string;
-    slug: string;
+    slug?: string;
     description: string;
     longDescription?: string;
     image?: string;
@@ -224,21 +224,6 @@ export class ProjectService {
         error instanceof Error ? error.message : "Failed to delete project";
       return { success: false, error: message };
     }
-  }
-
-  /**
-   * Check if slug is available
-   */
-  async isSlugAvailable(slug: string, excludeId?: string): Promise<boolean> {
-    await this.ensureConnection();
-
-    const existing = await Project.findOne({ slug })
-      .select("_id")
-      .lean<{ _id: string }>()
-      .exec();
-
-    if (!existing) return true;
-    return excludeId ? existing._id.toString() === excludeId : false;
   }
 }
 

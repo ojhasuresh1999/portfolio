@@ -31,7 +31,6 @@ export class SettingsService {
           siteTagline: "Backend Developer Portfolio",
           logoText: "DEV_IO",
           statusText: "System Online",
-          footerLatency: "12ms",
         });
         settings = created.toObject();
       }

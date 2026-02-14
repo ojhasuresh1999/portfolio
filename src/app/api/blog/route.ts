@@ -1,8 +1,15 @@
 import { NextRequest } from "next/server";
 import { Api } from "@/server/utils/api-response";
 import { handleError } from "@/server/utils/error-handler";
-import { validateQuery, paginationSchema } from "@/server/utils/validation";
+import {
+  validateQuery,
+  validateBody,
+  paginationSchema,
+  blogPostSchema,
+} from "@/server/utils/validation";
 import { blogService } from "@/server/services/blog.service";
+import { withAdmin } from "@/server/utils/auth-middleware";
+import { auditLog } from "@/server/utils/audit-logger";
 
 /**
  * @swagger
@@ -86,3 +93,60 @@ export async function GET(request: NextRequest) {
     return handleError(error);
   }
 }
+
+/**
+ * @swagger
+ * /api/blog:
+ *   post:
+ *     summary: Create Blog Post
+ *     description: Create a new blog post (Admin only)
+ *     tags:
+ *       - Blog
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/BlogPost'
+ *     responses:
+ *       201:
+ *         description: Blog post created successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       422:
+ *         description: Validation Error
+ */
+export const POST = withAdmin(async (request, { admin, ip }) => {
+  try {
+    // Validate request body
+    const bodyResult = await validateBody(request, blogPostSchema);
+    if (!bodyResult.success) {
+      return Api.validationError(bodyResult.errors);
+    }
+
+    const result = await blogService.create(bodyResult.data);
+
+    if (!result.success) {
+      return Api.internalError(result.error);
+    }
+
+    // Audit log
+    auditLog.create(
+      admin,
+      "blog_post",
+      result.data._id.toString(),
+      {
+        title: bodyResult.data.title,
+      },
+      ip,
+    );
+
+    return Api.created(result.data);
+  } catch (error) {
+    return handleError(error);
+  }
+});

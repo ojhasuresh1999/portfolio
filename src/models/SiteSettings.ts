@@ -10,7 +10,6 @@ export interface ISiteSettings {
   siteTagline: string;
   logoText: string;
   statusText: string;
-  footerLatency: string;
   metaTitle?: string;
   metaDescription?: string;
   createdAt: Date;
@@ -23,7 +22,6 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     siteTagline: { type: String, default: "Backend Developer Portfolio" },
     logoText: { type: String, default: "DEV_IO" },
     statusText: { type: String, default: "System Online" },
-    footerLatency: { type: String, default: "12ms" },
     metaTitle: { type: String },
     metaDescription: { type: String },
   },

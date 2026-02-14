@@ -64,7 +64,6 @@ export async function GET(): Promise<NextResponse> {
 
   // Add response time header
   const responseTime = Date.now() - startTime;
-  console.log("🚀 ~ GET ~ responseTime:", responseTime);
 
   return NextResponse.json(
     { success: response.status === "healthy", data: response },

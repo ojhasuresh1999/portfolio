@@ -189,7 +189,7 @@ export class BlogService {
    */
   async create(data: {
     title: string;
-    slug: string;
+    slug?: string;
     excerpt: string;
     content: string;
     coverImage?: string;

@@ -1,4 +1,8 @@
 import mongoose, { Schema, Model, Types } from "mongoose";
+import {
+  slugGeneratorPlugin,
+  type SlugModel,
+} from "@/lib/mongoose-plugins/slugGenerator";
 
 // ============================================
 // BlogPost Model
@@ -20,10 +24,13 @@ export interface IBlogPost {
   updatedAt: Date;
 }
 
+export interface IBlogPostModel
+  extends Model<IBlogPost>, SlugModel<IBlogPost> {}
+
 const BlogPostSchema = new Schema<IBlogPost>(
   {
     title: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
+    // slug is added automatically by the slugGenerator plugin
     excerpt: { type: String, required: true },
     content: { type: String, required: true },
     coverImage: { type: String },
@@ -36,11 +43,15 @@ const BlogPostSchema = new Schema<IBlogPost>(
   { timestamps: true },
 );
 
-// Note: unique: true on slug already creates an index
+// ── Plugins ────────────────────────────────
+BlogPostSchema.plugin(slugGeneratorPlugin, { sourceField: "title" });
+
+// ── Indexes ────────────────────────────────
+// Note: slug unique index is created by the plugin
 BlogPostSchema.index({ isPublished: 1, publishedAt: -1 });
 BlogPostSchema.index({ category: 1 });
 BlogPostSchema.index({ title: "text", content: "text", excerpt: "text" });
 
-export const BlogPost: Model<IBlogPost> =
-  mongoose.models.BlogPost ||
-  mongoose.model<IBlogPost>("BlogPost", BlogPostSchema);
+export const BlogPost: IBlogPostModel =
+  (mongoose.models.BlogPost as IBlogPostModel) ||
+  mongoose.model<IBlogPost, IBlogPostModel>("BlogPost", BlogPostSchema);
