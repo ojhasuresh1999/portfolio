@@ -1,35 +1,45 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 // =============================================================================
 // 2FA Verification Page
 // Design: SECURITY VERIFICATION - No top navbar per user feedback
 // =============================================================================
 
+interface ApiError {
+  error?: string;
+}
+
 export default function Verify2FAPage() {
   const router = useRouter();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [requestId, setRequestId] = useState("");
   const [resendTimer, setResendTimer] = useState(114); // 1:54 as shown in design
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // Ref to prevent multiple submissions — survives across renders and
+  // React Strict Mode double-mounts in development
+  const isSubmittingRef = useRef(false);
+  // Track if auto-submit has already run for the current code
+  const autoSubmittedRef = useRef(false);
 
   useEffect(() => {
     // Get 2FA data from session storage
     const storedRequestId = sessionStorage.getItem("2fa-requestId");
-    if (!storedRequestId) {
-      router.push("/admin/login");
+    const storedToken = sessionStorage.getItem("2fa-token");
+
+    if (!storedRequestId || !storedToken) {
+      // Only redirect if we haven't already submitted (successful verify clears storage)
+      if (!isSubmittingRef.current) {
+        router.push("/admin/login");
+      }
       return;
     }
-    // Wrap in setTimeout to avoid synchronous state update warning
-    setTimeout(() => {
-      setRequestId(storedRequestId);
-    }, 0);
 
     // Countdown timer
     const interval = setInterval(() => {
@@ -38,6 +48,27 @@ export default function Verify2FAPage() {
 
     return () => clearInterval(interval);
   }, [router]);
+
+  // Submit code to API — reads tokens directly from sessionStorage
+  const submitCode = (fullCode: string) => {
+    if (isSubmittingRef.current) return;
+
+    const twoFactorToken = sessionStorage.getItem("2fa-token");
+    const requestId = sessionStorage.getItem("2fa-requestId");
+    if (!twoFactorToken || !requestId) {
+      setError("Session expired. Please login again.");
+      setTimeout(() => router.push("/admin/login"), 2000);
+      return;
+    }
+
+    isSubmittingRef.current = true;
+
+    verifyMutation.mutate({
+      code: fullCode,
+      requestId,
+      twoFactorToken,
+    });
+  };
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -49,6 +80,12 @@ export default function Verify2FAPage() {
     // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit when all digits are entered
+    if (newCode.every((d) => d !== "") && !isSubmittingRef.current) {
+      autoSubmittedRef.current = true;
+      submitCode(newCode.join(""));
     }
   };
 
@@ -70,39 +107,24 @@ export default function Verify2FAPage() {
     }
     setCode(newCode);
     inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+
+    // Auto-submit pasted complete code
+    if (newCode.every((d) => d !== "") && !isSubmittingRef.current) {
+      autoSubmittedRef.current = true;
+      submitCode(newCode.join(""));
+    }
   };
 
-  const handleSubmit = useCallback(async () => {
-    const fullCode = code.join("");
-    if (fullCode.length !== 6) {
-      setError("Please enter the complete 6-digit code");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    const twoFactorToken = sessionStorage.getItem("2fa-token");
-
-    try {
-      const response = await fetch("/api/admin/auth/verify-2fa", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: fullCode,
-          requestId,
-          twoFactorToken,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        setError(data.error || "Verification failed");
-        setIsLoading(false);
-        return;
-      }
-
+  const verifyMutation = useMutation({
+    mutationFn: async (data: {
+      code: string;
+      requestId: string;
+      twoFactorToken: string;
+    }) => {
+      const response = await apiClient.post("/admin/auth/verify-2fa", data);
+      return response.data;
+    },
+    onSuccess: (data) => {
       // Clear 2FA session data
       sessionStorage.removeItem("2fa-token");
       sessionStorage.removeItem("2fa-requestId");
@@ -119,21 +141,24 @@ export default function Verify2FAPage() {
 
       // Redirect to admin dashboard
       router.push("/admin");
-    } catch {
-      setError("Network error. Please try again.");
-      setIsLoading(false);
-    }
-  }, [code, requestId, router]);
+    },
+    onError: (err: ApiError) => {
+      // Allow resubmission on error
+      isSubmittingRef.current = false;
+      autoSubmittedRef.current = false;
+      setError(err.error || "Verification failed");
+    },
+  });
 
-  // Auto-submit when all digits entered
-  useEffect(() => {
-    if (code.every((digit) => digit !== "")) {
-      // Wrap in setTimeout to avoid synchronous state update warning
-      setTimeout(() => {
-        handleSubmit();
-      }, 0);
+  const handleSubmit = () => {
+    const fullCode = code.join("");
+    if (fullCode.length !== 6) {
+      setError("Please enter the complete 6-digit code");
+      return;
     }
-  }, [code, handleSubmit]);
+    setError("");
+    submitCode(fullCode);
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -229,7 +254,7 @@ export default function Verify2FAPage() {
           {/* Request ID & Resend */}
           <div className="flex items-center justify-between text-[10px] md:text-xs mb-8 px-2">
             <span className="text-slate-500 font-[family-name:var(--font-mono)] tracking-wider">
-              ID: {requestId || "AUTH_0921_X"}
+              ID: {sessionStorage.getItem("2fa-requestId") || "AUTH_0921_X"}
             </span>
             <button
               onClick={handleResend}
@@ -269,11 +294,11 @@ export default function Verify2FAPage() {
           {/* Verify Button */}
           <button
             onClick={handleSubmit}
-            disabled={isLoading || code.some((d) => !d)}
+            disabled={verifyMutation.isPending || code.some((d) => !d)}
             className="w-full py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-[family-name:var(--font-mono)] text-sm uppercase tracking-wider shadow-lg shadow-primary/20 relative overflow-hidden group"
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-            {isLoading ? (
+            {verifyMutation.isPending ? (
               <>
                 <span className="material-symbols-outlined animate-spin text-lg">
                   progress_activity

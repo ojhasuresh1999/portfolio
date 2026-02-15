@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSocket } from "@/lib/socket-client";
+import { apiClient } from "@/lib/api-client";
 
 // =============================================================================
 // Admin Auth Context
@@ -72,7 +73,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
    */
   const logout = useCallback(async () => {
     try {
-      await fetch("/api/admin/auth/logout", { method: "POST" });
+      await apiClient.post("/admin/auth/logout");
     } catch {
       // Ignore errors
     }
@@ -92,13 +93,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch("/api/admin/auth/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
+      const response = await apiClient.post("/admin/auth/refresh", {
+        refreshToken,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         localStorage.setItem("admin-token", data.accessToken);
@@ -128,11 +127,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const response = await fetch("/api/admin/auth/session", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = await response.json();
+        const response = await apiClient.get("/admin/auth/session");
+        const data = response.data;
 
         if (data.success && data.user) {
           setUser(data.user);
@@ -141,11 +137,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
           const refreshed = await refreshSession();
           if (refreshed) {
             // Retry session fetch
-            const retryToken = localStorage.getItem("admin-token");
-            const retryResponse = await fetch("/api/admin/auth/session", {
-              headers: { Authorization: `Bearer ${retryToken}` },
-            });
-            const retryData = await retryResponse.json();
+            const retryResponse = await apiClient.get("/admin/auth/session");
+            const retryData = retryResponse.data;
             if (retryData.success && retryData.user) {
               setUser(retryData.user);
             } else {

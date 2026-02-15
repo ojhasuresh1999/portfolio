@@ -3,11 +3,11 @@ import { Api } from "@/server/utils/api-response";
 import { handleError } from "@/server/utils/error-handler";
 import {
   validateQuery,
-  validateBody,
   paginationSchema,
   projectSchema,
 } from "@/server/utils/validation";
 import { projectService } from "@/server/services/project.service";
+import { uploadService } from "@/server/services/upload.service";
 import { withAdmin } from "@/server/utils/auth-middleware";
 import { auditLog } from "@/server/utils/audit-logger";
 
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
  * /api/projects:
  *   post:
  *     summary: Create Project
- *     description: Create a new project (Admin only)
+ *     description: Create a new project with optional image upload (Admin only)
  *     tags:
  *       - Projects
  *     security:
@@ -108,9 +108,37 @@ export async function GET(request: NextRequest) {
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/Project'
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Project image file
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               longDescription:
+ *                 type: string
+ *               technologies:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               liveUrl:
+ *                 type: string
+ *               githubUrl:
+ *                 type: string
+ *               accentColor:
+ *                 type: string
+ *                 enum: [primary, secondary]
+ *               order:
+ *                 type: integer
+ *               isFeatured:
+ *                 type: boolean
+ *               isVisible:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Project created successfully
@@ -124,6 +152,8 @@ export async function GET(request: NextRequest) {
  *                   example: true
  *                 data:
  *                   $ref: '#/components/schemas/Project'
+ *       400:
+ *         description: Bad Request (Validation or Upload Error)
  *       401:
  *         description: Unauthorized
  *       403:
@@ -132,32 +162,138 @@ export async function GET(request: NextRequest) {
  *         description: Validation Error
  */
 export const POST = withAdmin(async (request, { admin, ip }) => {
+  let uploadedPublicId: string | null = null;
+
   try {
-    // Validate request body
-    const bodyResult = await validateBody(request, projectSchema);
-    if (!bodyResult.success) {
-      return Api.validationError(bodyResult.errors);
+    const formData = await request.formData();
+
+    const rawData: Record<string, unknown> = {};
+
+    const textFields = [
+      "title",
+      "description",
+      "longDescription",
+      "codeSnippet",
+      "liveUrl",
+      "githubUrl",
+      "accentColor",
+    ];
+    for (const field of textFields) {
+      const val = formData.get(field);
+      if (val && typeof val === "string" && val.trim() !== "") {
+        rawData[field] = val.trim();
+      }
+    }
+    const order = formData.get("order");
+    if (order && typeof order === "string") {
+      const parsed = parseInt(order, 10);
+      if (!isNaN(parsed)) rawData.order = parsed;
     }
 
-    const result = await projectService.create(bodyResult.data);
+    const boolFields = ["isFeatured", "isVisible"];
+    for (const field of boolFields) {
+      const val = formData.get(field);
+      if (val === "true") rawData[field] = true;
+      if (val === "false") rawData[field] = false;
+    }
+
+    const techEntries = formData.getAll("technologies");
+    if (techEntries.length > 0) {
+      const techs = techEntries
+        .map((t) => t.toString().trim())
+        .filter((t) => t !== "");
+
+      if (
+        techs.length === 1 &&
+        techs[0].startsWith("[") &&
+        techs[0].endsWith("]")
+      ) {
+        try {
+          const parsed = JSON.parse(techs[0]);
+          if (Array.isArray(parsed)) rawData.technologies = parsed;
+        } catch (_) {
+          rawData.technologies = techs;
+        }
+      } else {
+        rawData.technologies = techs;
+      }
+    }
+
+    const file = formData.get("file") as File | null;
+
+    const validationResult = projectSchema.safeParse(rawData);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.issues.map((issue) => {
+        const path = issue.path.join(".");
+        return path ? `${path}: ${issue.message}` : issue.message;
+      });
+      return Api.validationError(errors);
+    }
+
+    let validatedData = validationResult.data;
+
+    if (file && file.size > 0) {
+      const fileValidation = uploadService.validateFile(file);
+      if (!fileValidation.valid) {
+        return Api.badRequest(fileValidation.error || "Invalid file");
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const sanitizedTitle = validatedData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-");
+
+      const uploadResult = await uploadService.uploadImage(buffer, {
+        folder: `projects/${sanitizedTitle}`,
+        tags: ["project", "portfolio"],
+      });
+
+      if (!uploadResult.success) {
+        return Api.internalError(`Image upload failed: ${uploadResult.error}`);
+      }
+
+      uploadedPublicId = uploadResult.data.publicId;
+      console.log("🚀 ~ uploadedPublicId:", uploadedPublicId);
+
+      validatedData = {
+        ...validatedData,
+        image: uploadResult.data.secureUrl,
+      };
+    }
+
+    const result = await projectService.create(validatedData);
 
     if (!result.success) {
-      return Api.internalError(result.error);
+      throw new Error(result.error);
     }
 
-    // Audit log
     auditLog.create(
       admin,
       "project",
       result.data._id.toString(),
       {
-        title: bodyResult.data.title,
+        title: result.data.title,
+        hasImage: !!uploadedPublicId,
       },
       ip,
     );
 
     return Api.created(result.data);
   } catch (error) {
+    if (uploadedPublicId) {
+      console.warn(`[Rollback] Deleting orphaned image: ${uploadedPublicId}`);
+      try {
+        await uploadService.deleteImage(uploadedPublicId);
+      } catch (cleanupError) {
+        console.error(
+          `[Rollback Failed] Could not delete image ${uploadedPublicId}:`,
+          cleanupError,
+        );
+      }
+    }
+
     return handleError(error);
   }
 });

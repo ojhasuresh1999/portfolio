@@ -430,6 +430,42 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create Blog Post",
+        "description": "Create a new blog post (Admin only)",
+        "tags": [
+          "Blog"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlogPost"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Blog post created successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "422": {
+            "description": "Validation Error"
+          }
+        }
       }
     },
     "/api/contact": {
@@ -617,7 +653,7 @@
       },
       "post": {
         "summary": "Create Project",
-        "description": "Create a new project (Admin only)",
+        "description": "Create a new project with optional image upload (Admin only)",
         "tags": [
           "Projects"
         ],
@@ -629,9 +665,53 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Project"
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Project image file"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "longDescription": {
+                    "type": "string"
+                  },
+                  "technologies": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "liveUrl": {
+                    "type": "string"
+                  },
+                  "githubUrl": {
+                    "type": "string"
+                  },
+                  "accentColor": {
+                    "type": "string",
+                    "enum": [
+                      "primary",
+                      "secondary"
+                    ]
+                  },
+                  "order": {
+                    "type": "integer"
+                  },
+                  "isFeatured": {
+                    "type": "boolean"
+                  },
+                  "isVisible": {
+                    "type": "boolean"
+                  }
+                }
               }
             }
           }
@@ -655,6 +735,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request (Validation or Upload Error)"
           },
           "401": {
             "description": "Unauthorized"

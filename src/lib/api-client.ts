@@ -36,6 +36,12 @@ apiClient.interceptors.request.use(
       if (sessionToken) {
         config.headers.set("X-Session-Token", sessionToken);
       }
+
+      // Add admin token from localStorage if available
+      const adminToken = localStorage.getItem("admin-token");
+      if (adminToken) {
+        config.headers.set("Authorization", `Bearer ${adminToken}`);
+      }
     }
 
     // Log request in development

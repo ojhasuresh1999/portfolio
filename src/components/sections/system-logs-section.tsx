@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 interface BlogPost {
-  id: string;
+  _id: string; // Changed from id to _id
   title: string;
   slug: string;
   category: string;
@@ -14,14 +18,14 @@ interface SystemLogsSectionProps {
 
 const defaultPosts: BlogPost[] = [
   {
-    id: "1",
+    _id: "1",
     title: "Optimizing SQL Queries for Large Datasets",
     slug: "optimizing-sql-queries",
     category: "Query Optimization",
     publishedAt: "2023-10-24",
   },
   {
-    id: "2",
+    _id: "2",
     title: "Mastering Node.js Streams and Pipelines",
     slug: "mastering-nodejs-streams",
     category: "Stream API",
@@ -30,8 +34,26 @@ const defaultPosts: BlogPost[] = [
 ];
 
 export function SystemLogsSection({
-  posts = defaultPosts,
+  posts: initialPosts,
 }: SystemLogsSectionProps) {
+  const { data: apiPosts } = useQuery({
+    queryKey: ["blog-posts"],
+    queryFn: async () => {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: BlogPost[];
+      }>("/blog?limit=2");
+      return response.data.data.map((p: BlogPost) => ({
+        ...p,
+        // Ensure publishedAt is handled correctly
+      })) as BlogPost[];
+    },
+    initialData: initialPosts,
+  });
+
+  const displayPosts =
+    apiPosts && apiPosts.length > 0 ? apiPosts : defaultPosts;
+
   return (
     <section className="mt-32 mb-20">
       {/* Section Header */}
@@ -55,8 +77,8 @@ export function SystemLogsSection({
 
       {/* Blog Posts */}
       <div className="space-y-4">
-        {posts.map((post) => (
-          <BlogPostPreview key={post.id} post={post} />
+        {displayPosts.map((post) => (
+          <BlogPostPreview key={post._id} post={post} />
         ))}
       </div>
     </section>

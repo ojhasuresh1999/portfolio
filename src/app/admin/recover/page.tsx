@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 // =============================================================================
 // Recover Account Page
@@ -14,7 +16,6 @@ export default function RecoverPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
 
@@ -49,7 +50,21 @@ export default function RecoverPage() {
     document.getElementById(`otp-${focusIndex}`)?.focus();
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const recoverMutation = useMutation({
+    mutationFn: async (data: { email: string; code: string }) => {
+      const response = await apiClient.post("/admin/auth/recover", data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Redirect to reset password with token
+      router.push(`/admin/reset-password?token=${data.resetToken}`);
+    },
+    onError: (err: { error?: string }) => {
+      setError(err.error || "Recovery failed");
+    },
+  });
+
+  const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     setError("");
 
@@ -69,29 +84,7 @@ export default function RecoverPage() {
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/admin/auth/recover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: fullCode }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        setError(data.error || "Recovery failed");
-        setIsLoading(false);
-        return;
-      }
-
-      // Redirect to reset password with token
-      router.push(`/admin/reset-password?token=${data.resetToken}`);
-    } catch {
-      setError("Network error. Please try again.");
-      setIsLoading(false);
-    }
+    recoverMutation.mutate({ email, code: fullCode });
   };
 
   return (
@@ -207,11 +200,11 @@ export default function RecoverPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={recoverMutation.isPending}
               className="w-full py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-[family-name:var(--font-mono)] text-sm uppercase tracking-wider shadow-lg shadow-primary/20 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              {isLoading ? (
+              {recoverMutation.isPending ? (
                 <>
                   <span className="material-symbols-outlined animate-spin text-lg">
                     progress_activity

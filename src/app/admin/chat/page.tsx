@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { useSocket, useOnlineStatus, useNewMessage } from "@/lib/socket-client";
+import { apiClient } from "@/lib/api-client";
 import type {
   ConversationData,
   ChatUserData,
@@ -20,7 +22,6 @@ export default function AdminChatPage() {
   const [selectedConversation, setSelectedConversation] =
     useState<ConversationData | null>(null);
   const [messages, setMessages] = useState<MessageData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isMobileView, setIsMobileView] = useState(false);
 
   const { isConnected, joinConversation, leaveConversation } = useSocket();
@@ -33,29 +34,62 @@ export default function AdminChatPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Load conversations on mount
+  // Load conversations using TanStack Query
+  const { data: conversationData, isLoading: isLoadingConversations } =
+    useQuery({
+      queryKey: ["admin", "conversations"],
+      queryFn: async () => {
+        const response = await apiClient.get<{
+          success: boolean;
+          conversations: ConversationData[];
+        }>("/chat/conversations");
+        return response.data;
+      },
+    });
+
+  // Sync query data to local state for socket manipulations
+  // Local state is needed because socket events modify conversations independently of queries
+  const lastQueryConversations = useRef<ConversationData[] | undefined>(
+    undefined,
+  );
   useEffect(() => {
-    const loadConversations = async () => {
-      try {
-        const response = await fetch("/api/chat/conversations", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-          },
-        });
-        const data = await response.json();
+    if (
+      conversationData?.conversations &&
+      conversationData.conversations !== lastQueryConversations.current
+    ) {
+      lastQueryConversations.current = conversationData.conversations;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing query data with local state for socket mutations
+      setConversations(conversationData.conversations);
+    }
+  }, [conversationData]);
 
-        if (data.success) {
-          setConversations(data.conversations);
-        }
-      } catch (error) {
-        console.error("Failed to load conversations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Load messages for selected conversation
+  const { data: messagesData } = useQuery({
+    queryKey: ["admin", "messages", selectedConversation?._id],
+    queryFn: async () => {
+      if (!selectedConversation?._id) return null;
+      const response = await apiClient.get<{
+        success: boolean;
+        messages: MessageData[];
+      }>(`/chat/messages?conversationId=${selectedConversation._id}`);
+      return response.data;
+    },
+    enabled: !!selectedConversation?._id,
+  });
 
-    loadConversations();
-  }, []);
+  // Sync messages data to local state
+  // Local state is needed because socket events add new messages independently of queries
+  const lastQueryMessages = useRef<MessageData[] | undefined>(undefined);
+  useEffect(() => {
+    if (
+      messagesData?.messages &&
+      messagesData.messages !== lastQueryMessages.current
+    ) {
+      lastQueryMessages.current = messagesData.messages;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing query data with local state for socket mutations
+      setMessages(messagesData.messages);
+    }
+  }, [messagesData]);
 
   // Join as admin handled globally by AdminAuthProvider
   // We just wait for connection (handled by useSocket hook auto-connect)
@@ -174,25 +208,6 @@ export default function AdminChatPage() {
       ),
     );
 
-    // Load messages for this conversation
-    try {
-      const response = await fetch(
-        `/api/chat/messages?conversationId=${conversation._id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-          },
-        },
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        setMessages(data.messages);
-      }
-    } catch (error) {
-      console.error("Failed to load messages:", error);
-    }
-
     // Join conversation room
     joinConversation(conversation._id);
   };
@@ -258,7 +273,7 @@ export default function AdminChatPage() {
                   conversations={conversations}
                   selectedId={selectedConversation?._id}
                   onSelect={handleSelectConversation}
-                  isLoading={isLoading}
+                  isLoading={isLoadingConversations}
                 />
               </div>
             </motion.div>

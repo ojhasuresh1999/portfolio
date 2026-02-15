@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiClient } from "@/lib/api-client";
 
 // ── Live Latency Hook ────────────────────────
 
@@ -22,10 +23,8 @@ function useLatency(): LatencyState {
     const ping = async () => {
       const start = performance.now();
       try {
-        await fetch("/api/health", {
-          method: "GET",
-          cache: "no-store",
-          signal: AbortSignal.timeout(5000),
+        await apiClient.get("/health", {
+          timeout: 5000,
         });
         const elapsed = Math.round(performance.now() - start);
         setState({ latency: elapsed, status: "online" });

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 // =============================================================================
 // 2FA Settings Page
@@ -15,55 +17,44 @@ export default function TwoFASettingsPage() {
   const [secret, setSecret] = useState("");
   const [otpauth, setOtpauth] = useState("");
   const [code, setCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const generateSecret = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await fetch("/api/admin/auth/2fa/setup", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-        },
-      });
-      const data = await response.json();
-      if (!data.success) throw new Error(data.error);
-
+  const setupMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiClient.post("/admin/auth/2fa/setup");
+      return response.data;
+    },
+    onSuccess: (data) => {
       setSecret(data.secret);
       setOtpauth(data.otpauth);
       setStep("qr");
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to generate secret",
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    },
+    onError: (err: { error?: string }) => {
+      setError(err.error || "Failed to generate secret");
+    },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async (data: { token: string; secret: string }) => {
+      const response = await apiClient.put("/admin/auth/2fa/setup", data);
+      return response.data;
+    },
+    onSuccess: () => {
+      setStep("success");
+    },
+    onError: (err: { error?: string }) => {
+      setError(err.error || "Verification failed");
+    },
+  });
+
+  const generateSecret = () => {
+    setError("");
+    setupMutation.mutate();
   };
 
-  const verifyAndEnable = async () => {
-    setIsLoading(true);
+  const verifyAndEnable = () => {
     setError("");
-    try {
-      const response = await fetch("/api/admin/auth/2fa/setup", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("admin-token")}`,
-        },
-        body: JSON.stringify({ token: code, secret }),
-      });
-      const data = await response.json();
-      if (!data.success) throw new Error(data.error);
-
-      setStep("success");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed");
-    } finally {
-      setIsLoading(false);
-    }
+    verifyMutation.mutate({ token: code, secret });
   };
 
   return (
@@ -105,10 +96,12 @@ export default function TwoFASettingsPage() {
                 >
                   <button
                     onClick={generateSecret}
-                    disabled={isLoading}
+                    disabled={setupMutation.isPending}
                     className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold text-sm transition-colors flex items-center gap-2"
                   >
-                    {isLoading ? "Generating..." : "Setup Authenticator App"}
+                    {setupMutation.isPending
+                      ? "Generating..."
+                      : "Setup Authenticator App"}
                   </button>
                 </motion.div>
               )}
@@ -145,10 +138,12 @@ export default function TwoFASettingsPage() {
                     />
                     <button
                       onClick={verifyAndEnable}
-                      disabled={isLoading || code.length !== 6}
+                      disabled={verifyMutation.isPending || code.length !== 6}
                       className="w-full py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold text-sm shadow-lg shadow-primary/20"
                     >
-                      {isLoading ? "Verifying..." : "Verify & Enable"}
+                      {verifyMutation.isPending
+                        ? "Verifying..."
+                        : "Verify & Enable"}
                     </button>
                   </div>
                   {error && (

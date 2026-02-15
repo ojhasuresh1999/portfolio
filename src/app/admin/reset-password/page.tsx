@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 // =============================================================================
 // Password Reset Page
@@ -62,14 +64,33 @@ export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const entropy = useMemo(() => calculateEntropy(newPassword), [newPassword]);
   const strengthInfo = useMemo(() => getStrengthInfo(entropy), [entropy]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const resetMutation = useMutation({
+    mutationFn: async (data: {
+      newPassword: string;
+      confirmPassword: string;
+      resetToken: string | null;
+    }) => {
+      const response = await apiClient.post("/admin/auth/reset-password", data);
+      return response.data;
+    },
+    onSuccess: () => {
+      setSuccess(true);
+      setTimeout(() => {
+        router.push("/admin/login");
+      }, 2000);
+    },
+    onError: (err: { error?: string }) => {
+      setError(err.error || "Password reset failed");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -83,44 +104,15 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setIsLoading(true);
+    // Get token from URL if present (forgot password flow)
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get("token");
 
-    try {
-      // Get token from URL if present (forgot password flow)
-      const urlParams = new URLSearchParams(window.location.search);
-      const resetToken = urlParams.get("token");
-
-      const response = await fetch("/api/admin/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(localStorage.getItem("admin-token")
-            ? { Authorization: `Bearer ${localStorage.getItem("admin-token")}` }
-            : {}),
-        },
-        body: JSON.stringify({
-          newPassword,
-          confirmPassword,
-          resetToken,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        setError(data.error || "Password reset failed");
-        setIsLoading(false);
-        return;
-      }
-
-      setSuccess(true);
-      setTimeout(() => {
-        router.push("/admin/login");
-      }, 2000);
-    } catch {
-      setError("Network error. Please try again.");
-      setIsLoading(false);
-    }
+    resetMutation.mutate({
+      newPassword,
+      confirmPassword,
+      resetToken,
+    });
   };
 
   return (
@@ -334,11 +326,11 @@ export default function ResetPasswordPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={resetMutation.isPending}
                   className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/90 hover:to-teal-600/90 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-[family-name:var(--font-mono)] text-sm uppercase tracking-wider shadow-lg shadow-emerald-500/20 relative overflow-hidden group"
                 >
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                  {isLoading ? (
+                  {resetMutation.isPending ? (
                     <>
                       <span className="material-symbols-outlined animate-spin text-lg">
                         progress_activity

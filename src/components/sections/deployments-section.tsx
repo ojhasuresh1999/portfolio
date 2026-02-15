@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+
 interface Project {
-  id: string;
+  _id: string; // Changed from id to _id to match API
   title: string;
   slug: string;
   description: string;
@@ -18,7 +23,7 @@ interface DeploymentsSectionProps {
 
 const defaultProjects: Project[] = [
   {
-    id: "1",
+    _id: "1",
     title: "Microservices Gateway",
     slug: "microservices-gateway",
     description:
@@ -33,7 +38,7 @@ const defaultProjects: Project[] = [
     accentColor: "primary",
   },
   {
-    id: "2",
+    _id: "2",
     title: "Real-time Analytics Engine",
     slug: "analytics-engine",
     description:
@@ -45,8 +50,26 @@ const defaultProjects: Project[] = [
 ];
 
 export function DeploymentsSection({
-  projects = defaultProjects,
+  projects: initialProjects,
 }: DeploymentsSectionProps) {
+  const { data: apiProjects } = useQuery({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: Project[];
+      }>("/projects?limit=4&featured=true");
+      return response.data.data.map((p: Project) => ({
+        ...p,
+        accentColor: p.accentColor || "primary", // Default if missing
+      })) as Project[];
+    },
+    initialData: initialProjects,
+  });
+
+  const displayProjects =
+    apiProjects && apiProjects.length > 0 ? apiProjects : defaultProjects;
+
   return (
     <section className="mt-32">
       {/* Section Header */}
@@ -66,8 +89,8 @@ export function DeploymentsSection({
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+        {displayProjects.map((project) => (
+          <ProjectCard key={project._id} project={project} />
         ))}
       </div>
     </section>

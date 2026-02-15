@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 
 // =============================================================================
 // Admin Login Page
@@ -12,36 +14,21 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [stayLinked, setStayLinked] = useState(false);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    try {
-      const response = await fetch("/api/admin/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, stayLinked }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        setError(data.error || "Authentication failed");
-        setIsLoading(false);
-        return;
-      }
-
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: {
+      email: string;
+      password: string;
+      stayLinked: boolean;
+    }) => {
+      const response = await apiClient.post("/admin/auth/login", credentials);
+      return response.data;
+    },
+    onSuccess: (data) => {
       // If 2FA required, redirect to verification
       if (data.requiresTwoFactor) {
         // Store temporary tokens for 2FA flow
@@ -63,10 +50,21 @@ export default function AdminLoginPage() {
 
       // Redirect to admin dashboard
       router.push("/admin");
-    } catch {
-      setError("Network error. Please try again.");
-      setIsLoading(false);
-    }
+    },
+    onError: (err: { error?: string }) => {
+      setError(err.error || "Authentication failed");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    loginMutation.mutate({ email, password, stayLinked });
   };
 
   return (
@@ -242,11 +240,11 @@ export default function AdminLoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loginMutation.isPending}
                 className="w-full py-4 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-[family-name:var(--font-mono)] text-sm uppercase tracking-wider shadow-lg shadow-primary/20 relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                {isLoading ? (
+                {loginMutation.isPending ? (
                   <>
                     <span className="material-symbols-outlined animate-spin text-lg">
                       progress_activity
