@@ -254,7 +254,10 @@ export default function Verify2FAPage() {
           {/* Request ID & Resend */}
           <div className="flex items-center justify-between text-[10px] md:text-xs mb-8 px-2">
             <span className="text-slate-500 font-[family-name:var(--font-mono)] tracking-wider">
-              ID: {sessionStorage.getItem("2fa-requestId") || "AUTH_0921_X"}
+              ID:{" "}
+              {(typeof window !== "undefined" &&
+                sessionStorage.getItem("2fa-requestId")) ||
+                "AUTH_0921_X"}
             </span>
             <button
               onClick={handleResend}
