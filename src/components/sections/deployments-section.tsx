@@ -1,19 +1,9 @@
-"use client";
-
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { useProjects, type ProjectData } from "@/hooks/queries";
 
-interface Project {
-  _id: string; // Changed from id to _id to match API
-  title: string;
-  slug: string;
-  description: string;
-  codeSnippet?: string;
-  technologies: string[];
-  accentColor?: "primary" | "secondary";
+interface Project extends ProjectData {
   hasChart?: boolean;
 }
 
@@ -36,6 +26,11 @@ const defaultProjects: Project[] = [
 }`,
     technologies: ["Fastify", "Redis", "Docker"],
     accentColor: "primary",
+    order: 0,
+    isFeatured: true,
+    isVisible: true,
+    createdAt: "",
+    updatedAt: "",
   },
   {
     _id: "2",
@@ -46,29 +41,29 @@ const defaultProjects: Project[] = [
     technologies: ["WebSocket", "BullMQ", "TimescaleDB"],
     accentColor: "secondary",
     hasChart: true,
+    order: 0,
+    isFeatured: true,
+    isVisible: true,
+    createdAt: "",
+    updatedAt: "",
   },
 ];
 
 export function DeploymentsSection({
   projects: initialProjects,
 }: DeploymentsSectionProps) {
-  const { data: apiProjects } = useQuery({
-    queryKey: ["projects"],
-    queryFn: async () => {
-      const response = await apiClient.get<{
-        success: boolean;
-        data: Project[];
-      }>("/projects?limit=4&featured=true");
-      return response.data.data.map((p: Project) => ({
-        ...p,
-        accentColor: p.accentColor || "primary", // Default if missing
-      })) as Project[];
-    },
-    initialData: initialProjects,
-  });
+  const { data: apiProjects } = useProjects(
+    { limit: 4, featured: true },
+    { initialData: initialProjects as ProjectData[] },
+  );
 
-  const displayProjects =
-    apiProjects && apiProjects.length > 0 ? apiProjects : defaultProjects;
+  const displayProjects: Project[] =
+    apiProjects && apiProjects.length > 0
+      ? apiProjects.map((p) => ({
+          ...p,
+          accentColor: p.accentColor || "primary",
+        }))
+      : defaultProjects;
 
   return (
     <section className="mt-32">

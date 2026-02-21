@@ -35,12 +35,14 @@ export class ProjectService {
   }
 
   /**
-   * Get all visible projects with pagination
+   * Get all projects with pagination
+   * @param options.includeHidden - If true, includes hidden (isVisible: false) projects (for admin)
    */
   async getAll(options?: {
     page?: number;
     limit?: number;
     featured?: boolean;
+    includeHidden?: boolean;
   }): Promise<ServiceResult<{ items: ProjectDoc[]; total: number }>> {
     try {
       await this.ensureConnection();
@@ -49,7 +51,10 @@ export class ProjectService {
       const limit = Math.min(options?.limit ?? 10, 100);
       const skip = (page - 1) * limit;
 
-      const where: Record<string, unknown> = { isVisible: true };
+      const where: Record<string, unknown> = {};
+      if (!options?.includeHidden) {
+        where.isVisible = true;
+      }
       if (options?.featured !== undefined) {
         where.isFeatured = options.featured;
       }

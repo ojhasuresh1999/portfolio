@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { useSocket, useOnlineStatus, useNewMessage } from "@/lib/socket-client";
-import { apiClient } from "@/lib/api-client";
+import { useConversations, useMessages } from "@/hooks/queries";
 import type {
   ConversationData,
   ChatUserData,
@@ -34,20 +33,14 @@ export default function AdminChatPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Load conversations using TanStack Query
+  // Load conversations using custom hook
   const { data: conversationData, isLoading: isLoadingConversations } =
-    useQuery({
-      queryKey: ["admin", "conversations"],
-      queryFn: async () => {
-        const response = await apiClient.get<{
-          success: boolean;
-          conversations: ConversationData[];
-        }>("/chat/conversations");
-        return response.data;
-      },
-    });
+    useConversations();
 
-  // Sync query data to local state for socket manipulations
+  // Load messages for selected conversation using custom hook
+  const { data: messagesData } = useMessages(selectedConversation?._id);
+
+  // Sync conversation query data to local state for socket manipulations
   // Local state is needed because socket events modify conversations independently of queries
   const lastQueryConversations = useRef<ConversationData[] | undefined>(
     undefined,
@@ -62,20 +55,6 @@ export default function AdminChatPage() {
       setConversations(conversationData.conversations);
     }
   }, [conversationData]);
-
-  // Load messages for selected conversation
-  const { data: messagesData } = useQuery({
-    queryKey: ["admin", "messages", selectedConversation?._id],
-    queryFn: async () => {
-      if (!selectedConversation?._id) return null;
-      const response = await apiClient.get<{
-        success: boolean;
-        messages: MessageData[];
-      }>(`/chat/messages?conversationId=${selectedConversation._id}`);
-      return response.data;
-    },
-    enabled: !!selectedConversation?._id,
-  });
 
   // Sync messages data to local state
   // Local state is needed because socket events add new messages independently of queries

@@ -141,6 +141,15 @@ export default function CloudinaryUpload({
           );
 
           xhr.open("POST", "/api/upload");
+
+          // Add admin auth token (same as apiClient interceptor)
+          if (typeof window !== "undefined") {
+            const adminToken = localStorage.getItem("admin-token");
+            if (adminToken) {
+              xhr.setRequestHeader("Authorization", `Bearer ${adminToken}`);
+            }
+          }
+
           xhr.send(formData);
         });
 
@@ -162,9 +171,18 @@ export default function CloudinaryUpload({
   const handleRemove = useCallback(async () => {
     if (publicId) {
       try {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (typeof window !== "undefined") {
+          const adminToken = localStorage.getItem("admin-token");
+          if (adminToken) {
+            headers["Authorization"] = `Bearer ${adminToken}`;
+          }
+        }
         await fetch("/api/upload", {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ publicId }),
         });
       } catch {

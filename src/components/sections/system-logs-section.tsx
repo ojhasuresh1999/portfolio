@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { useBlogPosts, type BlogPostData } from "@/hooks/queries";
 
 interface BlogPost {
-  _id: string; // Changed from id to _id
+  _id: string;
   title: string;
   slug: string;
   category: string;
@@ -36,23 +35,21 @@ const defaultPosts: BlogPost[] = [
 export function SystemLogsSection({
   posts: initialPosts,
 }: SystemLogsSectionProps) {
-  const { data: apiPosts } = useQuery({
-    queryKey: ["blog-posts"],
-    queryFn: async () => {
-      const response = await apiClient.get<{
-        success: boolean;
-        data: BlogPost[];
-      }>("/blog?limit=2");
-      return response.data.data.map((p: BlogPost) => ({
-        ...p,
-        // Ensure publishedAt is handled correctly
-      })) as BlogPost[];
-    },
-    initialData: initialPosts,
-  });
+  const { data: apiPosts } = useBlogPosts(
+    { limit: 2 },
+    { initialData: initialPosts as BlogPostData[] },
+  );
 
-  const displayPosts =
-    apiPosts && apiPosts.length > 0 ? apiPosts : defaultPosts;
+  const displayPosts: BlogPost[] =
+    apiPosts && apiPosts.length > 0
+      ? apiPosts.map((p) => ({
+          _id: p._id,
+          title: p.title,
+          slug: p.slug,
+          category: p.category,
+          publishedAt: p.publishedAt || p.createdAt,
+        }))
+      : defaultPosts;
 
   return (
     <section className="mt-32 mb-20">

@@ -77,12 +77,15 @@ export async function GET(request: NextRequest) {
 
     const { page, limit } = queryResult.data;
     const featured = request.nextUrl.searchParams.get("featured");
+    const includeHidden =
+      request.nextUrl.searchParams.get("includeHidden") === "true";
 
     const result = await projectService.getAll({
       page,
       limit,
       featured:
         featured === "true" ? true : featured === "false" ? false : undefined,
+      includeHidden,
     });
 
     if (!result.success) {

@@ -77,12 +77,16 @@ export async function GET(request: NextRequest) {
 
     const { page, limit } = queryResult.data;
     const category = request.nextUrl.searchParams.get("category") ?? undefined;
+    const includeAll =
+      request.nextUrl.searchParams.get("includeAll") === "true";
 
-    const result = await blogService.getPublished({
-      page,
-      limit,
-      category,
-    });
+    let result;
+    if (includeAll) {
+      // Admin: include all posts (published + drafts)
+      result = await blogService.getAll({ page, limit });
+    } else {
+      result = await blogService.getPublished({ page, limit, category });
+    }
 
     if (!result.success) {
       return Api.internalError(result.error);
