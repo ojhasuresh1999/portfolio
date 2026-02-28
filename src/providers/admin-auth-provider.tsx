@@ -133,28 +133,19 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         if (data.success && data.user) {
           setUser(data.user);
         } else {
-          // Try to refresh
-          const refreshed = await refreshSession();
-          if (refreshed) {
-            // Retry session fetch
-            const retryResponse = await apiClient.get("/admin/auth/session");
-            const retryData = retryResponse.data;
-            if (retryData.success && retryData.user) {
-              setUser(retryData.user);
-            } else {
-              if (!isPublicRoute) {
-                router.push("/admin/unauthorized");
-              }
-            }
-          } else {
-            localStorage.removeItem("admin-token");
-            localStorage.removeItem("admin-refresh-token");
-            if (!isPublicRoute) {
-              router.push("/admin/unauthorized");
-            }
+          // If response succeeded but success is false, treat as unauthorized
+          if (!isPublicRoute) {
+            router.push("/admin/unauthorized");
           }
         }
-      } catch {
+      } catch (error) {
+        // apiClient will have already tried to refresh and failed if we reach here with a 401
+        console.error("[Auth verification failed]", error);
+
+        localStorage.removeItem("admin-token");
+        localStorage.removeItem("admin-refresh-token");
+        setUser(null);
+
         if (!isPublicRoute) {
           router.push("/admin/unauthorized");
         }

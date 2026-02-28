@@ -76,7 +76,7 @@ apiClient.interceptors.response.use(
     }
 
     // Handle API errors
-    const { status, data } = error.response;
+    const { status, data, config } = error.response;
 
     // Log error in development
     if (process.env.NODE_ENV === "development") {
@@ -84,20 +84,63 @@ apiClient.interceptors.response.use(
     }
 
     // Handle specific status codes
-    switch (status) {
-      case 401:
-        // Clear invalid session
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("chat-session-token");
-          localStorage.removeItem("chat-user-data");
+    if (status === 401) {
+      // Check if this is an admin request
+      const isAdminRequest = config.url?.includes("/admin/");
+      const isRefreshRequest = config.url?.includes("/admin/auth/refresh");
+
+      if (
+        isAdminRequest &&
+        !isRefreshRequest &&
+        typeof window !== "undefined"
+      ) {
+        const refreshToken = localStorage.getItem("admin-refresh-token");
+
+        if (refreshToken) {
+          // If we have a refresh token, try to get a new access token
+          // We use axios directly to avoid interceptor loop
+          return axios
+            .post("/api/admin/auth/refresh", { refreshToken })
+            .then((res) => {
+              if (res.data.success) {
+                const { accessToken, refreshToken: newRefreshToken } = res.data;
+                localStorage.setItem("admin-token", accessToken);
+                localStorage.setItem("admin-refresh-token", newRefreshToken);
+
+                // Update original request headers and retry
+                config.headers.set("Authorization", `Bearer ${accessToken}`);
+                return apiClient(config);
+              }
+              throw new Error("Refresh failed");
+            })
+            .catch((refreshError) => {
+              // Refresh failed, clear tokens and redirect if needed
+              localStorage.removeItem("admin-token");
+              localStorage.removeItem("admin-refresh-token");
+              return Promise.reject({
+                success: false,
+                error: "Session expired. Please login again.",
+                statusCode: 401,
+              });
+            });
         }
-        break;
-      case 429:
-        console.warn("[API] Rate limited");
-        break;
-      case 500:
-        console.error("[API] Server error");
-        break;
+      }
+
+      // Handle generic 401 (e.g. guest chat)
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("chat-session-token");
+        localStorage.removeItem("chat-user-data");
+      }
+    }
+
+    // Rate limiting
+    if (status === 429) {
+      console.warn("[API] Rate limited");
+    }
+
+    // Server error
+    if (status === 500) {
+      console.error("[API] Server error");
     }
 
     return Promise.reject({
