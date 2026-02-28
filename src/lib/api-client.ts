@@ -121,6 +121,7 @@ apiClient.interceptors.response.use(
                 success: false,
                 error: "Session expired. Please login again.",
                 statusCode: 401,
+                message: `Session expired. Please login again.${refreshError.message}`,
               });
             });
         }
