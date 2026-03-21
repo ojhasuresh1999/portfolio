@@ -25,6 +25,7 @@ export interface ProjectData {
   order: number;
   isFeatured: boolean;
   isVisible: boolean;
+  isSourceCodeVisible: boolean;
   createdAt: string;
   updatedAt: string;
 }

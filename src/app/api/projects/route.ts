@@ -193,7 +193,7 @@ export const POST = withAdmin(async (request, { admin, ip }) => {
       if (!isNaN(parsed)) rawData.order = parsed;
     }
 
-    const boolFields = ["isFeatured", "isVisible"];
+    const boolFields = ["isFeatured", "isVisible", "isSourceCodeVisible"];
     for (const field of boolFields) {
       const val = formData.get(field);
       if (val === "true") rawData[field] = true;

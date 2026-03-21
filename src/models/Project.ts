@@ -23,6 +23,7 @@ export interface IProject {
   order: number;
   isFeatured: boolean;
   isVisible: boolean;
+  isSourceCodeVisible: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +44,7 @@ const ProjectSchema = new Schema<IProject>(
     order: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
     isVisible: { type: Boolean, default: true },
+    isSourceCodeVisible: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

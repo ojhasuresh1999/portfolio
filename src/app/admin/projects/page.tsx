@@ -30,6 +30,7 @@ interface ProjectFormState {
   order: number;
   isFeatured: boolean;
   isVisible: boolean;
+  isSourceCodeVisible: boolean;
   image: string;
   imagePublicId: string;
 }
@@ -47,6 +48,7 @@ const emptyForm: ProjectFormState = {
   order: 0,
   isFeatured: false,
   isVisible: true,
+  isSourceCodeVisible: false,
   image: "",
   imagePublicId: "",
 };
@@ -360,8 +362,9 @@ export default function AdminProjectsPage() {
       githubUrl: project.githubUrl || "",
       accentColor: project.accentColor || "primary",
       order: project.order,
-      isFeatured: project.isFeatured,
-      isVisible: project.isVisible,
+      isFeatured: project.isFeatured ?? false,
+      isVisible: project.isVisible ?? true,
+      isSourceCodeVisible: project.isSourceCodeVisible ?? false,
       image: project.image || "",
       imagePublicId: "",
     });
@@ -399,7 +402,8 @@ export default function AdminProjectsPage() {
           order: form.order,
           isFeatured: form.isFeatured,
           isVisible: form.isVisible,
-        };
+          isSourceCodeVisible: form.isSourceCodeVisible,
+        } as Partial<ProjectData>;
         if (form.image) updateData.image = form.image;
 
         await updateProject.mutateAsync({
@@ -422,6 +426,10 @@ export default function AdminProjectsPage() {
         formData.append("order", String(form.order));
         formData.append("isFeatured", String(form.isFeatured));
         formData.append("isVisible", String(form.isVisible));
+        formData.append(
+          "isSourceCodeVisible",
+          String(form.isSourceCodeVisible),
+        );
         if (form.technologies.length > 0) {
           formData.append("technologies", JSON.stringify(form.technologies));
         }
@@ -1051,6 +1059,12 @@ export default function AdminProjectsPage() {
                   checked={form.isVisible}
                   onChange={(v) => updateField("isVisible", v)}
                   description="Publicly visible on the portfolio"
+                />
+                <Toggle
+                  label="Source Code Visible"
+                  checked={form.isSourceCodeVisible}
+                  onChange={(v) => updateField("isSourceCodeVisible", v)}
+                  description="Show GitHub repository link to users."
                 />
               </div>
             </div>

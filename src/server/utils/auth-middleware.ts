@@ -227,6 +227,7 @@ export function withAdmin(handler: AuthenticatedHandler): NextRouteHandler {
 
     // Extract and verify token
     const payload = getAuthFromRequest(request);
+    console.log("🚀 ~ withAdmin ~ payload:", payload);
     if (!payload) {
       return errorResponse(
         "Unauthorized: Valid access token required",

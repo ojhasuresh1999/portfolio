@@ -174,6 +174,7 @@ export const projectSchema = z.object({
   order: z.number().int().default(0),
   isFeatured: z.boolean().default(false),
   isVisible: z.boolean().default(true),
+  isSourceCodeVisible: z.boolean().default(false),
 });
 
 export type ProjectFormData = z.infer<typeof projectSchema>;

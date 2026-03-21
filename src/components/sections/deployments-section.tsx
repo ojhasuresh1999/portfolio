@@ -16,6 +16,7 @@ const defaultProjects: Project[] = [
   {
     _id: "1",
     title: "Microservices Gateway",
+    isSourceCodeVisible: true,
     slug: "microservices-gateway",
     description:
       "A custom API Gateway supporting rate limiting, request transformation, and centralized authentication using JWT and Redis. Handles 10k+ concurrent connections.",
@@ -37,6 +38,7 @@ const defaultProjects: Project[] = [
     _id: "2",
     title: "Real-time Analytics Engine",
     slug: "analytics-engine",
+    isSourceCodeVisible: true,
     description:
       "Low-latency processing engine for IoT sensor data, capable of handling 50k+ events per second with persistent storage.",
     technologies: ["WebSocket", "BullMQ", "TimescaleDB"],
@@ -67,7 +69,7 @@ export function DeploymentsSection({
       : defaultProjects;
 
   return (
-    <section className="mt-32">
+    <section id="projects" className="mt-32">
       {/* Section Header */}
       <div className="flex flex-col gap-2 mb-12">
         <div className="flex items-center gap-4">

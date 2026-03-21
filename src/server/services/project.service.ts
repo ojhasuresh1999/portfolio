@@ -18,6 +18,7 @@ interface ProjectDoc {
   order: number;
   isFeatured: boolean;
   isVisible: boolean;
+  isSourceCodeVisible: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -148,6 +149,7 @@ export class ProjectService {
     order?: number;
     isFeatured?: boolean;
     isVisible?: boolean;
+    isSourceCodeVisible?: boolean;
   }): Promise<ServiceResult<ProjectDoc>> {
     try {
       await this.ensureConnection();
@@ -184,6 +186,7 @@ export class ProjectService {
       order?: number;
       isFeatured?: boolean;
       isVisible?: boolean;
+      isSourceCodeVisible?: boolean;
     }>,
   ): Promise<ServiceResult<ProjectDoc>> {
     try {
