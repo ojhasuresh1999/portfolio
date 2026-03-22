@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/hooks/queries";
 
 const navItems = [
   { label: "Projects", href: "/projects" },
@@ -14,6 +15,8 @@ const navItems = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { data: settings } = useSettings();
+  const siteName = settings?.siteName || "DEV_IO";
 
   return (
     <div className="fixed top-6 w-full z-50 px-4 flex justify-center">
@@ -24,7 +27,7 @@ export function Navbar() {
             <span className="material-symbols-outlined text-lg">terminal</span>
           </div>
           <span className="text-white font-bold tracking-tight font-[family-name:var(--font-mono)] hidden sm:block">
-            DEV<span className="text-primary animate-pulse">_</span>IO
+            {siteName}
           </span>
         </Link>
 

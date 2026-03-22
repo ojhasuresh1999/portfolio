@@ -20,6 +20,9 @@ export const UPLOAD_CONFIG = {
     "image/webp",
     "image/gif",
     "image/svg+xml",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ] as const,
   DEFAULT_FOLDER: "portfolio",
   DEFAULT_TRANSFORMATIONS: {

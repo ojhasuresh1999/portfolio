@@ -12,6 +12,7 @@ export interface ISiteSettings {
   statusText: string;
   metaTitle?: string;
   metaDescription?: string;
+  resumeUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +25,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     statusText: { type: String, default: "System Online" },
     metaTitle: { type: String },
     metaDescription: { type: String },
+    resumeUrl: { type: String },
   },
   { timestamps: true },
 );

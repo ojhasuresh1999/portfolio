@@ -17,18 +17,37 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "DEV_IO | Backend Developer Portfolio",
-  description:
-    "I build high-performance distributed systems and resilient microservices that power the next generation of digital experiences.",
-  keywords: [
-    "Backend Developer",
-    "Node.js",
-    "TypeScript",
-    "Microservices",
-    "System Architecture",
-  ],
-};
+import { settingsService } from "@/server/services/settings.service";
+import { type ISiteSettings } from "@/models";
+
+export async function generateMetadata(): Promise<Metadata> {
+  let settings: Partial<ISiteSettings> = {};
+  try {
+    const result = await settingsService.getPublic();
+    if (result.success && result.data) {
+      settings = result.data as unknown as Partial<ISiteSettings>;
+    }
+  } catch (error) {
+    console.error("Failed to load settings for metadata:", error);
+  }
+
+  const siteName = settings.siteName || "DEV_IO";
+  const tagline = settings.siteTagline || "Backend Developer Portfolio";
+
+  return {
+    title: settings.metaTitle || `${siteName} | ${tagline}`,
+    description:
+      settings.metaDescription ||
+      "I build high-performance distributed systems and resilient microservices that power the next generation of digital experiences.",
+    keywords: [
+      "Backend Developer",
+      "Node.js",
+      "TypeScript",
+      "Microservices",
+      "System Architecture",
+    ],
+  };
+}
 
 export default function RootLayout({
   children,

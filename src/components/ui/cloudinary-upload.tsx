@@ -44,6 +44,9 @@ const ALLOWED_TYPES = [
   "image/webp",
   "image/gif",
   "image/svg+xml",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
 // ============================================
@@ -70,7 +73,7 @@ export default function CloudinaryUpload({
   // ── Client-side validation ───────────────
   const validateFile = (file: File): string | null => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return `Invalid file type. Allowed: JPEG, PNG, WebP, GIF, SVG`;
+      return `Invalid file type. Allowed: JPEG, PNG, WebP, GIF, SVG, PDF, DOC, DOCX`;
     }
     if (file.size > MAX_FILE_SIZE) {
       return `File too large. Maximum size is 10MB`;
@@ -428,7 +431,7 @@ export default function CloudinaryUpload({
                 or drag and drop
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                PNG, JPG, WebP, GIF, SVG up to 10MB
+                PNG, JPG, WebP, GIF, SVG, PDF, DOC up to 10MB
               </p>
             </div>
           </>

@@ -46,10 +46,17 @@ export const POST = withAdmin(async (request: NextRequest, { admin, ip }) => {
           .filter(Boolean)
       : undefined;
 
+    // Check if it's a document format
+    const isDoc =
+      file.type === "application/pdf" ||
+      file.type.includes("document") ||
+      file.type.includes("msword");
+
     // Upload to Cloudinary
     const result = await uploadService.uploadImage(buffer, {
       folder: folder || undefined,
       tags,
+      isDocument: isDoc,
     });
 
     if (!result.success) {
@@ -70,6 +77,8 @@ export const POST = withAdmin(async (request: NextRequest, { admin, ip }) => {
 
     return Api.created(result.data, "File uploaded successfully");
   } catch (error) {
+    console.log("🚀 ~ error:", error);
+
     return handleError(error);
   }
 });

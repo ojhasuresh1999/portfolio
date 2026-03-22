@@ -35,6 +35,7 @@ export class UploadService {
       publicId?: string;
       transformation?: Record<string, unknown>;
       tags?: string[];
+      isDocument?: boolean;
     },
   ): Promise<ServiceResult<CloudinaryUploadResult>> {
     try {
@@ -54,15 +55,19 @@ export class UploadService {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder,
-            resource_type: "image",
+            resource_type: options?.isDocument ? "raw" : "auto",
             ...(options?.publicId && { public_id: options.publicId }),
             ...(options?.tags && { tags: options.tags }),
-            transformation: [
-              {
-                ...UPLOAD_CONFIG.DEFAULT_TRANSFORMATIONS,
-                ...options?.transformation,
-              },
-            ],
+            ...(options?.isDocument
+              ? {}
+              : {
+                  transformation: [
+                    {
+                      ...UPLOAD_CONFIG.DEFAULT_TRANSFORMATIONS,
+                      ...options?.transformation,
+                    },
+                  ],
+                }),
             // Production optimizations
             overwrite: true,
             invalidate: true,
