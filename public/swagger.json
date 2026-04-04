@@ -750,6 +750,80 @@
           }
         }
       }
+    },
+    "/api/skills/{id}": {
+      "put": {
+        "summary": "Update Skill",
+        "description": "Update an existing skill (Admin only)",
+        "tags": [
+          "Skills"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Skill",
+        "description": "Delete an existing skill (Admin only)",
+        "tags": [
+          "Skills"
+        ]
+      }
+    },
+    "/api/skills": {
+      "get": {
+        "summary": "List Skills",
+        "description": "Retrieve all skills without pagination",
+        "tags": [
+          "Skills"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of skills"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Skill",
+        "description": "Create a new skill (Admin only)",
+        "tags": [
+          "Skills"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/tech-stack/{id}": {
+      "put": {
+        "summary": "Update Tech Stack Item",
+        "description": "Update an existing tech stack entry (Admin only)",
+        "tags": [
+          "TechStack"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Tech Stack Item",
+        "description": "Delete an existing tech stack entry (Admin only)",
+        "tags": [
+          "TechStack"
+        ]
+      }
+    },
+    "/api/tech-stack": {
+      "get": {
+        "summary": "List Tech Stack",
+        "description": "Retrieve all tech stack items without pagination",
+        "tags": [
+          "TechStack"
+        ]
+      },
+      "post": {
+        "summary": "Create Tech Stack Item",
+        "description": "Create a new tech stack entry (Admin only)",
+        "tags": [
+          "TechStack"
+        ]
+      }
     }
   },
   "tags": []

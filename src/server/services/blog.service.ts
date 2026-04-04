@@ -1,5 +1,6 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { BlogPost } from "@/models";
+import { subscriberService, emailService } from "./index";
 import type { ServiceResult } from "../types";
 
 // Return type for lean queries
@@ -38,6 +39,7 @@ export class BlogService {
     page?: number;
     limit?: number;
     category?: string;
+    tag?: string;
   }): Promise<ServiceResult<{ items: BlogPostDoc[]; total: number }>> {
     try {
       await this.ensureConnection();
@@ -49,6 +51,9 @@ export class BlogService {
       const where: Record<string, unknown> = { isPublished: true };
       if (options?.category) {
         where.category = options.category;
+      }
+      if (options?.tag) {
+        where.tags = options.tag;
       }
 
       const [items, total] = await Promise.all([
@@ -185,6 +190,34 @@ export class BlogService {
   }
 
   /**
+   * Get all tags with post count
+   */
+  async getTags(): Promise<ServiceResult<{ tag: string; count: number }[]>> {
+    try {
+      await this.ensureConnection();
+
+      const tags = await BlogPost.aggregate([
+        {
+          $match: {
+            isPublished: true,
+            tags: { $exists: true, $not: { $size: 0 } },
+          },
+        },
+        { $unwind: "$tags" },
+        { $group: { _id: "$tags", count: { $sum: 1 } } },
+        { $project: { tag: "$_id", count: 1, _id: 0 } },
+        { $sort: { count: -1 } },
+      ]).exec();
+
+      return { success: true, data: tags };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to fetch tags";
+      return { success: false, error: message };
+    }
+  }
+
+  /**
    * Create a new blog post
    */
   async create(data: {
@@ -270,9 +303,37 @@ export class BlogService {
    * Publish a blog post
    */
   async publish(id: string): Promise<ServiceResult<BlogPostDoc>> {
-    return this.update(id, {
+    const result = await this.update(id, {
       isPublished: true,
       publishedAt: new Date(),
+    });
+
+    if (result.success && result.data) {
+      // Trigger email blast to subscribers
+      this.notifySubscribers(result.data).catch((err) => {
+        console.error("Failed to notify subscribers:", err);
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Internal method to notify subscribers about a new post
+   */
+  private async notifySubscribers(post: BlogPostDoc): Promise<void> {
+    const subsRes = await subscriberService.getActiveSubscribers();
+    if (!subsRes.success || !subsRes.data || subsRes.data.length === 0) return;
+
+    const emails = subsRes.data.map((s) => s.email);
+    const blogUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blog/${post.slug}`;
+
+    await emailService.sendNewBlogPostNotification({
+      blogTitle: post.title,
+      blogExcerpt: post.excerpt,
+      blogUrl: blogUrl,
+      subscribers: emails,
+      coverImage: post.coverImage,
     });
   }
 

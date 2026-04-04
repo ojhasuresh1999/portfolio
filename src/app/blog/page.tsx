@@ -1,58 +1,51 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
+import { blogService } from "@/server/services/blog.service";
+import { NewsletterForm } from "@/components/blog/NewsletterForm";
 
-const blogPosts = [
-  {
-    id: "1",
-    title: "Optimizing Node.js Event Loop Cycles",
-    slug: "optimizing-nodejs-event-loop",
-    excerpt: [
-      "> A deep dive into the libuv thread pool.",
-      "> Avoid blocking the event loop.",
-      "> Profiling tools for heavy CPU tasks.",
-    ],
-    category: "Performance",
-    tags: ["#nodejs", "#libuv"],
-    date: "2023.10.24",
-    readTime: "8_MIN_READ",
-    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600",
-  },
-  {
-    id: "2",
-    title: "Scaling PostgreSQL for 1M+ Users",
-    slug: "scaling-postgresql",
-    excerpt: [
-      "> Connection pooling with PgBouncer.",
-      "> Read replicas & partitioning strategies.",
-      "> Maintaining sub-100ms latency.",
-    ],
-    category: "Database",
-    tags: ["#sql", "#scaling"],
-    date: "2023.10.12",
-    readTime: "12_MIN_READ",
-    image: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=600",
-  },
-  {
-    id: "3",
-    title: "Microservices Auth Protocols with JWT",
-    slug: "microservices-auth-jwt",
-    excerpt: [
-      "> Securing distributed systems.",
-      "> Centralized vs Decentralized validation.",
-      "> Token rotation policies & security.",
-    ],
-    category: "Security",
-    tags: ["#security", "#jwt"],
-    date: "2023.09.28",
-    readTime: "10_MIN_READ",
-    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600",
-  },
-];
+export const revalidate = 60; // 60s cache revalidation
 
-const systemTags = ["#nodejs", "#k8s", "#docker", "#sql", "#rest", "#graphql"];
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(date));
+}
 
-export default function BlogPage() {
+// ── Page Component ─────────────────────────────
+export default async function BlogPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+
+  // Parse filters from URL
+  const page = parseInt(searchParams.page as string) || 1;
+  const categoryFilter = searchParams.category as string | undefined;
+  const tagFilter = searchParams.tag as string | undefined;
+
+  // Fetch concurrently
+  const [postsRes, categoriesRes, tagsRes] = await Promise.all([
+    blogService.getPublished({
+      page,
+      limit: 10,
+      category: categoryFilter,
+      tag: tagFilter,
+    }),
+    blogService.getCategories(),
+    blogService.getTags(),
+  ]);
+
+  const posts = postsRes.success && postsRes.data ? postsRes.data.items : [];
+  const total = postsRes.success && postsRes.data ? postsRes.data.total : 0;
+  const totalPages = Math.ceil(total / 10);
+
+  const categoryStats =
+    categoriesRes.success && categoriesRes.data ? categoriesRes.data : [];
+  const dynamicTags = tagsRes.success && tagsRes.data ? tagsRes.data : [];
+
   return (
     <>
       <Navbar />
@@ -65,17 +58,17 @@ export default function BlogPage() {
         <div className="h-full bg-primary w-[35%] shadow-[0_0_15px_rgba(0,240,255,0.8)] animate-pulse" />
       </div>
 
-      <main className="max-w-7xl mx-auto w-full px-6 py-16 pt-32 relative z-10">
+      <main className="max-w-7xl mx-auto w-full px-6 py-16 pt-32 relative z-10 font-[family-name:var(--font-mono)]">
         {/* Header */}
         <div className="mb-24 relative">
-          <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none font-[family-name:var(--font-mono)] leading-none rotate-90 origin-left">
+          <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none leading-none rotate-90 origin-left">
             INDEX
           </div>
 
           <div className="flex flex-col gap-2 mb-8">
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 bg-primary rounded-full animate-ping" />
-              <span className="text-primary font-[family-name:var(--font-mono)] text-xs uppercase tracking-[0.2em]">
+              <span className="text-primary text-xs uppercase tracking-[0.2em]">
                 Incoming Transmission
               </span>
             </div>
@@ -89,11 +82,8 @@ export default function BlogPage() {
           </div>
 
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl leading-relaxed font-light border-l-2 border-primary/50 pl-6 ml-2">
-            Decrypting{" "}
-            <span className="text-white font-[family-name:var(--font-mono)]">
-              Node.js
-            </span>{" "}
-            internals, architectural patterns, and distributed system anomalies.
+            Decrypting architectural patterns, systems development, and
+            engineering anomalies via distributed technical logs.
           </p>
         </div>
 
@@ -104,202 +94,237 @@ export default function BlogPage() {
             {/* Filter Tabs */}
             <div className="border-b border-white/10 mb-4 sticky top-24 z-40 bg-obsidian/95 backdrop-blur py-4">
               <div className="flex gap-2 overflow-x-auto no-scrollbar items-center pb-2">
-                {[
-                  "All_Logs",
-                  "Node.js",
-                  "Databases",
-                  "Architecture",
-                  "Security",
-                ].map((tab, i) => (
-                  <button
-                    key={tab}
-                    className={`px-4 py-2 text-xs font-[family-name:var(--font-mono)] font-${i === 0 ? "bold text-black bg-primary" : "medium text-gray-400 hover:text-white border border-transparent hover:border-white/20"} uppercase tracking-wider skew-x-[-10deg] transition-all`}
+                <Link
+                  href="/blog"
+                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider skew-x-[-10deg] transition-all ${!categoryFilter ? "text-black bg-primary" : "text-gray-400 hover:text-white border border-transparent hover:border-white/20"}`}
+                >
+                  <span className="skew-x-[10deg] block">All_Logs</span>
+                </Link>
+                {categoryStats.map((cat) => (
+                  <Link
+                    key={cat.category}
+                    href={`/blog?category=${encodeURIComponent(cat.category)}`}
+                    className={`px-4 py-2 text-xs font-bold uppercase tracking-wider skew-x-[-10deg] transition-all ${categoryFilter === cat.category ? "text-black bg-primary" : "text-gray-400 hover:text-white border border-transparent hover:border-white/20"}`}
                   >
-                    <span className="skew-x-[10deg] block">{tab}</span>
-                  </button>
+                    <span className="skew-x-[10deg] block">
+                      {cat.category}{" "}
+                      <span className="opacity-50 text-[10px]">
+                        ({cat.count})
+                      </span>
+                    </span>
+                  </Link>
                 ))}
               </div>
             </div>
 
             {/* Blog Posts */}
-            {blogPosts.map((post) => (
-              <article
-                key={post.id}
-                className="group relative flex flex-col md:flex-row gap-8 items-stretch border border-white/5 bg-surface-dark hover:border-primary/30 p-6 transition-all duration-500 hover:shadow-[0_0_30px_rgba(0,240,255,0.05)]"
-              >
-                {/* Image */}
-                <div className="evervault-card md:w-5/12 w-full shrink-0 relative h-64 md:h-auto overflow-hidden bg-black border border-white/10 group-hover:border-primary/50 transition-colors">
-                  <div
-                    className="absolute inset-0 z-0 opacity-40 group-hover:opacity-100 transition-opacity duration-700 bg-cover bg-center grayscale group-hover:grayscale-0"
-                    style={{ backgroundImage: `url('${post.image}')` }}
-                  />
-                  <div className="absolute top-0 w-full h-[2px] bg-primary shadow-[0_0_15px_#00f0ff] opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-[scan_2s_ease-in-out_infinite] z-20" />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 flex flex-col justify-between py-2">
-                  <div>
-                    {/* Meta */}
-                    <div className="flex items-center gap-3 text-[10px] font-bold font-[family-name:var(--font-mono)] uppercase mb-4 text-gray-500">
-                      <span className="text-black bg-primary px-2 py-0.5 skew-x-[-10deg]">
-                        <span className="skew-x-[10deg] block">
-                          {post.category}
-                        </span>
-                      </span>
-                      <span>::</span>
-                      <span className="text-primary">{post.date}</span>
-                      <span>::</span>
-                      <span>{post.readTime}</span>
+            {posts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-16 text-center border border-white/5 bg-surface-dark border-dashed">
+                <span className="material-symbols-outlined text-4xl text-gray-500 mb-4">
+                  search_off
+                </span>
+                <p className="text-gray-400">
+                  No signals found matching criteria.
+                </p>
+              </div>
+            ) : (
+              posts.map((post) => (
+                <article
+                  key={post.slug}
+                  className="group relative flex flex-col md:flex-row gap-8 items-stretch border border-white/5 bg-surface-dark hover:border-primary/30 p-6 transition-all duration-500 hover:shadow-[0_0_30px_rgba(0,240,255,0.05)]"
+                >
+                  {/* Image */}
+                  {post.coverImage ? (
+                    <div className="evervault-card md:w-5/12 w-full shrink-0 relative h-64 md:h-auto overflow-hidden bg-black border border-white/10 group-hover:border-primary/50 transition-colors">
+                      <Image
+                        src={post.coverImage}
+                        alt={post.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 30vw"
+                        className="object-cover absolute inset-0 z-0 opacity-40 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
+                      />
+                      <div className="absolute top-0 w-full h-[2px] bg-primary shadow-[0_0_15px_#00f0ff] opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-[scan_2s_ease-in-out_infinite] z-20" />
                     </div>
+                  ) : (
+                    <div className="evervault-card md:w-5/12 w-full shrink-0 relative h-64 md:h-auto overflow-hidden bg-black border border-white/10 flex items-center justify-center group-hover:border-primary/50 transition-colors text-white/10">
+                      <span className="material-symbols-outlined text-6xl group-hover:text-primary/20 transition-colors">
+                        article
+                      </span>
+                    </div>
+                  )}
 
-                    {/* Title */}
-                    <h3 className="text-white text-2xl md:text-3xl font-bold font-[family-name:var(--font-mono)] leading-tight mb-4 group-hover:text-primary transition-colors cursor-pointer tracking-tight">
-                      {post.title.split(" ").slice(0, 3).join(" ")}
-                      <br />
-                      {post.title.split(" ").slice(3).join(" ")}
-                    </h3>
-
-                    {/* Excerpt */}
-                    <p className="text-gray-400 text-sm leading-relaxed mb-6 font-[family-name:var(--font-mono)] border-l border-white/10 pl-4">
-                      {post.excerpt.map((line, i) => (
-                        <span key={i}>
-                          {line}
-                          <br />
+                  {/* Content */}
+                  <div className="flex-1 flex flex-col justify-between py-2">
+                    <div>
+                      {/* Meta */}
+                      <div className="flex items-center gap-3 text-[10px] font-bold uppercase mb-4 text-gray-500">
+                        <span className="text-black bg-primary px-2 py-0.5 skew-x-[-10deg]">
+                          <span className="skew-x-[10deg] block">
+                            {post.category}
+                          </span>
                         </span>
-                      ))}
-                    </p>
-                  </div>
+                        <span>::</span>
+                        <span className="text-primary">
+                          {post.publishedAt
+                            ? formatDate(post.publishedAt)
+                            : formatDate(post.createdAt)}
+                        </span>
+                        <span>::</span>
+                        <span>{post.readTime} MIN</span>
+                      </div>
 
-                  {/* Footer */}
-                  <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
-                    <div className="flex gap-3">
-                      {post.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[10px] font-[family-name:var(--font-mono)] text-gray-500 group-hover:text-primary/70 transition-colors"
+                      {/* Title */}
+                      <h3 className="text-white text-2xl md:text-3xl font-bold leading-tight mb-4 group-hover:text-primary transition-colors cursor-pointer tracking-tight">
+                        <Link
+                          href={`/blog/${post.slug}`}
+                          className="hover:underline decoration-primary/50 underline-offset-4"
                         >
-                          [{tag}]
-                        </span>
-                      ))}
+                          {post.title}
+                        </Link>
+                      </h3>
+
+                      {/* Excerpt */}
+                      <p className="text-gray-400 text-sm leading-relaxed mb-6 border-l border-white/10 pl-4 relative line-clamp-3">
+                        {post.excerpt}
+                      </p>
                     </div>
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="flex items-center gap-2 text-xs font-bold font-[family-name:var(--font-mono)] text-white hover:text-primary transition-colors uppercase tracking-wider group/link"
-                    >
-                      Execute_Read{" "}
-                      <span className="material-symbols-outlined text-sm transition-transform group-hover/link:translate-x-1">
-                        terminal
-                      </span>
-                    </Link>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
+                      <div className="flex gap-2 flex-wrap">
+                        {post.tags.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[10px] text-gray-500 group-hover:text-primary/70 transition-colors"
+                          >
+                            #{tag.toLowerCase().replace(/\s+/g, "-")}
+                          </span>
+                        ))}
+                      </div>
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="flex items-center gap-2 text-xs font-bold text-white hover:text-primary transition-colors uppercase tracking-wider group/link shrink-0"
+                      >
+                        Execute_Read{" "}
+                        <span className="material-symbols-outlined text-sm transition-transform group-hover/link:translate-x-1">
+                          terminal
+                        </span>
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))
+            )}
 
             {/* Pagination */}
-            <div className="flex justify-center items-center gap-4 py-12 font-[family-name:var(--font-mono)]">
-              <button className="size-10 flex items-center justify-center border border-white/10 text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all">
-                <span className="material-symbols-outlined">chevron_left</span>
-              </button>
-              <div className="flex items-center gap-2">
-                <button className="w-10 h-10 flex items-center justify-center bg-primary text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.4)]">
-                  1
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center border border-white/10 text-gray-400 hover:border-white/40 transition-colors">
-                  2
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center border border-white/10 text-gray-400 hover:border-white/40 transition-colors">
-                  3
-                </button>
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 py-12">
+                <Link
+                  href={`/blog?page=${Math.max(1, page - 1)}${categoryFilter ? `&category=${encodeURIComponent(categoryFilter)}` : ""}${tagFilter ? `&tag=${encodeURIComponent(tagFilter)}` : ""}`}
+                  className={`size-10 flex items-center justify-center border border-white/10 transition-all ${page === 1 ? "opacity-30 pointer-events-none text-gray-600" : "text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5"}`}
+                >
+                  <span className="material-symbols-outlined">
+                    chevron_left
+                  </span>
+                </Link>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (p) => (
+                      <Link
+                        key={p}
+                        href={`/blog?page=${p}${categoryFilter ? `&category=${encodeURIComponent(categoryFilter)}` : ""}${tagFilter ? `&tag=${encodeURIComponent(tagFilter)}` : ""}`}
+                        className={`w-10 h-10 flex items-center justify-center ${p === page ? "bg-primary text-black font-bold shadow-[0_0_15px_rgba(0,240,255,0.4)]" : "border border-white/10 text-gray-400 hover:border-white/40 transition-colors"}`}
+                      >
+                        {p}
+                      </Link>
+                    ),
+                  )}
+                </div>
+                <Link
+                  href={`/blog?page=${Math.min(totalPages, page + 1)}${categoryFilter ? `&category=${encodeURIComponent(categoryFilter)}` : ""}${tagFilter ? `&tag=${encodeURIComponent(tagFilter)}` : ""}`}
+                  className={`size-10 flex items-center justify-center border border-white/10 transition-all ${page === totalPages ? "opacity-30 pointer-events-none text-gray-600" : "text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5"}`}
+                >
+                  <span className="material-symbols-outlined">
+                    chevron_right
+                  </span>
+                </Link>
               </div>
-              <button className="size-10 flex items-center justify-center border border-white/10 text-gray-500 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all">
-                <span className="material-symbols-outlined">chevron_right</span>
-              </button>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
-          <aside className="lg:col-span-4 flex flex-col gap-10">
+          <aside className="lg:col-span-4 flex flex-col gap-6 font-mono">
             {/* Newsletter */}
-            <div className="border border-primary/30 bg-surface-dark p-1 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-primary/5" />
-              <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-primary" />
-              <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-primary" />
-              <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-primary" />
-              <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-primary" />
+            <div className="border border-white/10 bg-[#06080a] p-1 relative group">
+              {/* Corner Accents */}
+              <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[#00f0ff]" />
+              <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[#00f0ff]" />
+              <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[#00f0ff]" />
+              <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[#00f0ff]" />
 
-              <div className="relative z-10 p-6 bg-obsidian/80 backdrop-blur-sm h-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="material-symbols-outlined text-primary text-2xl animate-pulse">
-                    broadcast_on_personal
+              <div className="relative z-10 p-5 bg-transparent h-full">
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="material-symbols-outlined text-[#00f0ff] mb-1">
+                    sensors
                   </span>
-                  <h4 className="text-lg font-bold font-[family-name:var(--font-mono)] text-white tracking-wider">
+                  <h4 className="text-white font-bold tracking-widest uppercase">
                     NET_INSIGHTS
                   </h4>
                 </div>
-                <p className="text-gray-400 mb-6 text-sm font-[family-name:var(--font-mono)] border-l-2 border-gray-800 pl-3">
-                  {"// Join the encrypted channel."}
-                  <br />
-                  {"// Weekly deep-dives."}
-                  <br />
-                  {"// No noise."}
-                </p>
-                <div className="flex flex-col gap-4">
-                  <input
-                    type="email"
-                    placeholder="user@domain.sys"
-                    className="bg-black border border-white/20 text-primary font-[family-name:var(--font-mono)] placeholder:text-gray-700 focus:ring-1 focus:ring-primary focus:border-primary py-3 px-4 text-xs w-full transition-all"
-                  />
-                  <button className="bg-white/5 border border-primary/50 text-primary font-bold py-3 text-xs font-[family-name:var(--font-mono)] hover:bg-primary hover:text-black transition-all uppercase tracking-widest relative overflow-hidden group/btn">
-                    <span className="relative z-10">Initialize_Sub</span>
-                    <div className="absolute inset-0 bg-primary translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 z-0" />
-                  </button>
+                <div className="text-gray-400 mb-6 text-xs border-l-[3px] border-white/5 pl-4 leading-relaxed font-mono">
+                  <div>{"// Join the encrypted channel."}</div>
+                  <div>{"// Weekly deep-dives."}</div>
+                  <div>{"// No noise."}</div>
                 </div>
+                <NewsletterForm />
               </div>
             </div>
 
             {/* Tags */}
-            <div className="border border-white/10 bg-surface-dark p-8 relative">
-              <h4 className="text-white font-bold font-[family-name:var(--font-mono)] mb-6 flex items-center gap-2 text-xs uppercase tracking-widest">
-                <span className="w-1 h-4 bg-primary" />
-                System_Tags
+            <div className="border border-white/10 bg-[#06080a] p-6 relative">
+              <h4 className="text-white font-bold mb-6 flex items-center gap-2 text-sm uppercase tracking-widest">
+                <span className="w-1 h-3.5 bg-[#00f0ff]" />
+                SYSTEM_TAGS
               </h4>
               <div className="flex flex-wrap gap-2">
-                {systemTags.map((tag) => (
-                  <a
-                    key={tag}
-                    href="#"
-                    className="font-[family-name:var(--font-mono)] bg-black border border-white/10 hover:border-primary text-gray-400 hover:text-primary px-3 py-1.5 text-[10px] uppercase tracking-wider transition-all hover:shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+                <Link
+                  href={`/blog`}
+                  className={`bg-black border transition-colors px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${!tagFilter ? "border-[#00f0ff] text-[#00f0ff]" : "border-white/10 text-gray-500 hover:border-white/30 hover:text-white"}`}
+                >
+                  ALL
+                </Link>
+                {dynamicTags.map((t) => (
+                  <Link
+                    key={t.tag}
+                    href={`/blog?tag=${encodeURIComponent(t.tag)}`}
+                    className={`bg-black border transition-colors px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${tagFilter === t.tag ? "border-[#00f0ff] text-[#00f0ff]" : "border-white/10 text-gray-500 hover:border-white/30 hover:text-white"}`}
                   >
-                    {tag}
-                  </a>
+                    {t.tag}
+                  </Link>
                 ))}
               </div>
             </div>
 
             {/* Social Links */}
-            <div className="border border-white/10 bg-surface-dark p-8 relative">
-              <h4 className="text-white font-bold font-[family-name:var(--font-mono)] mb-6 flex items-center gap-2 text-xs uppercase tracking-widest">
-                <span className="w-1 h-4 bg-primary" />
-                Handshake
+            <div className="border border-white/10 bg-[#06080a] p-6 relative">
+              <h4 className="text-[#00f0ff] font-bold font-mono mb-6 bg-white/5 inline-flex p-1 px-2 text-xs uppercase tracking-widest border-l-2 border-[#00f0ff]">
+                HANDSHAKE
               </h4>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-4 font-mono text-xs">
                 {[
-                  { label: "GitHub_Repo", href: "https://github.com" },
-                  { label: "LinkedIn_Link", href: "https://linkedin.com" },
-                  { label: "RSS_Feed", href: "/rss" },
+                  {
+                    label: "GITHUB_REPO",
+                    href: "https://github.com/ojhasuresh1999",
+                  },
+                  { label: "LINKEDIN_LINK", href: "/" },
+                  { label: "RSS_FEED", href: "/" },
                 ].map((link) => (
                   <a
                     key={link.label}
                     href={link.href}
-                    className="flex items-center gap-4 p-3 -mx-3 border border-transparent hover:border-primary/20 hover:bg-primary/5 text-gray-400 hover:text-white transition-all group"
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                   >
-                    <span className="font-[family-name:var(--font-mono)] text-xs font-bold uppercase group-hover:text-primary">
-                      :: {link.label}
-                    </span>
-                    <span className="material-symbols-outlined text-xs ml-auto text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      arrow_forward
-                    </span>
+                    <span className="text-gray-500">::</span> {link.label}
                   </a>
                 ))}
               </div>

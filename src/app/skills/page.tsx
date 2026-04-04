@@ -1,22 +1,35 @@
 import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
 import { cn } from "@/lib/utils";
+import { skillService } from "@/server/services/skill.service";
+import { techStackService } from "@/server/services/tech-stack.service";
 
-const languages = [
-  { name: "TypeScript", proficiency: 95 },
-  { name: "JavaScript (ESNext)", proficiency: 98 },
-  { name: "Go (Golang)", proficiency: 85 },
-  { name: "Python", proficiency: 70 },
-];
+// Enable revalidation Every 60 seconds or make it dynamic if we want to
+export const revalidate = 60;
 
-const architecturePatterns = [
-  { name: "Microservices", color: "bg-primary" },
-  { name: "Event-Driven", color: "bg-purple-500" },
-  { name: "Serverless", color: "bg-orange-500" },
-  { name: "Domain-Driven Design", color: "bg-emerald-500" },
-];
+export default async function SkillsPage() {
+  const [skillsRes, techStacksRes] = await Promise.all([
+    skillService.getAllSkills(),
+    techStackService.getAllTechStack(),
+  ]);
 
-export default function SkillsPage() {
+  const allSkills = skillsRes.success
+    ? skillsRes.data!.filter((s) => s.isVisible)
+    : [];
+  const architecturePatterns = techStacksRes.success
+    ? techStacksRes.data!.filter((t) => t.isVisible)
+    : [];
+
+  const languages = allSkills.filter((s) => s.category === "LANGUAGE");
+  const databases = allSkills.filter((s) => s.category === "DATABASE");
+  const devopsCloud = allSkills.filter((s) => s.category === "DEVOPS");
+  // Frameworks and Tools might just be combined or omitted based on the layout,
+  // but let's include them if they exist maybe inside DevOps or under Languages
+  // For now, let's keep the layout similar and we'll add them to an Extra section if needed.
+  const toolsAndFrameworks = allSkills.filter(
+    (s) => s.category === "FRAMEWORK" || s.category === "TOOL",
+  );
+
   return (
     <>
       <Navbar />
@@ -24,22 +37,18 @@ export default function SkillsPage() {
       <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-8 lg:px-12 pt-32">
         {/* Lamp Header Section */}
         <div className="relative w-full max-w-[960px] flex flex-col items-center text-center mb-16">
-          {/* Lamp Light Effect */}
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full max-w-lg h-40 bg-gradient-to-b from-primary/30 via-primary/5 to-transparent blur-[60px] pointer-events-none" />
 
           <div className="relative z-10 flex flex-col items-center gap-4">
-            {/* Badge */}
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               Skills & Expertise
             </div>
 
-            {/* Title */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-lg">
               Technical Architecture <br className="hidden md:block" />& Stack
             </h1>
 
-            {/* Description */}
             <p className="text-slate-400 text-lg md:text-xl max-w-2xl font-light leading-relaxed">
               Scalable solutions built with precision. Explore the technologies
               powering high-performance backend systems.
@@ -61,23 +70,32 @@ export default function SkillsPage() {
                   </span>
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors">
-                  Core Runtime
+                  Core Runtime & Tools
                 </h3>
                 <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                  Deep understanding of the Event Loop, asynchronous patterns,
-                  and non-blocking I/O. Leveraging modern runtimes for maximum
-                  throughput.
+                  Deep understanding of asynchronous patterns, runtimes, and
+                  building robust infrastructure layers. Leveraging modern
+                  runtimes for maximum throughput.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {["Node.js v20+", "Deno", "Bun", "C++ Addons"].map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 rounded-md text-xs font-medium bg-white/5 border border-white/10 text-slate-300 group-hover:border-primary/30 group-hover:text-white transition-colors"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {toolsAndFrameworks.length > 0
+                  ? toolsAndFrameworks.map((tag) => (
+                      <span
+                        key={tag._id.toString()}
+                        className="px-3 py-1 rounded-md text-xs font-medium bg-white/5 border border-white/10 text-slate-300 group-hover:border-primary/30 group-hover:text-white transition-colors"
+                      >
+                        {tag.name}
+                      </span>
+                    ))
+                  : ["Node.js v20+", "Deno", "Bun", "C++ Addons"].map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 rounded-md text-xs font-medium bg-white/5 border border-white/10 text-slate-300 group-hover:border-primary/30 group-hover:text-white transition-colors"
+                      >
+                        {tag}
+                      </span>
+                    ))}
               </div>
             </div>
 
@@ -104,25 +122,31 @@ export default function SkillsPage() {
               Polyglot proficiency focusing on type safety and performance.
             </p>
 
-            <div className="flex-1 flex flex-col gap-6 z-10">
-              {languages.map((lang) => (
-                <div key={lang.name} className="group/bar">
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-white font-semibold text-sm">
-                      {lang.name}
-                    </span>
-                    <span className="text-primary text-xs font-bold">
-                      {lang.proficiency}%
-                    </span>
+            <div className="flex-1 flex flex-col gap-6 z-10 w-full">
+              {languages.length > 0 ? (
+                languages.map((lang) => (
+                  <div key={lang._id.toString()} className="group/bar w-full">
+                    <div className="flex justify-between items-end mb-2 w-full">
+                      <span className="text-white font-semibold text-sm">
+                        {lang.name}
+                      </span>
+                      <span className="text-primary text-xs font-bold">
+                        {lang.proficiency}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-600 to-primary shadow-[0_0_10px_rgba(0,242,255,0.5)] group-hover/bar:brightness-125 transition-all duration-500"
+                        style={{ width: `${lang.proficiency}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-600 to-primary shadow-[0_0_10px_rgba(0,242,255,0.5)] group-hover/bar:brightness-125 transition-all duration-500"
-                      style={{ width: `${lang.proficiency}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-slate-500 text-sm italic">
+                  No languages defined yet.
+                </p>
+              )}
             </div>
           </div>
 
@@ -147,15 +171,30 @@ export default function SkillsPage() {
                 Relational & NoSQL mastery
               </p>
               <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide bg-blue-900/20 text-blue-200 border border-blue-500/20">
-                  PostgreSQL
-                </span>
-                <span className="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide bg-red-900/20 text-red-200 border border-red-500/20">
-                  Redis
-                </span>
-                <span className="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide bg-green-900/20 text-green-200 border border-green-500/20">
-                  MongoDB
-                </span>
+                {databases.length > 0 ? (
+                  databases.map((db, idx) => {
+                    const colors = [
+                      "bg-blue-900/20 text-blue-200 border-blue-500/20",
+                      "bg-red-900/20 text-red-200 border-red-500/20",
+                      "bg-green-900/20 text-green-200 border-green-500/20",
+                      "bg-purple-900/20 text-purple-200 border-purple-500/20",
+                      "bg-orange-900/20 text-orange-200 border-orange-500/20",
+                    ];
+                    const colorCombo = colors[idx % colors.length];
+                    return (
+                      <span
+                        key={db._id.toString()}
+                        className={`px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide border ${colorCombo}`}
+                      >
+                        {db.name}
+                      </span>
+                    );
+                  })
+                ) : (
+                  <p className="text-slate-500 text-xs italic">
+                    No databases defined.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -183,14 +222,20 @@ export default function SkillsPage() {
                 CI/CD & Infrastructure
               </p>
               <div className="flex flex-wrap gap-2">
-                {["Docker", "K8s", "AWS", "Terraform"].map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide bg-white/5 border border-white/10 text-slate-300"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {devopsCloud.length > 0 ? (
+                  devopsCloud.map((tag) => (
+                    <span
+                      key={tag._id.toString()}
+                      className="px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide bg-white/5 border border-white/10 text-slate-300"
+                    >
+                      {tag.name}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-slate-500 text-xs italic">
+                    No devops defined.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -206,7 +251,7 @@ export default function SkillsPage() {
                     hub
                   </span>
                   <h3 className="text-2xl font-bold text-white">
-                    Architecture Patterns
+                    Technical Stack
                   </h3>
                 </div>
                 <p className="text-slate-400 text-sm max-w-xl mb-6">
@@ -216,20 +261,38 @@ export default function SkillsPage() {
                   and observability.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  {architecturePatterns.map((pattern) => (
-                    <div
-                      key={pattern.name}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-slate-300 text-xs font-medium"
-                    >
-                      <span
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          pattern.color,
-                        )}
-                      />
-                      {pattern.name}
-                    </div>
-                  ))}
+                  {architecturePatterns.length > 0 ? (
+                    architecturePatterns.map((pattern) => {
+                      const colorClass =
+                        pattern.color && pattern.color.startsWith("bg-")
+                          ? pattern.color
+                          : "";
+                      const customColor =
+                        pattern.color && !pattern.color.startsWith("bg-")
+                          ? pattern.color
+                          : undefined;
+
+                      return (
+                        <div
+                          key={pattern._id.toString()}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-dark border border-white/10 text-slate-300 text-xs font-medium"
+                        >
+                          <span
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full",
+                              colorClass,
+                            )}
+                            style={{ backgroundColor: customColor }}
+                          />
+                          {pattern.name}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-slate-500 text-xs italic">
+                      No technical stack defined.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -252,7 +315,7 @@ export default function SkillsPage() {
         {/* Footer CTA */}
         <div className="mt-16 text-center">
           <a
-            href="https://github.com"
+            href="https://github.com/ojhasuresh1999"
             target="_blank"
             rel="noopener noreferrer"
             className="group inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium"

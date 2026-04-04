@@ -199,3 +199,29 @@ export const blogPostSchema = z.object({
 });
 
 export type BlogPostFormData = z.infer<typeof blogPostSchema>;
+
+/**
+ * Skill schema
+ */
+export const skillSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  proficiency: z.number().int().min(0).max(100),
+  category: z.enum(["LANGUAGE", "DATABASE", "DEVOPS", "FRAMEWORK", "TOOL"]),
+  order: z.number().int().default(0),
+  isVisible: z.boolean().default(true),
+});
+
+export type SkillFormData = z.infer<typeof skillSchema>;
+
+/**
+ * Tech Stack schema
+ */
+export const techStackSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  icon: z.string().min(1, "Icon is required").max(50),
+  color: z.string().min(1, "Color is required").max(50),
+  order: z.number().int().default(0),
+  isVisible: z.boolean().default(true),
+});
+
+export type TechStackFormData = z.infer<typeof techStackSchema>;

@@ -27,7 +27,9 @@ export {
 } from "./use-blog";
 
 // Chat
-export { useConversations, useMessages, chatKeys } from "./use-chat";
+export * from "./use-chat";
+export * from "./use-skills";
+export * from "./use-tech-stack";
 
 // Settings & Social Links
 export {
