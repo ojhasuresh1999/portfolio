@@ -15,6 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
   display: "swap",
+  preload: false,
 });
 
 import { settingsService } from "@/server/services/settings.service";
