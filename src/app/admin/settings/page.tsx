@@ -7,9 +7,9 @@ import {
   useSocialLinks,
   useUpdateSocialLinks,
 } from "@/hooks/queries";
-import CloudinaryUpload, {
-  type UploadResult,
-} from "@/components/ui/cloudinary-upload";
+// import CloudinaryUpload, {
+//   type UploadResult,
+// } from "@/components/ui/cloudinary-upload";
 
 const getValidIcon = (iconStr: string) => {
   const i = iconStr.toLowerCase().trim();

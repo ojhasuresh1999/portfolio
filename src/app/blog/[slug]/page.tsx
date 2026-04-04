@@ -102,7 +102,13 @@ export default async function BlogPostPage({
             remarkPlugins={[remarkGfm]}
             components={{
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              code({ node, inline, className, children, ...props }: any) {
+              code({
+                node: _node,
+                inline,
+                className,
+                children,
+                ...props
+              }: any) {
                 const match = /language-(\w+)/.exec(className || "");
                 return !inline && match ? (
                   <CodeBlock
