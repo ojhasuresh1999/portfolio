@@ -276,6 +276,69 @@
   },
   "security": [],
   "paths": {
+    "/api/about": {
+      "get": {
+        "summary": "Get About Content",
+        "description": "Retrieve the active about section content",
+        "tags": [
+          "About"
+        ],
+        "responses": {
+          "200": {
+            "description": "About content"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update About Content",
+        "description": "Create or update the about section content (Admin only)",
+        "tags": [
+          "About"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/about/timeline/{id}": {
+      "patch": {
+        "summary": "Update Timeline Entry",
+        "description": "Update an existing timeline entry (Admin only)",
+        "tags": [
+          "About"
+        ]
+      },
+      "delete": {
+        "summary": "Delete Timeline Entry",
+        "description": "Delete an existing timeline entry (Admin only)",
+        "tags": [
+          "About"
+        ]
+      }
+    },
+    "/api/about/timeline": {
+      "get": {
+        "summary": "Get Timeline Entries",
+        "description": "Retrieve all timeline journey entries",
+        "tags": [
+          "About"
+        ]
+      },
+      "post": {
+        "summary": "Create Timeline Entry",
+        "description": "Create a new timeline/journey entry (Admin only)",
+        "tags": [
+          "About"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/admin/auth/2fa/setup": {
       "post": {
         "summary": "Generate 2FA secret",
