@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { ComponentPropsWithoutRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -101,14 +102,16 @@ export default async function BlogPostPage({
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               code({
                 node: _node,
                 inline,
                 className,
                 children,
                 ...props
-              }: any) {
+              }: ComponentPropsWithoutRef<"code"> & {
+                inline?: boolean;
+                node?: unknown;
+              }) {
                 const match = /language-(\w+)/.exec(className || "");
                 return !inline && match ? (
                   <CodeBlock
