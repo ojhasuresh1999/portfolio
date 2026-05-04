@@ -15,6 +15,7 @@ export {
   type IContactSubmission,
 } from "./ContactSubmission";
 export { Subscriber, type ISubscriber } from "./Subscriber";
+export { EmailTemplate, type IEmailTemplate } from "./EmailTemplate";
 
 // Chat models
 export { ChatUser, type IChatUser } from "./ChatUser";

@@ -1,6 +1,7 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import { ContactSubmission } from "@/models";
 import type { ServiceResult } from "../types";
+import { emailService } from "./email.service";
 
 // Type definitions for contact form data
 interface ContactSubmissionData {
@@ -48,6 +49,18 @@ export class ContactService {
         subject: data.subject ?? undefined,
         message: data.message,
       });
+
+      // Fire-and-forget auto-reply email — never blocks or fails the submission
+      emailService
+        .sendContactAutoReply({
+          name: data.name,
+          email: data.email,
+          subject: data.subject ?? undefined,
+          message: data.message,
+        })
+        .catch((err) =>
+          console.error("[ContactService] Auto-reply email failed:", err),
+        );
 
       return { success: true, data: { id: submission._id.toString() } };
     } catch (error) {

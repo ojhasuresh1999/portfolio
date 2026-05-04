@@ -225,3 +225,29 @@ export const techStackSchema = z.object({
 });
 
 export type TechStackFormData = z.infer<typeof techStackSchema>;
+
+/**
+ * About content schema
+ */
+export const aboutContentSchema = z.object({
+  title: z.string().max(200).optional(),
+  subtitle: z.string().max(200).optional(),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  resumeUrl: z.string().url("Invalid resume URL").optional().or(z.literal("")),
+  isActive: z.boolean().optional(),
+});
+
+export type AboutFormData = z.infer<typeof aboutContentSchema>;
+
+/**
+ * Timeline entry schema
+ */
+export const timelineEntrySchema = z.object({
+  year: z.string().min(1, "Year is required").max(30),
+  title: z.string().min(1, "Title is required").max(200),
+  description: z.string().min(1, "Description is required"),
+  order: z.number().int().default(0),
+  isVisible: z.boolean().default(true),
+});
+
+export type TimelineEntryFormData = z.infer<typeof timelineEntrySchema>;

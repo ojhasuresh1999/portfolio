@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import axios from "axios";
 
-const HEALTH_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const HEALTH_CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
 export function SocketHealthProvider({
   children,

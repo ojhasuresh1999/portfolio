@@ -15,7 +15,12 @@ const sidebarItems = [
   { label: "Skills", href: "/admin/skills", icon: "code" },
   { label: "Blog", href: "/admin/blog", icon: "article" },
   { label: "Chat", href: "/admin/chat", icon: "chat" },
-  { label: "Timeline", href: "/admin/timeline", icon: "timeline" },
+  { label: "About", href: "/admin/about", icon: "info" },
+  {
+    label: "Email Template",
+    href: "/admin/about/email-template",
+    icon: "mark_email_read",
+  },
   { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
 
