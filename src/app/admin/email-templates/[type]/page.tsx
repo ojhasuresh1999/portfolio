@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 
 // ============================================================================
 // Types
@@ -15,28 +15,80 @@ interface EmailTemplateForm {
   isActive: boolean;
 }
 
-const TEMPLATE_TYPE = "contact_auto_reply";
-
-const VARIABLES = [
-  { key: "{{name}}", label: "Sender's Name" },
-  { key: "{{email}}", label: "Sender's Email" },
-  { key: "{{subject}}", label: "Message Subject" },
-  { key: "{{message}}", label: "Message Content" },
-];
+const TEMPLATE_CONFIGS: Record<
+  string,
+  {
+    title: string;
+    desc: string;
+    variables: { key: string; label: string }[];
+  }
+> = {
+  contact_auto_reply: {
+    title: "Contact Auto-Reply",
+    desc: "Sent to the user when they submit a contact form.",
+    variables: [
+      { key: "{{name}}", label: "Sender's Name" },
+      { key: "{{email}}", label: "Sender's Email" },
+      { key: "{{subject}}", label: "Message Subject" },
+      { key: "{{message}}", label: "Message Content" },
+    ],
+  },
+  contact_admin_notice: {
+    title: "Contact Admin Notice",
+    desc: "Sent to you when a new contact form is submitted.",
+    variables: [
+      { key: "{{name}}", label: "Sender's Name" },
+      { key: "{{email}}", label: "Sender's Email" },
+      { key: "{{subject}}", label: "Message Subject" },
+      { key: "{{message}}", label: "Message Content" },
+    ],
+  },
+  chat_offline_user_notice: {
+    title: "Chat Offline Notice",
+    desc: "Sent to users who chat while you are offline.",
+    variables: [{ key: "{{message}}", label: "Message Content" }],
+  },
+  chat_admin_notice: {
+    title: "Chat Admin Notice",
+    desc: "Sent to you when a new chat message arrives.",
+    variables: [
+      { key: "{{name}}", label: "Sender's Name" },
+      { key: "{{message}}", label: "Message Content" },
+    ],
+  },
+  subscribe_user_welcome: {
+    title: "Subscriber Welcome",
+    desc: "Sent to users when they subscribe to your blog.",
+    variables: [],
+  },
+  subscribe_admin_notice: {
+    title: "Subscriber Admin Notice",
+    desc: "Sent to you when a new user subscribes.",
+    variables: [{ key: "{{email}}", label: "Subscriber Email" }],
+  },
+  blog_newsletter: {
+    title: "Blog Newsletter",
+    desc: "Sent to subscribers when a new post is published.",
+    variables: [
+      { key: "{{blogTitle}}", label: "Blog Post Title" },
+      { key: "{{blogExcerpt}}", label: "Blog Post Excerpt" },
+      { key: "{{blogUrl}}", label: "Blog Post URL" },
+    ],
+  },
+};
 
 const DEFAULT_FORM: EmailTemplateForm = {
-  subject: "Thanks for reaching out, {{name}}!",
+  subject: "Subject here...",
   greeting: "Hi {{name}},",
-  body: 'Thank you for getting in touch! I\'ve received your message and will get back to you as soon as possible.\n\nYour message:\n"{{message}}"',
-  ctaText: "Visit My Portfolio",
-  ctaUrl: "",
-  footerText:
-    "You'll typically hear from me within 24–48 hours. This is an automated confirmation.",
+  body: "Message body...",
+  ctaText: "Click Here",
+  ctaUrl: "https://yourportfolio.com",
+  footerText: "Automated message.",
   isActive: true,
 };
 
 // ============================================================================
-// Preview renderer (mirrors email.service.ts renderAutoReplyTemplate)
+// Preview renderer
 // ============================================================================
 function interpolate(tmpl: string, vars: Record<string, string>): string {
   return tmpl.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? `{{${k}}}`);
@@ -48,6 +100,9 @@ function renderPreviewHtml(form: EmailTemplateForm): string {
     email: "alex@example.com",
     subject: "Exciting collaboration opportunity",
     message: "Hi! I would love to collaborate on a project with you.",
+    blogTitle: "Next.js 15: What's New?",
+    blogExcerpt: "A deep dive into the latest Next.js 15 features...",
+    blogUrl: "https://yourportfolio.com/blog/nextjs-15",
   };
 
   const resolvedGreeting = interpolate(form.greeting, vars);
@@ -73,8 +128,7 @@ function renderPreviewHtml(form: EmailTemplateForm): string {
     <div style="display:inline-block;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.3);border-radius:12px;padding:10px 18px;margin-bottom:16px;">
       <span style="font-family:monospace;font-size:16px;font-weight:900;letter-spacing:2px;color:#00f0ff;">DEV_IO</span>
     </div>
-    <h1 style="margin:0;font-size:22px;font-weight:800;color:#fff;">Message Received!</h1>
-    <p style="margin:8px 0 0;font-size:13px;color:#94a3b8;">I'll get back to you shortly</p>
+    <h1 style="margin:0;font-size:22px;font-weight:800;color:#fff;">${interpolate(form.subject, vars)}</h1>
   </td></tr>
   <tr><td style="background:linear-gradient(90deg,#10b981,#059669);height:3px;border-left:1px solid rgba(99,102,241,0.2);border-right:1px solid rgba(99,102,241,0.2);"></td></tr>
   <tr><td style="background:#0f172a;padding:32px;border-left:1px solid rgba(99,102,241,0.2);border-right:1px solid rgba(99,102,241,0.2);">
@@ -117,7 +171,12 @@ function VarChip({ varKey, onClick }: { varKey: string; onClick: () => void }) {
 // ============================================================================
 // Main Page
 // ============================================================================
-export default function AdminEmailTemplatePage() {
+export default function AdminEmailTemplatePage({
+  params,
+}: {
+  params: Promise<{ type: string }>;
+}) {
+  const { type: TEMPLATE_TYPE } = use(params);
   const [form, setForm] = useState<EmailTemplateForm>(DEFAULT_FORM);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -133,6 +192,9 @@ export default function AdminEmailTemplatePage() {
   const textareaRefs = useRef<
     Partial<Record<keyof EmailTemplateForm, HTMLTextAreaElement | null>>
   >({});
+
+  const config =
+    TEMPLATE_CONFIGS[TEMPLATE_TYPE] || TEMPLATE_CONFIGS["contact_auto_reply"];
 
   // Load existing template
   useEffect(() => {
@@ -164,7 +226,7 @@ export default function AdminEmailTemplatePage() {
       }
     };
     load();
-  }, []);
+  }, [TEMPLATE_TYPE]);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
@@ -262,13 +324,8 @@ export default function AdminEmailTemplatePage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">
-            Contact Auto-Reply Email
-          </h2>
-          <p className="text-slate-400 text-sm mt-1">
-            This email is sent automatically to every visitor who submits the
-            contact form.
-          </p>
+          <h2 className="text-2xl font-bold text-white">{config.title}</h2>
+          <p className="text-slate-400 text-sm mt-1">{config.desc}</p>
         </div>
         <div className="flex items-center gap-3">
           {isDirty && (
@@ -296,25 +353,29 @@ export default function AdminEmailTemplatePage() {
       </div>
 
       {/* Variable Reference */}
-      <div className="bg-card-dark border border-white/5 rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="material-symbols-outlined text-primary text-lg">
-            code
-          </span>
-          <h3 className="text-sm font-bold text-white">Available Variables</h3>
-          <span className="text-xs text-slate-500">
-            — Click to insert at cursor position
-          </span>
+      {config.variables.length > 0 && (
+        <div className="bg-card-dark border border-white/5 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-primary text-lg">
+              code
+            </span>
+            <h3 className="text-sm font-bold text-white">
+              Available Variables
+            </h3>
+            <span className="text-xs text-slate-500">
+              — Click to insert at cursor position
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {config.variables.map((v) => (
+              <div key={v.key} className="flex items-center gap-1.5">
+                <VarChip varKey={v.key} onClick={() => insertVariable(v.key)} />
+                <span className="text-[11px] text-slate-500">{v.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {VARIABLES.map((v) => (
-            <div key={v.key} className="flex items-center gap-1.5">
-              <VarChip varKey={v.key} onClick={() => insertVariable(v.key)} />
-              <span className="text-[11px] text-slate-500">{v.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Main Split: Editor + Preview */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -328,12 +389,9 @@ export default function AdminEmailTemplatePage() {
           <div className="bg-card-dark border border-white/5 rounded-xl p-4">
             <label className="flex items-center justify-between cursor-pointer">
               <div>
-                <p className="text-sm font-bold text-white">
-                  Auto-Reply Active
-                </p>
+                <p className="text-sm font-bold text-white">Template Active</p>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  When disabled, no confirmation email is sent after form
-                  submissions.
+                  When disabled, this email will not be sent automatically.
                 </p>
               </div>
               <div
@@ -425,7 +483,7 @@ export default function AdminEmailTemplatePage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-slate-500">Button URL</label>
                 <input
-                  type="url"
+                  type="text"
                   value={form.ctaUrl}
                   onChange={(e) => handleChange("ctaUrl", e.target.value)}
                   onFocus={() => setActiveField("ctaUrl")}

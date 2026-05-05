@@ -56,6 +56,51 @@ class MessageServiceClass {
         createdAt: message.createdAt,
       };
 
+      // Extract chat user email if they provided one
+      if (data.senderType === "user") {
+        import("@/models/ChatUser").then(async ({ ChatUser }) => {
+          import("@/models/User").then(async ({ User }) => {
+            const [chatUser, admin] = await Promise.all([
+              ChatUser.findOne({ sessionId: data.senderId }),
+              User.findOne({ role: "ADMIN" }),
+            ]);
+
+            // 1. Send Admin Notice
+            if (process.env.SENDGRID_FROM_EMAIL) {
+              const { emailService } = await import("./email.service");
+              emailService
+                .sendTemplateEmail({
+                  to: process.env.SENDGRID_FROM_EMAIL,
+                  templateType: "chat_admin_notice",
+                  vars: {
+                    name: chatUser?.name || "Guest",
+                    message: data.content,
+                  },
+                })
+                .catch((err) =>
+                  console.error("[MessageService] admin notice failed", err),
+                );
+            }
+
+            // 2. Send Offline Notice to User if Admin is offline
+            if (admin && !admin.isOnline && chatUser && chatUser.email) {
+              const { emailService } = await import("./email.service");
+              emailService
+                .sendTemplateEmail({
+                  to: chatUser.email,
+                  templateType: "chat_offline_user_notice",
+                  vars: {
+                    message: data.content,
+                  },
+                })
+                .catch((err) =>
+                  console.error("[MessageService] offline notice failed", err),
+                );
+            }
+          });
+        });
+      }
+
       return { success: true, data: messageData };
     } catch (error) {
       const message =

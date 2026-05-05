@@ -26,6 +26,7 @@ export interface IUser {
   lastLoginAt?: Date;
   loginAttempts: number;
   lockUntil?: Date;
+  isOnline: boolean;
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +55,7 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     lastLoginAt: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date },
+    isOnline: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

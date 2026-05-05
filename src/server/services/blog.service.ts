@@ -328,12 +328,14 @@ export class BlogService {
     const emails = subsRes.data.map((s) => s.email);
     const blogUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blog/${post.slug}`;
 
-    await emailService.sendNewBlogPostNotification({
-      blogTitle: post.title,
-      blogExcerpt: post.excerpt,
-      blogUrl: blogUrl,
-      subscribers: emails,
-      coverImage: post.coverImage,
+    await emailService.sendTemplateEmail({
+      to: emails,
+      templateType: "blog_newsletter",
+      vars: {
+        blogTitle: post.title,
+        blogExcerpt: post.excerpt,
+        blogUrl: blogUrl,
+      },
     });
   }
 

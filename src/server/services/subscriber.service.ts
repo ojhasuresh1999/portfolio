@@ -2,9 +2,39 @@ import { Subscriber, ISubscriber } from "@/models/Subscriber";
 import { connectToDatabase } from "@/lib/mongodb";
 import type { ServiceResult } from "../types";
 
+import { emailService } from "./email.service";
+
 export class SubscriberService {
   private async ensureConnection(): Promise<void> {
     await connectToDatabase();
+  }
+
+  private triggerSubscriptionEmails(email: string) {
+    const vars = { email };
+
+    // 1. To User
+    emailService
+      .sendTemplateEmail({
+        to: email,
+        templateType: "subscribe_user_welcome",
+        vars,
+      })
+      .catch((err) =>
+        console.error("[SubscriberService] Welcome email failed:", err),
+      );
+
+    // 2. To Admin
+    if (process.env.SENDGRID_FROM_EMAIL) {
+      emailService
+        .sendTemplateEmail({
+          to: process.env.SENDGRID_FROM_EMAIL,
+          templateType: "subscribe_admin_notice",
+          vars,
+        })
+        .catch((err) =>
+          console.error("[SubscriberService] Admin notice failed:", err),
+        );
+    }
   }
 
   /**
@@ -24,11 +54,13 @@ export class SubscriberService {
           existing.isActive = true;
           existing.unsubscribedAt = undefined;
           await existing.save();
+          this.triggerSubscriptionEmails(email);
           return { success: true, data: existing };
         }
       }
 
       const subscriber = await Subscriber.create({ email });
+      this.triggerSubscriptionEmails(email);
       return { success: true, data: subscriber };
     } catch (error) {
       const message =

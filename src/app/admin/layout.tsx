@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,8 +18,8 @@ const sidebarItems = [
   { label: "Chat", href: "/admin/chat", icon: "chat" },
   { label: "About", href: "/admin/about", icon: "info" },
   {
-    label: "Email Template",
-    href: "/admin/about/email-template",
+    label: "Email Templates",
+    href: "/admin/email-templates",
     icon: "mark_email_read",
   },
   { label: "Settings", href: "/admin/settings", icon: "settings" },
@@ -155,11 +156,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           </h1>
 
           <div className="flex items-center gap-4">
-            {/* Status */}
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              System Online
-            </div>
+            {/* Online Status Toggle */}
+            <OnlineToggle />
 
             {/* User */}
             <div className="flex items-center gap-3">
@@ -179,6 +177,37 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="p-8">{children}</div>
       </main>
     </div>
+  );
+}
+
+function OnlineToggle() {
+  const [isOnline, setIsOnline] = useState(false);
+
+  // Ideally, fetch initial state here
+  // For now, toggle optimistically
+
+  return (
+    <button
+      onClick={async () => {
+        setIsOnline(!isOnline);
+        const token = localStorage.getItem("admin-token");
+        await fetch("/api/admin/profile/presence", {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      }}
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors border ${isOnline ? "bg-white/5 hover:bg-white/10 border-white/10" : "bg-red-500/10 hover:bg-red-500/20 border-red-500/20"}`}
+      title="Toggle Online Status for Chat Offline Auto-Replies"
+    >
+      <span
+        className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
+      />
+      <span
+        className={`text-xs font-medium ${isOnline ? "text-white" : "text-red-400"}`}
+      >
+        {isOnline ? "Online" : "Offline"}
+      </span>
+    </button>
   );
 }
 

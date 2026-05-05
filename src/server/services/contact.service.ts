@@ -50,17 +50,38 @@ export class ContactService {
         message: data.message,
       });
 
-      // Fire-and-forget auto-reply email — never blocks or fails the submission
+      // Fire-and-forget emails — never blocks or fails the submission
+      const emailVars = {
+        name: data.name,
+        email: data.email,
+        subject: data.subject || "(no subject)",
+        message: data.message,
+      };
+
+      // 1. To User
       emailService
-        .sendContactAutoReply({
-          name: data.name,
-          email: data.email,
-          subject: data.subject ?? undefined,
-          message: data.message,
+        .sendTemplateEmail({
+          to: data.email,
+          templateType: "contact_auto_reply",
+          vars: emailVars,
         })
         .catch((err) =>
-          console.error("[ContactService] Auto-reply email failed:", err),
+          console.error("[ContactService] User auto-reply failed:", err),
         );
+
+      // 2. To Admin (assuming admin email is SENDGRID_FROM_EMAIL or a dedicated ADMIN_EMAIL env var)
+      // For now, we'll send it to the FROM email, which is usually the site owner.
+      if (process.env.SENDGRID_FROM_EMAIL) {
+        emailService
+          .sendTemplateEmail({
+            to: process.env.SENDGRID_FROM_EMAIL,
+            templateType: "contact_admin_notice",
+            vars: emailVars,
+          })
+          .catch((err) =>
+            console.error("[ContactService] Admin notice failed:", err),
+          );
+      }
 
       return { success: true, data: { id: submission._id.toString() } };
     } catch (error) {

@@ -23,107 +23,52 @@ export class EmailService {
   }
 
   // ======================================================================
-  // Blog Newsletter
+  // Generic Template Sender
   // ======================================================================
 
   /**
-   * Send a newsletter email to all active subscribers
+   * Send an email using an admin-managed template.
+   * Interpolates all variables before sending.
    */
-  async sendNewBlogPostNotification(options: {
-    blogTitle: string;
-    blogExcerpt: string;
-    blogUrl: string;
-    subscribers: string[];
-    coverImage?: string;
+  async sendTemplateEmail(options: {
+    to: string | string[];
+    templateType: string;
+    vars: Record<string, string>;
+    subjectPrefix?: string; // Optional prefix like "[Urgent] "
   }): Promise<{ success: boolean; error?: string }> {
     if (!this.isConfigured()) {
       console.warn("SendGrid not configured. Email not sent.");
       return { success: false, error: "SendGrid not configured" };
     }
 
-    const { blogTitle, blogExcerpt, blogUrl, subscribers, coverImage } =
-      options;
-
-    if (subscribers.length === 0) return { success: true };
-
-    const msg = {
-      to: subscribers,
-      from: process.env.SENDGRID_FROM_EMAIL!,
-      subject: `New Blog Post: ${blogTitle}`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          ${coverImage ? `<img src="${coverImage}" alt="${blogTitle}" style="width: 100%; border-radius: 5px; margin-bottom: 20px;">` : ""}
-          <h1 style="color: #333; margin-bottom: 10px;">${blogTitle}</h1>
-          <p style="color: #666; font-size: 16px; line-height: 1.5;">${blogExcerpt}</p>
-          <a href="${blogUrl}" style="display: inline-block; background-color: #00f0ff; color: #000; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold; margin-top: 20px;">Read More</a>
-          <hr style="margin-top: 30px; border: 0; border-top: 1px solid #eee;">
-          <p style="color: #999; font-size: 12px; text-align: center;">You're receiving this because you subscribed to Net Insights.</p>
-        </div>
-      `,
-    };
-
-    try {
-      await sgMail.send(msg);
-      return { success: true };
-    } catch (error) {
-      console.error("SendGrid Error:", error);
-      const message =
-        error instanceof Error ? error.message : "Unknown SendGrid error";
-      return { success: false, error: message };
-    }
-  }
-
-  // ======================================================================
-  // Contact Auto-Reply
-  // ======================================================================
-
-  /**
-   * Send auto-reply confirmation to a contact form submitter.
-   * Uses the admin-managed "contact_auto_reply" email template.
-   * All template variables ({{name}}, {{email}}, {{subject}}, {{message}})
-   * are interpolated before sending.
-   */
-  async sendContactAutoReply(options: {
-    name: string;
-    email: string;
-    subject?: string;
-    message: string;
-  }): Promise<{ success: boolean; error?: string }> {
-    if (!this.isConfigured()) {
-      console.warn("SendGrid not configured. Auto-reply not sent.");
-      return { success: false, error: "SendGrid not configured" };
-    }
-
-    const { name, email, subject, message } = options;
+    const { to, templateType, vars, subjectPrefix = "" } = options;
 
     // Fetch the dynamic template
-    const templateResult =
-      await emailTemplateService.getByType("contact_auto_reply");
+    const templateResult = await emailTemplateService.getByType(templateType);
     if (!templateResult.success) {
-      console.error("Failed to load email template:", templateResult.error);
+      console.error(
+        `Failed to load email template ${templateType}:`,
+        templateResult.error,
+      );
       return { success: false, error: "Email template not available" };
     }
 
     if (!templateResult.data) {
-      console.error("Failed to load email template: no data returned");
+      console.error(
+        `Failed to load email template ${templateType}: no data returned`,
+      );
       return { success: false, error: "Email template not available" };
     }
 
     const tmpl = templateResult.data;
     if (!tmpl.isActive) {
-      console.info("Auto-reply template is inactive. Email not sent.");
+      console.info(`Template ${templateType} is inactive. Email not sent.`);
       return { success: true }; // silently skip
     }
 
-    const vars: Record<string, string> = {
-      name,
-      email,
-      subject: subject || "(no subject)",
-      message,
-    };
-
     // Interpolate all template fields
-    const resolvedSubject = interpolateTemplate(tmpl.subject, vars);
+    const resolvedSubject =
+      subjectPrefix + interpolateTemplate(tmpl.subject, vars);
     const resolvedGreeting = interpolateTemplate(tmpl.greeting, vars);
     const resolvedBody = interpolateTemplate(tmpl.body, vars);
     const resolvedCtaText = interpolateTemplate(tmpl.ctaText, vars);
@@ -140,25 +85,28 @@ export class EmailService {
       )
       .join("");
 
-    const html = this.renderAutoReplyTemplate({
+    const html = this.renderEmailHtml({
+      subject: resolvedSubject, // Use resolved subject for title
       greeting: resolvedGreeting,
       bodyHtml,
       ctaText: resolvedCtaText,
       ctaUrl: resolvedCtaUrl,
       footerText: resolvedFooter,
-      name,
     });
 
     try {
-      await sgMail.send({
-        to: email,
+      const msg: sgMail.MailDataRequired = {
+        to: Array.isArray(to) ? to[0] : to, // Send to the first or single recipient
+        bcc: Array.isArray(to) && to.length > 1 ? to.slice(1) : undefined, // BCC the rest if array
         from: process.env.SENDGRID_FROM_EMAIL!,
         subject: resolvedSubject,
         html,
-      });
+      };
+
+      await sgMail.send(msg);
       return { success: true };
     } catch (error) {
-      console.error("SendGrid Auto-Reply Error:", error);
+      console.error(`SendGrid Error (${templateType}):`, error);
       const message =
         error instanceof Error ? error.message : "Unknown SendGrid error";
       return { success: false, error: message };
@@ -169,22 +117,23 @@ export class EmailService {
   // Premium HTML Email Renderer
   // ======================================================================
 
-  private renderAutoReplyTemplate(options: {
+  private renderEmailHtml(options: {
+    subject: string;
     greeting: string;
     bodyHtml: string;
     ctaText: string;
     ctaUrl: string;
     footerText: string;
-    name: string;
   }): string {
-    const { greeting, bodyHtml, ctaText, ctaUrl, footerText } = options;
+    const { subject, greeting, bodyHtml, ctaText, ctaUrl, footerText } =
+      options;
 
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Message Received</title>
+  <title>${subject}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#0a0f1e;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0f1e;padding:40px 20px;">
@@ -199,8 +148,7 @@ export class EmailService {
               <div style="display:inline-block;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.3);border-radius:12px;padding:12px 20px;margin-bottom:20px;">
                 <span style="font-family:monospace;font-size:18px;font-weight:900;letter-spacing:2px;color:#00f0ff;">DEV_IO</span>
               </div>
-              <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Message Received!</h1>
-              <p style="margin:10px 0 0;font-size:14px;color:#94a3b8;letter-spacing:0.5px;">I'll get back to you shortly</p>
+              <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">${subject}</h1>
             </td>
           </tr>
 
