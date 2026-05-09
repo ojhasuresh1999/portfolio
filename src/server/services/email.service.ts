@@ -1,4 +1,4 @@
-import sgMail from "@sendgrid/mail";
+import nodemailer from "nodemailer";
 import {
   emailTemplateService,
   interpolateTemplate,
@@ -6,20 +6,35 @@ import {
 
 /**
  * Email Service
- * Handles sending emails via SendGrid
+ * Handles sending emails via Gmail SMTP using Nodemailer + Google App Password
  */
 export class EmailService {
-  constructor() {
-    if (process.env.SENDGRID_API_KEY) {
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  // ======================================================================
+  // Private Transporter (created lazily before every send)
+  // ======================================================================
+
+  private createTransporter() {
+    if (!process.env.GMAIL_USER) {
+      throw new Error("GMAIL_USER is not set in environment variables");
     }
+    if (!process.env.GMAIL_APP_PASSWORD) {
+      throw new Error("GMAIL_APP_PASSWORD is not set in environment variables");
+    }
+
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
   }
 
   /**
-   * Check SendGrid is configured
+   * Check Gmail SMTP is configured
    */
   private isConfigured(): boolean {
-    return !!(process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL);
+    return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
   }
 
   // ======================================================================
@@ -34,11 +49,11 @@ export class EmailService {
     to: string | string[];
     templateType: string;
     vars: Record<string, string>;
-    subjectPrefix?: string; // Optional prefix like "[Urgent] "
+    subjectPrefix?: string;
   }): Promise<{ success: boolean; error?: string }> {
     if (!this.isConfigured()) {
-      console.warn("SendGrid not configured. Email not sent.");
-      return { success: false, error: "SendGrid not configured" };
+      console.warn("Gmail SMTP not configured. Email not sent.");
+      return { success: false, error: "Gmail SMTP not configured" };
     }
 
     const { to, templateType, vars, subjectPrefix = "" } = options;
@@ -86,7 +101,7 @@ export class EmailService {
       .join("");
 
     const html = this.renderEmailHtml({
-      subject: resolvedSubject, // Use resolved subject for title
+      subject: resolvedSubject,
       greeting: resolvedGreeting,
       bodyHtml,
       ctaText: resolvedCtaText,
@@ -95,20 +110,24 @@ export class EmailService {
     });
 
     try {
-      const msg: sgMail.MailDataRequired = {
-        to: Array.isArray(to) ? to[0] : to, // Send to the first or single recipient
-        bcc: Array.isArray(to) && to.length > 1 ? to.slice(1) : undefined, // BCC the rest if array
-        from: process.env.SENDGRID_FROM_EMAIL!,
+      const transporter = this.createTransporter();
+
+      const toAddresses = Array.isArray(to) ? to : [to];
+
+      await transporter.sendMail({
+        from: `"SURESH" <${process.env.GMAIL_USER}>`,
+        to: toAddresses[0],
+        bcc: toAddresses.length > 1 ? toAddresses.slice(1) : undefined,
         subject: resolvedSubject,
         html,
-      };
+      });
 
-      await sgMail.send(msg);
+      console.info(`Email sent successfully for template: ${templateType}`);
       return { success: true };
     } catch (error) {
-      console.error(`SendGrid Error (${templateType}):`, error);
+      console.error(`Gmail SMTP Error (${templateType}):`, error);
       const message =
-        error instanceof Error ? error.message : "Unknown SendGrid error";
+        error instanceof Error ? error.message : "Unknown email error";
       return { success: false, error: message };
     }
   }
@@ -146,7 +165,7 @@ export class EmailService {
             <td style="background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);border-radius:16px 16px 0 0;padding:40px 40px 30px;text-align:center;border:1px solid rgba(99,102,241,0.2);border-bottom:none;">
               <!-- Logo mark -->
               <div style="display:inline-block;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.3);border-radius:12px;padding:12px 20px;margin-bottom:20px;">
-                <span style="font-family:monospace;font-size:18px;font-weight:900;letter-spacing:2px;color:#00f0ff;">DEV_IO</span>
+                <span style="font-family:monospace;font-size:18px;font-weight:900;letter-spacing:2px;color:#00f0ff;">SURESH</span>
               </div>
               <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">${subject}</h1>
             </td>
@@ -187,7 +206,7 @@ export class EmailService {
             <td style="background:linear-gradient(135deg,#0f172a,#0a0f1e);border-radius:0 0 16px 16px;padding:30px 40px;border:1px solid rgba(99,102,241,0.2);border-top:none;">
               <p style="margin:0 0 8px;font-size:12px;color:#64748b;text-align:center;line-height:1.6;">${footerText}</p>
               <p style="margin:0;font-size:11px;color:#334155;text-align:center;">
-                &copy; ${new Date().getFullYear()} DEV_IO Portfolio. Built with ❤️ and Node.js.
+                &copy; ${new Date().getFullYear()} SURESH Portfolio. Built with ❤️ and Node.js.
               </p>
             </td>
           </tr>

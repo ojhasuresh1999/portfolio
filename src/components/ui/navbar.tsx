@@ -16,7 +16,7 @@ const navItems = [
 export function Navbar() {
   const pathname = usePathname();
   const { data: settings } = useSettings();
-  const siteName = settings?.siteName || "DEV_IO";
+  const siteName = settings?.siteName || "SURESH";
 
   return (
     <div className="fixed top-6 w-full z-50 px-4 flex justify-center">

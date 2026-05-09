@@ -236,9 +236,24 @@ export class BlogService {
       await this.ensureConnection();
       const post = await BlogPost.create(data);
       const doc = post.toObject();
+      const resultData = {
+        ...doc,
+        _id: doc._id.toString(),
+      } as unknown as BlogPostDoc;
+
+      // If created as published, notify subscribers
+      if (resultData.isPublished) {
+        this.notifySubscribers(resultData).catch((err) => {
+          console.error(
+            "[BlogService] Initial publication notice failed:",
+            err,
+          );
+        });
+      }
+
       return {
         success: true,
-        data: { ...doc, _id: doc._id.toString() } as BlogPostDoc,
+        data: resultData,
       };
     } catch (error) {
       const message =
@@ -257,6 +272,12 @@ export class BlogService {
     try {
       await this.ensureConnection();
 
+      // Fetch old state to check for publication transition
+      const oldPost = await BlogPost.findById(id)
+        .select("isPublished")
+        .lean()
+        .exec();
+
       const post = await BlogPost.findByIdAndUpdate(id, data, {
         new: true,
         runValidators: true,
@@ -266,6 +287,16 @@ export class BlogService {
 
       if (!post) {
         return { success: false, error: "Blog post not found" };
+      }
+
+      // Transition check: unpublished -> published
+      if (!oldPost?.isPublished && post.isPublished) {
+        this.notifySubscribers(post).catch((err) => {
+          console.error(
+            "[BlogService] Publication transition notice failed:",
+            err,
+          );
+        });
       }
 
       return { success: true, data: post };
@@ -303,19 +334,10 @@ export class BlogService {
    * Publish a blog post
    */
   async publish(id: string): Promise<ServiceResult<BlogPostDoc>> {
-    const result = await this.update(id, {
+    return this.update(id, {
       isPublished: true,
       publishedAt: new Date(),
     });
-
-    if (result.success && result.data) {
-      // Trigger email blast to subscribers
-      this.notifySubscribers(result.data).catch((err) => {
-        console.error("Failed to notify subscribers:", err);
-      });
-    }
-
-    return result;
   }
 
   /**
@@ -326,7 +348,7 @@ export class BlogService {
     if (!subsRes.success || !subsRes.data || subsRes.data.length === 0) return;
 
     const emails = subsRes.data.map((s) => s.email);
-    const blogUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blog/${post.slug}`;
+    const blogUrl = `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blog/${post.slug}`;
 
     await emailService.sendTemplateEmail({
       to: emails,

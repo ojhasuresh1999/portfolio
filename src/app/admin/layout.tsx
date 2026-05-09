@@ -87,7 +87,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <h2 className="text-white font-bold font-[family-name:var(--font-mono)]">
-              DEV_IO
+              SURESH
             </h2>
             <span className="text-[10px] text-slate-500 uppercase tracking-wider">
               Admin Panel

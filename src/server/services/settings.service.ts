@@ -27,9 +27,9 @@ export class SettingsService {
       // Create default settings if none exist
       if (!settings) {
         const created = await SiteSettings.create({
-          siteName: "DEV_IO",
+          siteName: "SURESH",
           siteTagline: "Backend Developer Portfolio",
-          logoText: "DEV_IO",
+          logoText: "SURESH",
           statusText: "System Online",
         });
         settings = created.toObject();

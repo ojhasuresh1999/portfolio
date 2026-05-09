@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
     console.error("Failed to load settings for metadata:", error);
   }
 
-  const siteName = settings.siteName || "DEV_IO";
+  const siteName = settings.siteName || "SURESH";
   const tagline = settings.siteTagline || "Backend Developer Portfolio";
 
   return {

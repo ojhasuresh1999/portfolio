@@ -19,9 +19,9 @@ export interface ISiteSettings {
 
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
-    siteName: { type: String, default: "DEV_IO" },
+    siteName: { type: String, default: "SURESH" },
     siteTagline: { type: String, default: "Backend Developer Portfolio" },
-    logoText: { type: String, default: "DEV_IO" },
+    logoText: { type: String, default: "SURESH" },
     statusText: { type: String, default: "System Online" },
     metaTitle: { type: String },
     metaDescription: { type: String },

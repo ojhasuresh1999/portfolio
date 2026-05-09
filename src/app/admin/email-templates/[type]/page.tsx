@@ -126,7 +126,7 @@ function renderPreviewHtml(form: EmailTemplateForm): string {
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
   <tr><td style="background:linear-gradient(135deg,#0f172a,#1e1b4b);border-radius:16px 16px 0 0;padding:32px;text-align:center;border:1px solid rgba(99,102,241,0.2);border-bottom:none;">
     <div style="display:inline-block;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.3);border-radius:12px;padding:10px 18px;margin-bottom:16px;">
-      <span style="font-family:monospace;font-size:16px;font-weight:900;letter-spacing:2px;color:#00f0ff;">DEV_IO</span>
+      <span style="font-family:monospace;font-size:16px;font-weight:900;letter-spacing:2px;color:#00f0ff;">SURESH</span>
     </div>
     <h1 style="margin:0;font-size:22px;font-weight:800;color:#fff;">${interpolate(form.subject, vars)}</h1>
   </td></tr>
@@ -145,7 +145,7 @@ function renderPreviewHtml(form: EmailTemplateForm): string {
   </td></tr>
   <tr><td style="background:linear-gradient(135deg,#0f172a,#0a0f1e);border-radius:0 0 16px 16px;padding:24px 32px;border:1px solid rgba(99,102,241,0.2);border-top:none;">
     <p style="margin:0 0 6px;font-size:11px;color:#64748b;text-align:center;line-height:1.6;">${resolvedFooter}</p>
-    <p style="margin:0;font-size:10px;color:#334155;text-align:center;">© ${new Date().getFullYear()} DEV_IO Portfolio</p>
+    <p style="margin:0;font-size:10px;color:#334155;text-align:center;">© ${new Date().getFullYear()} SURESH Portfolio</p>
   </td></tr>
 </table>
 </td></tr>

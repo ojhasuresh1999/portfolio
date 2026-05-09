@@ -24,9 +24,9 @@ function useLatency(): LatencyState {
     const ping = async () => {
       const start = performance.now();
       try {
-        await apiClient.get("/health", {
-          timeout: 5000,
-        });
+        // await apiClient.get("/health", {
+        //   timeout: 5000,
+        // });
         const elapsed = Math.round(performance.now() - start);
         setState({ latency: elapsed, status: "online" });
       } catch {
@@ -69,7 +69,7 @@ export function Footer() {
   const isOnline = status === "online";
   const latencyDisplay = latency !== null ? `${latency}ms` : "--ms";
 
-  const siteName = settings?.siteName || "DEV_IO";
+  const siteName = settings?.siteName || "SURESH";
   const statusText = isOnline
     ? settings?.statusText || "OPERATIONAL"
     : "OFFLINE";
