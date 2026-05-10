@@ -87,10 +87,11 @@ apiClient.interceptors.response.use(
     if (status === 401) {
       // Check if this is an admin request
       const isAdminRequest = config.url?.includes("/admin/");
+      const isAuthHeaderPresent = !!config.headers.get("Authorization");
       const isRefreshRequest = config.url?.includes("/admin/auth/refresh");
 
       if (
-        isAdminRequest &&
+        (isAdminRequest || isAuthHeaderPresent) &&
         !isRefreshRequest &&
         typeof window !== "undefined"
       ) {

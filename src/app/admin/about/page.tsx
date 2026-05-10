@@ -110,6 +110,8 @@ interface AboutFormState {
 interface TimelineFormState {
   year: string;
   title: string;
+  organizationName?: string;
+  organizationUrl?: string;
   description: string;
   order: number;
   isVisible: boolean;
@@ -118,6 +120,8 @@ interface TimelineFormState {
 const emptyTimelineForm: TimelineFormState = {
   year: "",
   title: "",
+  organizationName: "",
+  organizationUrl: "",
   description: "",
   order: 0,
   isVisible: true,
@@ -217,6 +221,8 @@ export default function AdminAboutPage() {
     setTimelineForm({
       year: entry.year,
       title: entry.title,
+      organizationName: entry.organizationName || "",
+      organizationUrl: entry.organizationUrl || "",
       description: entry.description,
       order: entry.order,
       isVisible: entry.isVisible,
@@ -529,6 +535,23 @@ export default function AdminAboutPage() {
                               </span>
                               <h4 className="font-bold text-white text-sm mt-0.5">
                                 {entry.title}
+                                {entry.organizationName && (
+                                  <span className="text-slate-400 font-normal ml-2">
+                                    @{" "}
+                                    {entry.organizationUrl ? (
+                                      <a
+                                        href={entry.organizationUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-primary hover:underline transition-colors"
+                                      >
+                                        {entry.organizationName}
+                                      </a>
+                                    ) : (
+                                      entry.organizationName
+                                    )}
+                                  </span>
+                                )}
                               </h4>
                               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                                 {entry.description}
@@ -643,6 +666,49 @@ export default function AdminAboutPage() {
                     setTimelineForm({ ...timelineForm, title: e.target.value })
                   }
                   placeholder="e.g. Senior Node.js Developer"
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/40 text-sm"
+                />
+              </div>
+
+              {/* Organization Name */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Organization / Company
+                  <span className="text-slate-500 font-normal ml-1">
+                    (Optional)
+                  </span>
+                </label>
+                <input
+                  value={timelineForm.organizationName || ""}
+                  onChange={(e) =>
+                    setTimelineForm({
+                      ...timelineForm,
+                      organizationName: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. Google, Remote, etc."
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/40 text-sm"
+                />
+              </div>
+
+              {/* Organization URL */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Organization Website
+                  <span className="text-slate-500 font-normal ml-1">
+                    (Optional)
+                  </span>
+                </label>
+                <input
+                  type="url"
+                  value={timelineForm.organizationUrl || ""}
+                  onChange={(e) =>
+                    setTimelineForm({
+                      ...timelineForm,
+                      organizationUrl: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. https://google.com"
                   className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-slate-600 focus:outline-none focus:border-primary/40 text-sm"
                 />
               </div>

@@ -8,6 +8,8 @@ export interface ITimelineEntry {
   _id: Types.ObjectId;
   year: string;
   title: string;
+  organizationName?: string;
+  organizationUrl?: string;
   description: string;
   order: number;
   isVisible: boolean;
@@ -19,6 +21,8 @@ const TimelineEntrySchema = new Schema<ITimelineEntry>(
   {
     year: { type: String, required: true },
     title: { type: String, required: true },
+    organizationName: { type: String, required: false },
+    organizationUrl: { type: String, required: false },
     description: { type: String, required: true },
     order: { type: Number, default: 0 },
     isVisible: { type: Boolean, default: true },

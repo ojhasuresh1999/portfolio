@@ -34,8 +34,11 @@ export default function AdminChatPage() {
   }, []);
 
   // Load conversations using custom hook
-  const { data: conversationData, isLoading: isLoadingConversations } =
-    useConversations();
+  const {
+    data: conversationData,
+    isLoading: isLoadingConversations,
+    refetch: refetchConversations,
+  } = useConversations();
 
   // Load messages for selected conversation using custom hook
   const { data: messagesData } = useMessages(selectedConversation?._id);
@@ -141,6 +144,17 @@ export default function AdminChatPage() {
   useNewMessage(
     useCallback(
       (message: MessageData) => {
+        // Check if conversation exists in current list
+        const exists = conversations.some(
+          (c) => c._id === message.conversationId,
+        );
+
+        if (!exists) {
+          // New conversation! Refetch the list
+          refetchConversations();
+          return;
+        }
+
         // Update conversation list with new message preview
         setConversations((prev) =>
           prev.map((conv) => {
@@ -165,9 +179,28 @@ export default function AdminChatPage() {
           }),
         );
       },
-      [selectedConversation],
+      [selectedConversation, conversations, refetchConversations],
     ),
   );
+
+  // Handle instantly updating conversation list when admin sends a message
+  const handleMessageSent = useCallback((message: MessageData) => {
+    setConversations((prev) =>
+      prev.map((conv) => {
+        if (conv._id === message.conversationId) {
+          return {
+            ...conv,
+            lastMessage: {
+              content: message.content,
+              timestamp: message.createdAt,
+              senderType: message.senderType,
+            },
+          };
+        }
+        return conv;
+      }),
+    );
+  }, []);
 
   // Handle conversation selection
   const handleSelectConversation = async (conversation: ConversationData) => {
@@ -279,6 +312,7 @@ export default function AdminChatPage() {
                   recipientLastSeen={selectedConversation.participant.lastSeen}
                   initialMessages={messages}
                   onBack={isMobileView ? handleBack : undefined}
+                  onMessageSent={handleMessageSent}
                 />
               ) : (
                 <div className="flex-1 flex items-center justify-center">

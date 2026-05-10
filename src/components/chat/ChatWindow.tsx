@@ -29,6 +29,7 @@ interface ChatWindowProps {
   recipientLastSeen?: Date;
   initialMessages?: MessageData[];
   onBack?: () => void;
+  onMessageSent?: (message: MessageData) => void;
 }
 
 export function ChatWindow({
@@ -41,6 +42,7 @@ export function ChatWindow({
   recipientLastSeen,
   initialMessages = [],
   onBack,
+  onMessageSent,
 }: ChatWindowProps) {
   const [messages, setMessages] = useState<MessageData[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
@@ -156,6 +158,13 @@ export function ChatWindow({
       const result = await sendMessage(payload);
 
       if (result.success && result.message) {
+        const newMsg = result.message;
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === newMsg._id)) return prev;
+          return [...prev, newMsg];
+        });
+        if (onMessageSent) onMessageSent(newMsg);
+
         setInputValue("");
         setMediaPreview(null);
         setMediaFile(null);

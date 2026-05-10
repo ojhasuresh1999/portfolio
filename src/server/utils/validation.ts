@@ -245,6 +245,8 @@ export type AboutFormData = z.infer<typeof aboutContentSchema>;
 export const timelineEntrySchema = z.object({
   year: z.string().min(1, "Year is required").max(30),
   title: z.string().min(1, "Title is required").max(200),
+  organizationName: z.string().max(200).optional(),
+  organizationUrl: z.string().url().optional().or(z.literal("")),
   description: z.string().min(1, "Description is required"),
   order: z.number().int().default(0),
   isVisible: z.boolean().default(true),

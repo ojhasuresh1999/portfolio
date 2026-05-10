@@ -22,6 +22,8 @@ export interface AboutFormData {
 export interface TimelineFormData {
   year: string;
   title: string;
+  organizationName?: string;
+  organizationUrl?: string;
   description: string;
   order?: number;
   isVisible?: boolean;

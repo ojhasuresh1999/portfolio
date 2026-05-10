@@ -23,6 +23,7 @@ const sidebarItems = [
     href: "/admin/email-templates",
     icon: "mark_email_read",
   },
+  { label: "Subscribers", href: "/admin/subscribers", icon: "group" },
   { label: "Settings", href: "/admin/settings", icon: "settings" },
 ];
 

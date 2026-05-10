@@ -80,7 +80,7 @@ export default function RootLayout({
               {children}
             </div>
 
-            {/* Floating Chat Widget */}
+            {/* Floating Widgets */}
             <ChatWidget />
             <AnalyticsTracker />
           </SocketHealthProvider>

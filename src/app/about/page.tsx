@@ -1,41 +1,18 @@
-import Link from "next/link";
 import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
 import { aboutService } from "@/server/services/about.service";
 import { settingsService } from "@/server/services/settings.service";
-import { socialLinksService } from "@/server/services/social-links.service";
+import { techStackService } from "@/server/services/tech-stack.service";
 import { AboutContactForm } from "@/components/about/about-contact-form";
-
-// Material Symbols icon map for social links
-const iconMap: Record<string, string> = {
-  github: "code",
-  git: "code",
-  linkedin: "work",
-  linked: "work",
-  twitter: "tag",
-  x: "tag",
-  email: "alternate_email",
-  mail: "alternate_email",
-  gmail: "alternate_email",
-  facebook: "thumb_up",
-  instagram: "photo_camera",
-  youtube: "play_circle",
-  resume: "description",
-  cv: "description",
-};
-
-function getSocialIcon(icon: string, platform: string): string {
-  const key = (icon || platform).toLowerCase().trim();
-  return iconMap[key] ?? key;
-}
+import { FloatingSocialLinks } from "@/components/ui/floating-social-links";
 
 export default async function AboutPage() {
-  const [aboutResult, timelineResult, settingsResult, socialResult] =
+  const [aboutResult, timelineResult, settingsResult, techStackResult] =
     await Promise.all([
       aboutService.getAboutContent(),
       aboutService.getVisibleTimeline(),
       settingsService.getPublic(),
-      socialLinksService.getAll(),
+      techStackService.getAllTechStack(),
     ]);
 
   const aboutContent =
@@ -57,20 +34,39 @@ export default async function AboutPage() {
     : null;
   const resumeUrl = settings?.resumeUrl || aboutContent.resumeUrl || "";
 
-  // Social links — only visible ones, sorted by order
-  interface SocialLinkRecord {
+  // Tech stack - only visible ones
+  interface TechStackRecord {
     _id?: string;
-    platform: string;
-    url: string;
+    name: string;
     icon: string;
+    color: string;
     isVisible?: boolean;
     order?: number;
   }
-  const socialLinks = (
-    socialResult.success
-      ? (socialResult.data as unknown as SocialLinkRecord[])
+  const techStack = (
+    techStackResult.success
+      ? (techStackResult.data as unknown as TechStackRecord[])
       : []
-  ).filter((l) => l.isVisible !== false);
+  ).filter((t) => t.isVisible !== false);
+
+  const centerNode = techStack.length > 0 ? techStack[0] : null;
+  const orbitNodes = techStack.length > 1 ? techStack.slice(1) : [];
+
+  // Helper to map non-material icon names to material symbols
+  const getTechIcon = (icon: string, name: string) => {
+    const key = (icon || name).toLowerCase().trim();
+    const map: Record<string, string> = {
+      zap: "bolt",
+      box: "inventory_2",
+      "share-2": "share",
+      triangle: "change_history",
+      js: "javascript",
+      react: "data_object",
+      "node.js": "hexagon",
+      "next.js": "change_history",
+    };
+    return map[key] || key;
+  };
 
   return (
     <>
@@ -124,27 +120,74 @@ export default async function AboutPage() {
                     </span>
                     My Journey
                   </h3>
-                  <div className="ml-2">
+
+                  <div className="space-y-12 relative mt-8">
+                    {/* Vertical Line Gradient */}
+                    <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-primary via-primary/40 to-transparent" />
+
                     {timelineEntries.map((entry, index) => (
                       <div
                         key={entry._id.toString()}
-                        className="timeline-item opacity-0 animate-fade-in-up"
+                        className="relative pl-10 opacity-0 animate-fade-in-up"
                         style={{
-                          animationDelay: `${0.2 + index * 0.2}s`,
+                          animationDelay: `${0.2 + index * 0.15}s`,
                           animationFillMode: "forwards",
                         }}
                       >
-                        <div className="timeline-dot" />
-                        <div className="flex flex-col gap-1">
-                          <span className="text-sm font-bold text-primary">
-                            {entry.year}
-                          </span>
-                          <h4 className="font-bold text-lg text-white">
-                            {entry.title}
-                          </h4>
-                          <p className="text-sm text-slate-400">
-                            {entry.description}
-                          </p>
+                        {/* Glowing Dot */}
+                        <div className="absolute left-[-5px] top-2 size-[11px] rounded-full bg-primary ring-4 ring-primary/20 shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)] z-10" />
+
+                        <div className="flex flex-col gap-3 group">
+                          {/* Year Badge */}
+                          <div className="inline-flex items-center">
+                            <span className="text-[11px] font-black tracking-widest uppercase px-3 py-1 bg-white/5 border border-white/10 text-primary rounded-full group-hover:bg-primary/10 group-hover:border-primary/20 transition-all duration-300">
+                              {entry.year}
+                            </span>
+                          </div>
+
+                          {/* Content Card */}
+                          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-500 group/card relative overflow-hidden">
+                            {/* Subtle background glow on hover */}
+                            <div className="absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 blur-xl" />
+
+                            <div className="relative z-10">
+                              <h4 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 group-hover:text-primary transition-colors duration-300">
+                                {entry.title}
+                              </h4>
+
+                              {entry.organizationName && (
+                                <div className="flex items-center gap-2 mb-4">
+                                  <div className="size-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 group-hover/card:bg-primary/10 group-hover/card:text-primary transition-all">
+                                    <span className="material-symbols-outlined text-[20px]">
+                                      corporate_fare
+                                    </span>
+                                  </div>
+
+                                  {entry.organizationUrl ? (
+                                    <a
+                                      href={entry.organizationUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-slate-300 font-bold hover:text-primary transition-colors flex items-center gap-1.5 group/link text-base"
+                                    >
+                                      {entry.organizationName}
+                                      <span className="material-symbols-outlined text-[14px] opacity-0 -translate-y-1 group-hover/link:opacity-100 group-hover/link:translate-y-0 transition-all">
+                                        open_in_new
+                                      </span>
+                                    </a>
+                                  ) : (
+                                    <span className="text-slate-300 font-bold text-base">
+                                      {entry.organizationName}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              <p className="text-slate-400 text-base leading-relaxed max-w-2xl font-medium">
+                                {entry.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -177,57 +220,51 @@ export default async function AboutPage() {
               {/* Background Glow */}
               <div className="absolute w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-primary/5 rounded-full blur-3xl" />
 
-              {/* Center Node - Node.js */}
-              <div className="relative z-20 w-16 h-16 sm:w-24 sm:h-24 bg-slate-800 rounded-full flex items-center justify-center shadow-xl border border-slate-700 animate-float">
-                <span
-                  className="material-symbols-outlined text-3xl sm:text-5xl"
-                  style={{ color: "#339933" }}
-                >
-                  hexagon
-                </span>
-              </div>
+              {/* Center Node */}
+              {centerNode ? (
+                <div className="relative z-20 w-16 h-16 sm:w-24 sm:h-24 bg-slate-800 rounded-full flex items-center justify-center shadow-xl border border-slate-700 animate-float group">
+                  <span
+                    className="material-symbols-outlined text-3xl sm:text-5xl group-hover:scale-110 transition-transform"
+                    style={{ color: centerNode.color }}
+                  >
+                    {getTechIcon(centerNode.icon, centerNode.name)}
+                  </span>
+                </div>
+              ) : (
+                <div className="relative z-20 w-16 h-16 sm:w-24 sm:h-24 bg-slate-800 rounded-full flex items-center justify-center shadow-xl border border-slate-700 animate-float" />
+              )}
 
               {/* Orbit Ring */}
               <div className="absolute w-[240px] h-[240px] sm:w-[320px] sm:h-[320px] md:w-[400px] md:h-[400px] border border-dashed border-slate-700 rounded-full animate-orbit">
-                {/* AWS - Top */}
-                <div className="absolute left-1/2 -top-5 sm:-top-6 -ml-5 sm:-ml-6 w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-slate-800 rounded-full shadow-lg flex items-center justify-center border border-slate-700 animate-reverse-orbit">
-                  <span
-                    className="material-symbols-outlined text-2xl md:text-3xl"
-                    style={{ color: "#FF9900" }}
-                  >
-                    cloud
-                  </span>
-                </div>
+                {orbitNodes.map((tech, index) => {
+                  const angle = (index / orbitNodes.length) * 360;
+                  const radiusX = 50; // 50%
+                  const radiusY = 50; // 50%
+                  // Subtract 90 degrees so the first item starts at the top
+                  const left =
+                    50 + radiusX * Math.cos(((angle - 90) * Math.PI) / 180);
+                  const top =
+                    50 + radiusY * Math.sin(((angle - 90) * Math.PI) / 180);
 
-                {/* Docker - Right */}
-                <div className="absolute top-1/2 -right-5 sm:-right-6 -mt-5 sm:-mt-6 w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-slate-800 rounded-full shadow-lg flex items-center justify-center border border-slate-700 animate-reverse-orbit">
-                  <span
-                    className="material-symbols-outlined text-2xl md:text-3xl"
-                    style={{ color: "#2496ED" }}
-                  >
-                    inventory_2
-                  </span>
-                </div>
-
-                {/* Kubernetes - Bottom */}
-                <div className="absolute left-1/2 -bottom-5 sm:-bottom-6 -ml-5 sm:-ml-6 w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-slate-800 rounded-full shadow-lg flex items-center justify-center border border-slate-700 animate-reverse-orbit">
-                  <span
-                    className="material-symbols-outlined text-2xl md:text-3xl"
-                    style={{ color: "#326CE5" }}
-                  >
-                    hub
-                  </span>
-                </div>
-
-                {/* Git - Left */}
-                <div className="absolute top-1/2 -left-5 sm:-left-6 -mt-5 sm:-mt-6 w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-slate-800 rounded-full shadow-lg flex items-center justify-center border border-slate-700 animate-reverse-orbit">
-                  <span
-                    className="material-symbols-outlined text-2xl md:text-3xl"
-                    style={{ color: "#F05032" }}
-                  >
-                    account_tree
-                  </span>
-                </div>
+                  return (
+                    <div
+                      key={tech._id?.toString() ?? tech.name}
+                      className="absolute w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 -ml-5 -mt-5 sm:-ml-6 sm:-mt-6 md:-ml-8 md:-mt-8 bg-slate-800 rounded-full shadow-lg flex items-center justify-center border border-slate-700 animate-reverse-orbit group"
+                      style={{
+                        left: `${left}%`,
+                        top: `${top}%`,
+                      }}
+                      title={tech.name}
+                    >
+                      <span
+                        className="material-symbols-outlined text-2xl md:text-3xl group-hover:scale-110 transition-transform"
+                        style={{ color: tech.color }}
+                      >
+                        {getTechIcon(tech.icon, tech.name)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Inner Ring */}
@@ -237,31 +274,8 @@ export default async function AboutPage() {
         </div>
       </main>
 
-      {/* Floating Social Dock — Dynamic from Admin Settings */}
-      {socialLinks.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-2xl bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl z-50 transition-all hover:scale-105 max-w-[90vw] overflow-x-auto no-scrollbar">
-          {socialLinks.map((link) => (
-            <Link
-              key={link._id ?? link.platform}
-              href={link.url}
-              target={link.url.startsWith("http") ? "_blank" : undefined}
-              rel={
-                link.url.startsWith("http") ? "noopener noreferrer" : undefined
-              }
-              className="group relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-800 hover:bg-primary hover:-translate-y-2 transition-all duration-300 shrink-0"
-            >
-              <span className="material-symbols-outlined text-2xl text-slate-200 group-hover:text-black">
-                {getSocialIcon(link.icon, link.platform)}
-              </span>
-              <span className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-black text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                {link.platform}
-              </span>
-            </Link>
-          ))}
-        </div>
-      )}
-
       <Footer />
+      <FloatingSocialLinks />
     </>
   );
 }

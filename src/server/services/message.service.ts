@@ -61,7 +61,7 @@ class MessageServiceClass {
         import("@/models/ChatUser").then(async ({ ChatUser }) => {
           import("@/models/User").then(async ({ User }) => {
             const [chatUser, admin] = await Promise.all([
-              ChatUser.findOne({ sessionId: data.senderId }),
+              ChatUser.findOne({ sessionToken: data.senderId }),
               User.findOne({ role: "ADMIN" }),
             ]);
 

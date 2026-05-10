@@ -25,6 +25,8 @@ export interface TimelineEntryData {
   _id: string;
   year: string;
   title: string;
+  organizationName?: string;
+  organizationUrl?: string;
   description: string;
   order: number;
   isVisible: boolean;

@@ -30,6 +30,7 @@ export function useConversations() {
       }>("/chat/conversations");
       return response.data;
     },
+    refetchInterval: 10000, // Refetch every 10 seconds as a fallback
   });
 }
 
