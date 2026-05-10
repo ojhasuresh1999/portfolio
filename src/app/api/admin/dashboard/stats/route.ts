@@ -5,6 +5,7 @@ import { Project } from "@/models/Project";
 import { BlogPost } from "@/models/BlogPost";
 import { Skill } from "@/models/Skill";
 import { ContactSubmission } from "@/models/ContactSubmission";
+import { Analytics } from "@/models/Analytics";
 import { Subscriber } from "@/models/Subscriber";
 
 export async function GET(request: NextRequest) {
@@ -18,14 +19,21 @@ export async function GET(request: NextRequest) {
     await connectToDatabase();
 
     // 1. Total Counts
-    const [projectCount, blogCount, skillCount, messageCount, subscriberCount] =
-      await Promise.all([
-        Project.countDocuments(),
-        BlogPost.countDocuments(),
-        Skill.countDocuments(),
-        ContactSubmission.countDocuments(),
-        Subscriber.countDocuments({ isActive: true }),
-      ]);
+    const [
+      projectCount,
+      blogCount,
+      skillCount,
+      messageCount,
+      subscriberCount,
+      hitsCount,
+    ] = await Promise.all([
+      Project.countDocuments(),
+      BlogPost.countDocuments(),
+      Skill.countDocuments(),
+      ContactSubmission.countDocuments(),
+      Subscriber.countDocuments({ isActive: true }),
+      Analytics.countDocuments(),
+    ]);
 
     // 2. Category Distributions
     const blogCategories = await BlogPost.aggregate([
@@ -110,6 +118,7 @@ export async function GET(request: NextRequest) {
           skills: skillCount,
           messages: messageCount,
           subscribers: subscriberCount,
+          hits: hitsCount,
         },
         distributions: {
           blogCategories:

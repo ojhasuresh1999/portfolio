@@ -52,14 +52,16 @@ export function SystemLogsSection({
       : defaultPosts;
 
   return (
-    <section className="mt-32 mb-20">
+    <section className="mt-20 sm:mt-32 mb-16 sm:mb-20">
       {/* Section Header */}
-      <div className="flex items-end justify-between mb-10">
+      <div className="flex items-end justify-between mb-6 sm:mb-10">
         <div className="flex items-center gap-4">
           <span className="flex items-center justify-center size-8 rounded bg-white/5 text-slate-300 border border-white/10 font-[family-name:var(--font-mono)] text-xs">
             03
           </span>
-          <h2 className="text-2xl font-bold text-white">System Logs</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">
+            System Logs
+          </h2>
         </div>
         <Link
           href="/blog"
@@ -91,7 +93,7 @@ function BlogPostPreview({ post }: { post: BlogPost }) {
 
   return (
     <Link href={`/blog/${post.slug}`} className="block group">
-      <div className="bg-white/[0.02] border border-white/5 p-6 rounded-xl flex flex-col md:flex-row md:items-center justify-between transition-all hover:bg-white/5 hover:border-primary/30 hover:translate-x-2">
+      <div className="bg-white/[0.02] border border-white/5 p-4 sm:p-6 rounded-xl flex flex-col md:flex-row md:items-center justify-between transition-all hover:bg-white/5 hover:border-primary/30 hover:translate-x-2">
         <div className="flex flex-col gap-2">
           {/* Meta */}
           <div className="flex items-center gap-3 text-[10px] font-[family-name:var(--font-mono)] text-slate-500 uppercase tracking-widest">
@@ -101,7 +103,7 @@ function BlogPostPreview({ post }: { post: BlogPost }) {
           </div>
 
           {/* Title */}
-          <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">
+          <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-primary transition-colors">
             {post.title}
           </h3>
         </div>

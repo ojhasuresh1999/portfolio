@@ -16,7 +16,7 @@ export default function HomePage() {
         <LeftSidebar />
 
         {/* Main Content */}
-        <main className="flex-1 w-full px-6 pt-32 pb-20 relative z-10">
+        <main className="flex-1 w-full px-4 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20 relative z-10">
           {/* Hero Section */}
           <HeroSection />
 

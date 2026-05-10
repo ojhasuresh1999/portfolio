@@ -22,7 +22,7 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
     <>
       <Navbar />
 
-      <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-8 lg:px-12 pt-32 relative">
+      <main className="flex-1 flex flex-col items-center px-4 sm:px-6 md:px-8 lg:px-12 py-12 pt-28 sm:pt-32 relative">
         {/* Lamp Light Effect */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-80 bg-gradient-to-b from-primary/20 via-primary/5 to-transparent blur-[80px] pointer-events-none" />
 
@@ -40,10 +40,10 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
 
           {/* Header */}
           <div className="mb-16">
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-6 drop-shadow-md">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black tracking-tight text-white mb-4 sm:mb-6 drop-shadow-md">
               {project.title}
             </h1>
-            <p className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-3xl">
+            <p className="text-lg sm:text-xl md:text-2xl text-slate-400 font-light leading-relaxed max-w-3xl">
               {project.description}
             </p>
           </div>
@@ -59,7 +59,7 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12">
             {/* Main Content */}
             <div className="md:col-span-2 space-y-12 text-slate-300 leading-relaxed">
               <section>

@@ -75,8 +75,8 @@ export function Footer() {
     : "OFFLINE";
 
   return (
-    <footer className="w-full border-t border-white/5 bg-[#020203] px-6 py-12 relative z-30">
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+    <footer className="w-full border-t border-white/5 bg-[#020203] px-4 sm:px-6 py-8 sm:py-12 relative z-30">
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
         {/* Logo & Status */}
         <div className="flex flex-col items-center md:items-start gap-4">
           <div className="flex items-center gap-2 text-white font-bold font-[family-name:var(--font-mono)]">

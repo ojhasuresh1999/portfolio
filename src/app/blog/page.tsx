@@ -58,10 +58,10 @@ export default async function BlogPage(props: {
         <div className="h-full bg-primary w-[35%] shadow-[0_0_15px_rgba(0,240,255,0.8)] animate-pulse" />
       </div>
 
-      <main className="max-w-7xl mx-auto w-full px-6 py-16 pt-32 relative z-10 font-[family-name:var(--font-mono)]">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 pt-28 sm:pt-32 relative z-10 font-[family-name:var(--font-mono)]">
         {/* Header */}
-        <div className="mb-24 relative">
-          <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none leading-none rotate-90 origin-left">
+        <div className="mb-12 sm:mb-24 relative">
+          <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none leading-none rotate-90 origin-left hidden md:block">
             INDEX
           </div>
 
@@ -72,7 +72,7 @@ export default async function BlogPage(props: {
                 Incoming Transmission
               </span>
             </div>
-            <h1 className="text-white text-5xl md:text-7xl font-bold tracking-tighter leading-none">
+            <h1 className="text-white text-3xl xs:text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter leading-none">
               ENGINEERING
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-400 to-gray-600">
@@ -81,16 +81,16 @@ export default async function BlogPage(props: {
             </h1>
           </div>
 
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl leading-relaxed font-light border-l-2 border-primary/50 pl-6 ml-2">
+          <p className="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed font-light border-l-2 border-primary/50 pl-4 sm:pl-6 ml-0 sm:ml-2">
             Decrypting architectural patterns, systems development, and
             engineering anomalies via distributed technical logs.
           </p>
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16">
           {/* Articles */}
-          <div className="lg:col-span-8 flex flex-col gap-12">
+          <div className="lg:col-span-8 flex flex-col gap-8 sm:gap-12">
             {/* Filter Tabs */}
             <div className="border-b border-white/10 mb-4 sticky top-24 z-40 bg-obsidian/95 backdrop-blur py-4">
               <div className="flex gap-2 overflow-x-auto no-scrollbar items-center pb-2">
@@ -131,11 +131,11 @@ export default async function BlogPage(props: {
               posts.map((post) => (
                 <article
                   key={post.slug}
-                  className="group relative flex flex-col md:flex-row gap-8 items-stretch border border-white/5 bg-surface-dark hover:border-primary/30 p-6 transition-all duration-500 hover:shadow-[0_0_30px_rgba(0,240,255,0.05)]"
+                  className="group relative flex flex-col md:flex-row gap-5 sm:gap-8 items-stretch border border-white/5 bg-surface-dark hover:border-primary/30 p-4 sm:p-6 transition-all duration-500 hover:shadow-[0_0_30px_rgba(0,240,255,0.05)]"
                 >
                   {/* Image */}
                   {post.coverImage ? (
-                    <div className="evervault-card md:w-5/12 w-full shrink-0 relative h-64 md:h-auto overflow-hidden bg-black border border-white/10 group-hover:border-primary/50 transition-colors">
+                    <div className="evervault-card md:w-5/12 w-full shrink-0 relative h-48 sm:h-64 md:h-auto overflow-hidden bg-black border border-white/10 group-hover:border-primary/50 transition-colors">
                       <Image
                         src={post.coverImage}
                         alt={post.title}
@@ -146,7 +146,7 @@ export default async function BlogPage(props: {
                       <div className="absolute top-0 w-full h-[2px] bg-primary shadow-[0_0_15px_#00f0ff] opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-[scan_2s_ease-in-out_infinite] z-20" />
                     </div>
                   ) : (
-                    <div className="evervault-card md:w-5/12 w-full shrink-0 relative h-64 md:h-auto overflow-hidden bg-black border border-white/10 flex items-center justify-center group-hover:border-primary/50 transition-colors text-white/10">
+                    <div className="evervault-card md:w-5/12 w-full shrink-0 relative h-48 sm:h-64 md:h-auto overflow-hidden bg-black border border-white/10 flex items-center justify-center group-hover:border-primary/50 transition-colors text-white/10">
                       <span className="material-symbols-outlined text-6xl group-hover:text-primary/20 transition-colors">
                         article
                       </span>
@@ -174,7 +174,7 @@ export default async function BlogPage(props: {
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-white text-2xl md:text-3xl font-bold leading-tight mb-4 group-hover:text-primary transition-colors cursor-pointer tracking-tight">
+                      <h3 className="text-white text-xl sm:text-2xl md:text-3xl font-bold leading-tight mb-3 sm:mb-4 group-hover:text-primary transition-colors cursor-pointer tracking-tight">
                         <Link
                           href={`/blog/${post.slug}`}
                           className="hover:underline decoration-primary/50 underline-offset-4"

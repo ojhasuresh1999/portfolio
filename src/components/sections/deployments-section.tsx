@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 import { useProjects, type ProjectData } from "@/hooks/queries";
@@ -69,14 +70,14 @@ export function DeploymentsSection({
       : defaultProjects;
 
   return (
-    <section id="projects" className="mt-32">
+    <section id="projects" className="mt-20 sm:mt-32">
       {/* Section Header */}
-      <div className="flex flex-col gap-2 mb-12">
+      <div className="flex flex-col gap-2 mb-8 sm:mb-12">
         <div className="flex items-center gap-4">
           <span className="flex items-center justify-center size-8 rounded bg-secondary/10 text-secondary border border-secondary/20 font-[family-name:var(--font-mono)] text-xs">
             02
           </span>
-          <h2 className="text-3xl font-bold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Deployments
           </h2>
         </div>
@@ -86,7 +87,7 @@ export function DeploymentsSection({
       </div>
 
       {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
         {displayProjects.map((project) => (
           <ProjectCard key={project._id} project={project} />
         ))}
@@ -107,8 +108,22 @@ function ProjectCard({ project }: { project: Project }) {
         )}
       >
         {/* Image/Visual Area */}
-        <div className="h-60 w-full bg-slate-900 relative overflow-hidden group-hover:saturate-150 transition-all duration-500">
-          {project.hasChart ? (
+        <div className="h-48 sm:h-60 w-full bg-slate-900 relative overflow-hidden group-hover:saturate-150 transition-all duration-500">
+          {project.image ? (
+            // Project Image
+            <>
+              <Image
+                src={project.image}
+                alt={project.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent" />
+              {/* Scan-line hover effect */}
+              <div className="absolute top-0 w-full h-[2px] bg-primary shadow-[0_0_15px_#00f0ff] opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-[scan_2s_ease-in-out_infinite] z-20" />
+            </>
+          ) : project.hasChart ? (
             // Chart Visualization
             <div className="absolute inset-0 flex items-end justify-center pb-0 gap-1 opacity-70">
               <div className="w-4 bg-secondary/60 rounded-t h-12 group-hover:h-32 transition-all duration-300 ease-out" />
@@ -117,7 +132,7 @@ function ProjectCard({ project }: { project: Project }) {
               <div className="w-4 bg-white/20 rounded-t h-8 group-hover:h-20 transition-all duration-300 ease-out" />
               <div className="w-4 bg-secondary/60 rounded-t h-24 group-hover:h-36 transition-all duration-600 ease-out delay-150" />
             </div>
-          ) : (
+          ) : project.codeSnippet ? (
             // Code Snippet
             <>
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
@@ -133,15 +148,26 @@ function ProjectCard({ project }: { project: Project }) {
                 </code>
               </div>
             </>
+          ) : (
+            // Fallback placeholder
+            <>
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="material-symbols-outlined text-6xl text-slate-700 group-hover:text-primary/30 transition-colors">
+                  code_blocks
+                </span>
+              </div>
+            </>
           )}
         </div>
 
         {/* Content */}
-        <div className="p-8 flex-1 flex flex-col">
+        <div className="p-5 sm:p-8 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-4">
             <h3
               className={cn(
-                "text-2xl font-bold text-white transition-colors",
+                "text-xl sm:text-2xl font-bold text-white transition-colors",
                 isPrimary
                   ? "group-hover:text-primary"
                   : "group-hover:text-secondary",

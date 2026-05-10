@@ -34,7 +34,7 @@ export default async function SkillsPage() {
     <>
       <Navbar />
 
-      <main className="flex-1 flex flex-col items-center px-4 py-12 md:px-8 lg:px-12 pt-32">
+      <main className="flex-1 flex flex-col items-center px-4 sm:px-6 md:px-8 lg:px-12 py-12 pt-28 sm:pt-32">
         {/* Lamp Header Section */}
         <div className="relative w-full max-w-[960px] flex flex-col items-center text-center mb-16">
           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full max-w-lg h-40 bg-gradient-to-b from-primary/30 via-primary/5 to-transparent blur-[60px] pointer-events-none" />
@@ -45,11 +45,11 @@ export default async function SkillsPage() {
               Skills & Expertise
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-lg">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-lg">
               Technical Architecture <br className="hidden md:block" />& Stack
             </h1>
 
-            <p className="text-slate-400 text-lg md:text-xl max-w-2xl font-light leading-relaxed">
+            <p className="text-slate-400 text-base sm:text-lg md:text-xl max-w-2xl font-light leading-relaxed">
               Scalable solutions built with precision. Explore the technologies
               powering high-performance backend systems.
             </p>
@@ -57,9 +57,9 @@ export default async function SkillsPage() {
         </div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-[960px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full max-w-[960px]">
           {/* Core Runtime - Wide Card */}
-          <div className="group relative md:col-span-2 overflow-hidden rounded-xl bg-card-dark border border-white/5 p-6 md:p-8 transition-all duration-500 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,242,255,0.15)] flex flex-col md:flex-row gap-6">
+          <div className="group relative md:col-span-2 overflow-hidden rounded-xl bg-card-dark border border-white/5 p-5 sm:p-6 md:p-8 transition-all duration-500 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,242,255,0.15)] flex flex-col md:flex-row gap-5 sm:gap-6">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <div className="flex-1 flex flex-col justify-between z-10">
@@ -110,7 +110,7 @@ export default async function SkillsPage() {
           </div>
 
           {/* Languages - Tall Card */}
-          <div className="group relative md:row-span-2 overflow-hidden rounded-xl bg-card-dark border border-white/5 p-6 md:p-8 transition-all duration-500 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,242,255,0.15)] flex flex-col">
+          <div className="group relative md:row-span-2 overflow-hidden rounded-xl bg-card-dark border border-white/5 p-5 sm:p-6 md:p-8 transition-all duration-500 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,242,255,0.15)] flex flex-col">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <div className="mb-6 inline-flex p-3 rounded-lg bg-surface-dark border border-white/10 text-primary w-fit">
@@ -241,7 +241,7 @@ export default async function SkillsPage() {
           </div>
 
           {/* Architecture Patterns - Full Width */}
-          <div className="group relative md:col-span-3 overflow-hidden rounded-xl bg-card-dark border border-white/5 p-6 md:p-8 transition-all duration-500 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,242,255,0.15)]">
+          <div className="group relative md:col-span-3 overflow-hidden rounded-xl bg-card-dark border border-white/5 p-5 sm:p-6 md:p-8 transition-all duration-500 hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,242,255,0.15)]">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,242,255,0.05),transparent_50%,rgba(0,242,255,0.05))] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">

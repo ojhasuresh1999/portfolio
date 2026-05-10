@@ -26,9 +26,11 @@ export default async function ResumePage() {
       {/* Background Effects */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-gradient-to-br from-indigo-900/20 via-purple-900/10 to-slate-900 animate-gradient-xy" />
 
-      <main className="flex-1 px-6 py-32 flex flex-col items-center justify-center min-h-[85vh] relative z-10 w-full">
+      <main className="flex-1 px-4 sm:px-6 py-28 sm:py-32 flex flex-col items-center justify-center min-h-[85vh] relative z-10 w-full">
         <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-5xl mb-8 gap-4">
-          <h1 className="text-3xl font-bold text-white">My Resume</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+            My Resume
+          </h1>
           {resumeUrl && (
             <a
               href={resumeUrl}
@@ -46,7 +48,7 @@ export default async function ResumePage() {
         </div>
 
         {resumeUrl ? (
-          <div className="w-full max-w-5xl h-[75vh] rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-white/5">
+          <div className="w-full max-w-5xl h-[60vh] sm:h-[75vh] rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-white/5">
             <iframe
               src={viewerUrl}
               className="w-full h-full border-0 bg-white"

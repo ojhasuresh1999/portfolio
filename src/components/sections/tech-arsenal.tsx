@@ -21,23 +21,23 @@ const defaultTechItems: TechItem[] = [
 
 export function TechArsenal({ items = defaultTechItems }: TechArsenalProps) {
   return (
-    <section className="mt-32">
+    <section className="mt-20 sm:mt-32">
       {/* Section Header */}
-      <div className="flex items-center gap-4 mb-12">
+      <div className="flex items-center gap-3 sm:gap-4 mb-8 sm:mb-12">
         <span className="flex items-center justify-center size-8 rounded bg-primary/10 text-primary border border-primary/20 font-[family-name:var(--font-mono)] text-xs">
           01
         </span>
-        <h2 className="text-2xl font-bold text-white tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
           Technical Arsenal
         </h2>
         <div className="h-[1px] flex-1 bg-gradient-to-r from-white/10 to-transparent" />
       </div>
 
       {/* Tech Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {items.map((item) => (
           <div key={item.name} className="group card-3d-wrapper">
-            <div className="card-3d bg-white/5 border border-white/5 p-6 rounded-xl flex flex-col items-center justify-center gap-4 hover:bg-white/10 hover:border-primary/50 relative overflow-hidden">
+            <div className="card-3d bg-white/5 border border-white/5 p-4 sm:p-6 rounded-xl flex flex-col items-center justify-center gap-3 sm:gap-4 hover:bg-white/10 hover:border-primary/50 relative overflow-hidden">
               {/* Hover Gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 

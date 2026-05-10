@@ -19,10 +19,10 @@ export default async function ProjectsPage() {
         <div className="h-full bg-primary w-[65%] shadow-[0_0_15px_rgba(0,240,255,0.8)] animate-pulse" />
       </div>
 
-      <main className="max-w-7xl mx-auto w-full px-6 py-16 pt-32 relative z-10">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 pt-28 sm:pt-32 relative z-10">
         {/* Header */}
-        <div className="mb-24 relative">
-          <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none font-[family-name:var(--font-mono)] leading-none rotate-90 origin-left">
+        <div className="mb-12 sm:mb-24 relative">
+          <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none font-[family-name:var(--font-mono)] leading-none rotate-90 origin-left hidden md:block">
             SYS_ARCHIVES
           </div>
 
@@ -33,7 +33,7 @@ export default async function ProjectsPage() {
                 Project Catalog
               </span>
             </div>
-            <h1 className="text-white text-5xl md:text-7xl font-bold tracking-tighter leading-none">
+            <h1 className="text-white text-3xl xs:text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter leading-none">
               DEPLOYED
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-400 to-gray-600">
@@ -42,7 +42,7 @@ export default async function ProjectsPage() {
             </h1>
           </div>
 
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl leading-relaxed font-light border-l-2 border-primary/50 pl-6 ml-2">
+          <p className="text-gray-400 text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed font-light border-l-2 border-primary/50 pl-4 sm:pl-6 ml-0 sm:ml-2">
             Archived builds showcasing{" "}
             <span className="text-white font-[family-name:var(--font-mono)]">
               scalable architecture
@@ -53,11 +53,11 @@ export default async function ProjectsPage() {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 gap-12">
+        <div className="grid grid-cols-1 gap-8 sm:gap-12">
           {projects.map((project, index) => (
             <div
               key={project._id.toString()}
-              className="group relative flex flex-col md:flex-row gap-8 items-stretch border border-white/5 bg-surface-dark hover:border-primary/30 p-6 md:p-8 transition-all duration-500 hover:shadow-[0_0_30px_rgba(0,240,255,0.05)] overflow-hidden"
+              className="group relative flex flex-col md:flex-row gap-5 sm:gap-8 items-stretch border border-white/5 bg-surface-dark hover:border-primary/30 p-4 sm:p-6 md:p-8 transition-all duration-500 hover:shadow-[0_0_30px_rgba(0,240,255,0.05)] overflow-hidden"
             >
               {/* Optional: Add hover grid effect on card */}
               <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -68,7 +68,7 @@ export default async function ProjectsPage() {
               </div>
 
               {/* Image Container */}
-              <div className="w-full md:w-5/12 shrink-0 relative h-64 md:h-80 bg-black border border-white/10 group-hover:border-primary/50 transition-colors overflow-hidden rounded-sm z-10">
+              <div className="w-full md:w-5/12 shrink-0 relative h-48 sm:h-64 md:h-80 bg-black border border-white/10 group-hover:border-primary/50 transition-colors overflow-hidden rounded-sm z-10">
                 {project.image ? (
                   <div
                     className="absolute inset-0 z-0 opacity-50 group-hover:opacity-100 transition-opacity duration-700 bg-cover bg-center grayscale group-hover:grayscale-0"
@@ -99,16 +99,16 @@ export default async function ProjectsPage() {
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-white text-3xl font-bold font-[family-name:var(--font-mono)] mb-4 group-hover:text-primary transition-colors tracking-tight">
+                  <h3 className="text-white text-xl sm:text-2xl md:text-3xl font-bold font-[family-name:var(--font-mono)] mb-3 sm:mb-4 group-hover:text-primary transition-colors tracking-tight">
                     {project.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-gray-400 text-sm md:text-base leading-relaxed mb-6 font-[family-name:var(--font-mono)] border-l border-white/10 pl-4 max-w-2xl">
+                  <p className="text-gray-400 text-xs sm:text-sm md:text-base leading-relaxed mb-4 sm:mb-6 font-[family-name:var(--font-mono)] border-l border-white/10 pl-3 sm:pl-4 max-w-2xl">
                     {project.description}
                   </p>
 
-                  <div className="flex flex-wrap gap-2 mb-8">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6 sm:mb-8">
                     {project.technologies.map((tech) => (
                       <span
                         key={tech}

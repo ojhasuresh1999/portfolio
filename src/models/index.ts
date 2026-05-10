@@ -26,3 +26,6 @@ export {
   type IMessageMedia,
   type IMessageReaction,
 } from "./Message";
+
+// Analytics models
+export { Analytics, type IAnalytics, type IAnalyticsModel } from "./Analytics";

@@ -16,6 +16,7 @@ interface DashboardStats {
     skills: number;
     messages: number;
     subscribers: number;
+    hits: number;
   };
   distributions: {
     blogCategories: { name: string; value: number }[];
@@ -112,6 +113,14 @@ export default function AdminDashboard() {
       border: "border-orange-400/20",
       bg: "bg-orange-400/5",
     },
+    {
+      label: "Total Hits",
+      value: statsData?.counts.hits ?? 0,
+      icon: "monitoring",
+      color: "text-blue-400",
+      border: "border-blue-400/20",
+      bg: "bg-blue-400/5",
+    },
   ];
 
   if (isLoading) {
@@ -167,7 +176,7 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+        className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4"
       >
         {statCards.map((stat, i) => (
           <motion.div

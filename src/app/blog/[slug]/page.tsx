@@ -37,7 +37,7 @@ export default async function BlogPostPage({
     <>
       <Navbar />
 
-      <main className="max-w-4xl mx-auto w-full px-6 py-24 pt-32 relative z-10 font-[family-name:var(--font-mono)]">
+      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-20 sm:py-24 pt-28 sm:pt-32 relative z-10 font-[family-name:var(--font-mono)]">
         {/* Back Link */}
         <div className="mb-8">
           <Link
@@ -65,7 +65,7 @@ export default async function BlogPostPage({
             <span>{post.readTime} MIN_READ</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-8 tracking-tighter">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-tight mb-6 sm:mb-8 tracking-tighter">
             {post.title}
           </h1>
 
@@ -84,7 +84,7 @@ export default async function BlogPostPage({
 
         {/* Cover Image */}
         {post.coverImage && (
-          <div className="w-full h-64 md:h-[400px] relative rounded overflow-hidden border border-white/10 mb-16 shadow-[0_0_30px_rgba(0,242,255,0.05)]">
+          <div className="w-full h-48 sm:h-64 md:h-[400px] relative rounded overflow-hidden border border-white/10 mb-10 sm:mb-16 shadow-[0_0_30px_rgba(0,242,255,0.05)]">
             <Image
               src={post.coverImage}
               alt={post.title}

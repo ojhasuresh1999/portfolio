@@ -15,6 +15,7 @@ const sidebarItems = [
   { label: "Projects", href: "/admin/projects", icon: "folder" },
   { label: "Skills", href: "/admin/skills", icon: "code" },
   { label: "Blog", href: "/admin/blog", icon: "article" },
+  { label: "Analytics", href: "/admin/analytics", icon: "monitoring" },
   { label: "Chat", href: "/admin/chat", icon: "chat" },
   { label: "About", href: "/admin/about", icon: "info" },
   {

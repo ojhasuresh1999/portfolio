@@ -10,3 +10,4 @@ export * from "./skill.service";
 export * from "./tech-stack.service";
 export * from "./subscriber.service";
 export * from "./email.service";
+export * from "./analytics.service";

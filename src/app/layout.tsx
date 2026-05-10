@@ -4,6 +4,7 @@ import "./globals.css";
 import { ChatWidget } from "@/components/chat";
 import { QueryProvider } from "@/providers/query-provider";
 import { SocketHealthProvider } from "@/providers/socket-health-provider";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -81,6 +82,7 @@ export default function RootLayout({
 
             {/* Floating Chat Widget */}
             <ChatWidget />
+            <AnalyticsTracker />
           </SocketHealthProvider>
         </QueryProvider>
       </body>

@@ -40,6 +40,9 @@
   /* Fonts */
   --font-display: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Custom Breakpoints */
+  --breakpoint-xs: 480px;
 }
 
 /* ============================================
