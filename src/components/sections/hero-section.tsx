@@ -19,9 +19,9 @@ export function HeroSection({
   const parts = title.split(highlightWord);
 
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-center min-h-[500px] md:min-h-[700px]">
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-16 items-center min-h-[calc(100vh-120px)] sm:min-h-[500px] md:min-h-[700px]">
       {/* Left Content */}
-      <div className="flex flex-col gap-5 md:gap-8 relative z-10 order-2 lg:order-1">
+      <div className="flex flex-col gap-5 md:gap-8 relative z-10 order-2 lg:order-1 mt-4 lg:mt-0">
         {/* Terminal */}
         <TerminalWindow command={terminalCommand} />
 
