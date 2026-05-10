@@ -414,6 +414,29 @@
         "description": "Verify TOTP code to receive a password reset token"
       }
     },
+    "/api/admin/subscribers": {
+      "get": {
+        "summary": "Get All Subscribers",
+        "description": "Retrieve all newsletter subscribers (Admin only)",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/admin/subscribers/{id}": {
+      "delete": {
+        "summary": "Unsubscribe a user",
+        "description": "Unsubscribe a user manually (Admin only)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
     "/api/blog": {
       "get": {
         "summary": "List Blog Posts",
