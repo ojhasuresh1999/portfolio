@@ -20,6 +20,7 @@ export interface IProject {
   liveUrl?: string;
   githubUrl?: string;
   accentColor: string;
+  status: "ongoing" | "completed" | "on-hold" | "archived";
   order: number;
   isFeatured: boolean;
   isVisible: boolean;
@@ -41,6 +42,11 @@ const ProjectSchema = new Schema<IProject>(
     liveUrl: { type: String },
     githubUrl: { type: String },
     accentColor: { type: String, default: "primary" },
+    status: {
+      type: String,
+      enum: ["ongoing", "completed", "on-hold", "archived"],
+      default: "completed",
+    },
     order: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
     isVisible: { type: Boolean, default: true },
@@ -57,6 +63,11 @@ ProjectSchema.plugin(slugGeneratorPlugin, { sourceField: "title" });
 ProjectSchema.index({ isVisible: 1, isFeatured: 1 });
 ProjectSchema.index({ order: 1 });
 
-export const Project: IProjectModel =
-  (mongoose.models.Project as IProjectModel) ||
-  mongoose.model<IProject, IProjectModel>("Project", ProjectSchema);
+if (mongoose.models && mongoose.models.Project) {
+  Reflect.deleteProperty(mongoose.models, "Project");
+}
+
+export const Project: IProjectModel = mongoose.model<IProject, IProjectModel>(
+  "Project",
+  ProjectSchema,
+);

@@ -171,6 +171,9 @@ export const projectSchema = z.object({
     .nullable()
     .transform((val) => val ?? undefined),
   accentColor: z.enum(["primary", "secondary"]).default("primary"),
+  status: z
+    .enum(["ongoing", "completed", "on-hold", "archived"])
+    .default("completed"),
   order: z.number().int().default(0),
   isFeatured: z.boolean().default(false),
   isVisible: z.boolean().default(true),

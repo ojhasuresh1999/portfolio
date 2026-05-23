@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import Image from "next/image";
 import {
   useAdminBlogPosts,
@@ -12,6 +13,10 @@ import {
 import CloudinaryUpload, {
   type UploadResult,
 } from "@/components/ui/cloudinary-upload";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { CodeBlock } from "@/components/mdx/CodeBlock";
+import { autoDetectCodeBlocks } from "@/lib/code-detector";
 
 // =============================================================================
 // Types
@@ -103,6 +108,7 @@ export default function AdminBlogPage() {
   } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BlogPostData | null>(null);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
 
   // ── Queries & Mutations ────────────────────
   const { data, isLoading, isError, error, refetch } = useAdminBlogPosts({
@@ -142,6 +148,7 @@ export default function AdminBlogPage() {
     setEditingSlug(null);
     setSlugManual(false);
     setTagInput("");
+    setActiveTab("write");
     setIsDrawerOpen(true);
   }, []);
 
@@ -161,6 +168,7 @@ export default function AdminBlogPage() {
     setEditingSlug(post.slug);
     setSlugManual(true);
     setTagInput("");
+    setActiveTab("write");
     setIsDrawerOpen(true);
   }, []);
 
@@ -215,12 +223,15 @@ export default function AdminBlogPage() {
 
     setSaving(true);
     try {
+      // Auto-detect code blocks in content on save
+      const formattedContent = autoDetectCodeBlocks(form.content);
+
       if (editingSlug) {
         // Update
         const updateData: Partial<BlogPostData> = {
           title: form.title,
           excerpt: form.excerpt,
-          content: form.content,
+          content: formattedContent,
           category: form.category,
           tags: form.tags,
           readTime: form.readTime,
@@ -236,7 +247,7 @@ export default function AdminBlogPage() {
           title: form.title,
           slug: form.slug || undefined,
           excerpt: form.excerpt,
-          content: form.content,
+          content: formattedContent,
           coverImage: form.coverImage || undefined,
           category: form.category,
           tags: form.tags,
@@ -783,27 +794,140 @@ export default function AdminBlogPage() {
 
               {/* ── Content ──────────────────── */}
               <div className="space-y-1">
-                <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
-                  Content
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
+                    Content
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const formatted = autoDetectCodeBlocks(form.content);
+                      setForm((p) => ({ ...p, content: formatted }));
+                      setToast({
+                        message:
+                          "Code blocks automatically detected and formatted!",
+                        type: "success",
+                      });
+                    }}
+                    className="text-xs flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all font-semibold"
+                    title="Automatically detect code snippets and wrap them in markdown backticks"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">
+                      magic_button
+                    </span>
+                    Auto-detect Code
+                  </button>
+                </div>
                 <div className="h-px bg-white/5" />
               </div>
 
-              {/* Content (markdown) */}
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1.5">
-                  Content * (Markdown)
-                </label>
-                <textarea
-                  value={form.content}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, content: e.target.value }))
-                  }
-                  rows={10}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm font-mono placeholder:text-slate-600 focus:ring-2 focus:ring-primary/40 focus:border-primary/40 outline-none transition-all resize-y"
-                  placeholder="Write your blog post in Markdown..."
-                />
+              {/* Tabs selector */}
+              <div className="flex border-b border-white/10 gap-4 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("write")}
+                  className={`pb-2 text-sm font-semibold border-b-2 transition-all ${
+                    activeTab === "write"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Write
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("preview")}
+                  className={`pb-2 text-sm font-semibold border-b-2 transition-all ${
+                    activeTab === "preview"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Preview (Live Auto-detect)
+                </button>
               </div>
+
+              {/* Tab Content */}
+              {activeTab === "write" ? (
+                <div>
+                  <textarea
+                    value={form.content}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, content: e.target.value }))
+                    }
+                    rows={12}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm font-mono placeholder:text-slate-600 focus:ring-2 focus:ring-primary/40 focus:border-primary/40 outline-none transition-all resize-y"
+                    placeholder="Write your blog post... You can paste raw code snippets directly here. Click 'Auto-detect Code' above to format them into markdown automatically!"
+                  />
+                </div>
+              ) : (
+                <div className="prose prose-invert prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 max-w-none text-slate-300 text-sm leading-relaxed marker:text-primary max-h-[350px] overflow-y-auto border border-white/10 rounded-xl p-4 bg-white/[0.02]">
+                  {form.content.trim() ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({
+                          node: _node,
+                          inline,
+                          className,
+                          children,
+                          ...props
+                        }: ComponentPropsWithoutRef<"code"> & {
+                          inline?: boolean;
+                          node?: unknown;
+                        }) {
+                          const match = /language-(\w+)/.exec(className || "");
+                          return !inline && match ? (
+                            <CodeBlock
+                              language={match[1]}
+                              code={String(children).replace(/\n$/, "")}
+                            />
+                          ) : (
+                            <code
+                              {...props}
+                              className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold border border-primary/20"
+                            >
+                              {children}
+                            </code>
+                          );
+                        },
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-4 border-primary pl-4 py-1 italic bg-primary/5 text-slate-300 my-4">
+                            {children}
+                          </blockquote>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 className="text-lg font-black tracking-tight text-white mt-6 mb-3 flex items-center gap-2">
+                            <span className="w-1 h-4 bg-primary inline-block" />
+                            {children}
+                          </h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="text-base font-bold tracking-tight text-white mt-4 mb-2 text-primary">
+                            {children}
+                          </h3>
+                        ),
+                        a: ({ children, href }) => (
+                          <a
+                            href={href}
+                            className="text-primary hover:text-white underline decoration-primary/50 underline-offset-4 transition-colors font-semibold"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      {autoDetectCodeBlocks(form.content)}
+                    </ReactMarkdown>
+                  ) : (
+                    <p className="text-slate-500 italic text-center py-8">
+                      Nothing to preview. Start writing to see the preview!
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Tags */}
               <div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import Image from "next/image";
 import CloudinaryUpload, {
   type UploadResult,
@@ -12,6 +13,10 @@ import {
   useDeleteProject,
   type ProjectData,
 } from "@/hooks/queries";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { CodeBlock } from "@/components/mdx/CodeBlock";
+import { autoDetectCodeBlocks } from "@/lib/code-detector";
 
 // =============================================================================
 // Types
@@ -27,6 +32,7 @@ interface ProjectFormState {
   liveUrl: string;
   githubUrl: string;
   accentColor: "primary" | "secondary";
+  status: "ongoing" | "completed" | "on-hold" | "archived";
   order: number;
   isFeatured: boolean;
   isVisible: boolean;
@@ -45,6 +51,7 @@ const emptyForm: ProjectFormState = {
   liveUrl: "",
   githubUrl: "",
   accentColor: "primary",
+  status: "completed",
   order: 0,
   isFeatured: false,
   isVisible: true,
@@ -298,6 +305,7 @@ export default function AdminProjectsPage() {
     message: string;
     type: "success" | "error";
   } | null>(null);
+  const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
 
   // ── Queries & Mutations ────────────────────────────
   const {
@@ -346,6 +354,7 @@ export default function AdminProjectsPage() {
     setEditingSlug(null);
     setForm(emptyForm);
     setAutoSlug(true);
+    setActiveTab("write");
     setDrawerOpen(true);
   };
 
@@ -361,6 +370,7 @@ export default function AdminProjectsPage() {
       liveUrl: project.liveUrl || "",
       githubUrl: project.githubUrl || "",
       accentColor: project.accentColor || "primary",
+      status: project.status || "completed",
       order: project.order,
       isFeatured: project.isFeatured ?? false,
       isVisible: project.isVisible ?? true,
@@ -369,6 +379,7 @@ export default function AdminProjectsPage() {
       imagePublicId: "",
     });
     setAutoSlug(false);
+    setActiveTab("write");
     setDrawerOpen(true);
   };
 
@@ -388,17 +399,21 @@ export default function AdminProjectsPage() {
     }
 
     try {
+      // Auto-detect code blocks in longDescription on save
+      const formattedLongDesc = autoDetectCodeBlocks(form.longDescription);
+
       if (editingSlug) {
         // Update
         const updateData: Partial<ProjectData> = {
           title: form.title,
           description: form.description,
-          longDescription: form.longDescription || undefined,
+          longDescription: formattedLongDesc || undefined,
           codeSnippet: form.codeSnippet || undefined,
           technologies: form.technologies,
           liveUrl: form.liveUrl || undefined,
           githubUrl: form.githubUrl || undefined,
           accentColor: form.accentColor,
+          status: form.status,
           order: form.order,
           isFeatured: form.isFeatured,
           isVisible: form.isVisible,
@@ -417,12 +432,13 @@ export default function AdminProjectsPage() {
         formData.append("title", form.title);
         if (form.slug) formData.append("slug", form.slug);
         formData.append("description", form.description);
-        if (form.longDescription)
-          formData.append("longDescription", form.longDescription);
+        if (formattedLongDesc)
+          formData.append("longDescription", formattedLongDesc);
         if (form.codeSnippet) formData.append("codeSnippet", form.codeSnippet);
         if (form.liveUrl) formData.append("liveUrl", form.liveUrl);
         if (form.githubUrl) formData.append("githubUrl", form.githubUrl);
         formData.append("accentColor", form.accentColor);
+        formData.append("status", form.status);
         formData.append("order", String(form.order));
         formData.append("isFeatured", String(form.isFeatured));
         formData.append("isVisible", String(form.isVisible));
@@ -677,17 +693,36 @@ export default function AdminProjectsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {project.isFeatured && (
-                          <span className="px-2 py-0.5 text-xs bg-yellow-500/10 text-yellow-400 rounded border border-yellow-500/20 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-xs">
-                              star
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <div className="flex flex-wrap gap-1 items-center">
+                          {project.status === "ongoing" && (
+                            <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">
+                              Ongoing
                             </span>
-                            Featured
-                          </span>
-                        )}
+                          )}
+                          {project.status === "completed" && (
+                            <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-green-500/10 text-green-400 rounded border border-green-500/20">
+                              Completed
+                            </span>
+                          )}
+                          {project.status === "on-hold" && (
+                            <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">
+                              On Hold
+                            </span>
+                          )}
+                          {project.status === "archived" && (
+                            <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-slate-500/10 text-slate-400 rounded border border-slate-500/20">
+                              Archived
+                            </span>
+                          )}
+                          {project.isFeatured && (
+                            <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-yellow-500/10 text-yellow-400 rounded border border-yellow-500/20 flex items-center gap-1">
+                              Featured
+                            </span>
+                          )}
+                        </div>
                         <span
-                          className={`px-2 py-0.5 text-xs rounded border flex items-center gap-1 ${
+                          className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded border ${
                             project.isVisible
                               ? "bg-green-500/10 text-green-400 border-green-500/20"
                               : "bg-slate-500/10 text-slate-400 border-slate-500/20"
@@ -932,32 +967,139 @@ export default function AdminProjectsPage() {
 
               {/* Long Description */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Long Description
-                </label>
-                <textarea
-                  value={form.longDescription}
-                  onChange={(e) =>
-                    updateField("longDescription", e.target.value)
-                  }
-                  placeholder="Detailed description for the project page..."
-                  rows={4}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-none"
-                />
-              </div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-slate-300">
+                    Long Description (Markdown)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const formatted = autoDetectCodeBlocks(
+                        form.longDescription,
+                      );
+                      updateField("longDescription", formatted);
+                      setToast({
+                        message:
+                          "Code blocks automatically detected and formatted!",
+                        type: "success",
+                      });
+                    }}
+                    className="text-xs flex items-center gap-1 px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition-all font-semibold"
+                    title="Automatically detect code snippets and wrap them in markdown backticks"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">
+                      magic_button
+                    </span>
+                    Auto-detect Code
+                  </button>
+                </div>
 
-              {/* Code Snippet */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Code Snippet
-                </label>
-                <textarea
-                  value={form.codeSnippet}
-                  onChange={(e) => updateField("codeSnippet", e.target.value)}
-                  placeholder="// Paste a code example..."
-                  rows={4}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg font-mono text-sm text-green-400 placeholder:text-slate-500 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-none"
-                />
+                {/* Tabs selector */}
+                <div className="flex border-b border-white/10 gap-4 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("write")}
+                    className={`pb-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
+                      activeTab === "write"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Write
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("preview")}
+                    className={`pb-2 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
+                      activeTab === "preview"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    Preview (Auto-detect)
+                  </button>
+                </div>
+
+                {activeTab === "write" ? (
+                  <textarea
+                    value={form.longDescription}
+                    onChange={(e) =>
+                      updateField("longDescription", e.target.value)
+                    }
+                    placeholder="Detailed description for the project page... You can paste raw code snippets directly here."
+                    rows={6}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 resize-y font-mono text-sm"
+                  />
+                ) : (
+                  <div className="prose prose-invert prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 max-w-none text-slate-300 text-sm leading-relaxed max-h-[300px] overflow-y-auto border border-white/10 rounded-lg p-4 bg-white/[0.02]">
+                    {form.longDescription.trim() ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          code({
+                            node: _node,
+                            inline,
+                            className,
+                            children,
+                            ...props
+                          }: ComponentPropsWithoutRef<"code"> & {
+                            inline?: boolean;
+                            node?: unknown;
+                          }) {
+                            const match = /language-(\w+)/.exec(
+                              className || "",
+                            );
+                            return !inline && match ? (
+                              <CodeBlock
+                                language={match[1]}
+                                code={String(children).replace(/\n$/, "")}
+                              />
+                            ) : (
+                              <code
+                                {...props}
+                                className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold border border-primary/20"
+                              >
+                                {children}
+                              </code>
+                            );
+                          },
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 border-primary pl-4 py-1 italic bg-primary/5 text-slate-300 my-4">
+                              {children}
+                            </blockquote>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-lg font-black tracking-tight text-white mt-6 mb-3 flex items-center gap-2">
+                              <span className="w-1 h-4 bg-primary inline-block" />
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-base font-bold tracking-tight text-white mt-4 mb-2 text-primary">
+                              {children}
+                            </h3>
+                          ),
+                          a: ({ children, href }) => (
+                            <a
+                              href={href}
+                              className="text-primary hover:text-white underline decoration-primary/50 underline-offset-4 transition-colors font-semibold"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {children}
+                            </a>
+                          ),
+                        }}
+                      >
+                        {autoDetectCodeBlocks(form.longDescription)}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="text-slate-500 italic text-center py-8">
+                        Nothing to preview. Start writing to see the preview!
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Technologies */}
@@ -992,8 +1134,8 @@ export default function AdminProjectsPage() {
                 </div>
               </div>
 
-              {/* Accent Color & Order */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Accent Color, Status & Order */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
                     Accent Color
@@ -1002,8 +1144,9 @@ export default function AdminProjectsPage() {
                     {(["primary", "secondary"] as const).map((color) => (
                       <button
                         key={color}
+                        type="button"
                         onClick={() => updateField("accentColor", color)}
-                        className={`flex-1 py-3 rounded-lg border text-sm font-medium capitalize transition-all ${
+                        className={`flex-1 py-2.5 rounded-lg border text-sm font-medium capitalize transition-all ${
                           form.accentColor === color
                             ? color === "primary"
                               ? "bg-primary/20 border-primary/40 text-primary"
@@ -1018,6 +1161,37 @@ export default function AdminProjectsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Project Status
+                  </label>
+                  <select
+                    value={form.status}
+                    onChange={(e) =>
+                      updateField(
+                        "status",
+                        e.target.value as ProjectFormState["status"],
+                      )
+                    }
+                    className="w-full px-3 py-2.5 bg-[#161b22] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 appearance-none cursor-pointer"
+                  >
+                    <option value="ongoing" className="bg-obsidian text-white">
+                      Ongoing
+                    </option>
+                    <option
+                      value="completed"
+                      className="bg-obsidian text-white"
+                    >
+                      Completed
+                    </option>
+                    <option value="on-hold" className="bg-obsidian text-white">
+                      On Hold
+                    </option>
+                    <option value="archived" className="bg-obsidian text-white">
+                      Archived
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Display Order
                   </label>
                   <input
@@ -1026,7 +1200,7 @@ export default function AdminProjectsPage() {
                     onChange={(e) =>
                       updateField("order", parseInt(e.target.value) || 0)
                     }
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
                   />
                 </div>
               </div>

@@ -8,6 +8,7 @@ import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
 import { blogService } from "@/server/services/blog.service";
+import { autoDetectCodeBlocks } from "@/lib/code-detector";
 
 export const revalidate = 60; // optionally revalidate every 60 seconds
 
@@ -158,7 +159,7 @@ export default async function BlogPostPage({
               ),
             }}
           >
-            {post.content}
+            {autoDetectCodeBlocks(post.content)}
           </ReactMarkdown>
         </article>
 

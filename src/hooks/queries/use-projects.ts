@@ -22,6 +22,7 @@ export interface ProjectData {
   liveUrl?: string;
   githubUrl?: string;
   accentColor?: "primary" | "secondary";
+  status?: "ongoing" | "completed" | "on-hold" | "archived";
   order: number;
   isFeatured: boolean;
   isVisible: boolean;

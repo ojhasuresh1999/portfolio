@@ -95,6 +95,26 @@ export default async function ProjectsPage() {
                         <span className="skew-x-[10deg] block">Featured</span>
                       </span>
                     )}
+                    {project.status === "ongoing" && (
+                      <span className="text-blue-400 border border-blue-500/30 bg-blue-500/5 px-2 py-0.5 rounded-sm">
+                        Ongoing
+                      </span>
+                    )}
+                    {project.status === "completed" && (
+                      <span className="text-green-400 border border-green-500/30 bg-green-500/5 px-2 py-0.5 rounded-sm">
+                        Completed
+                      </span>
+                    )}
+                    {project.status === "on-hold" && (
+                      <span className="text-yellow-400 border border-yellow-500/30 bg-yellow-500/5 px-2 py-0.5 rounded-sm">
+                        On Hold
+                      </span>
+                    )}
+                    {project.status === "archived" && (
+                      <span className="text-slate-400 border border-slate-500/30 bg-slate-500/5 px-2 py-0.5 rounded-sm">
+                        Archived
+                      </span>
+                    )}
                     <span>:: SYS_BUILD</span>
                   </div>
 

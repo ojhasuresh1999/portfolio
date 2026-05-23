@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ComponentPropsWithoutRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { CodeBlock } from "@/components/mdx/CodeBlock";
+import { autoDetectCodeBlocks } from "@/lib/code-detector";
 import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
 import { projectService } from "@/server/services/project.service";
@@ -40,6 +45,36 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
 
           {/* Header */}
           <div className="mb-16">
+            <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 border-l-2 border-primary pl-4 font-[family-name:var(--font-mono)] animate-pulse">
+              {project.status === "ongoing" && (
+                <span className="text-blue-400 bg-blue-500/10 px-2.5 py-1 border border-blue-500/20 rounded">
+                  Ongoing
+                </span>
+              )}
+              {project.status === "completed" && (
+                <span className="text-green-400 bg-green-500/10 px-2.5 py-1 border border-green-500/20 rounded">
+                  Completed
+                </span>
+              )}
+              {project.status === "on-hold" && (
+                <span className="text-yellow-400 bg-yellow-500/10 px-2.5 py-1 border border-yellow-500/20 rounded">
+                  On Hold
+                </span>
+              )}
+              {project.status === "archived" && (
+                <span className="text-slate-400 bg-slate-500/10 px-2.5 py-1 border border-slate-500/20 rounded">
+                  Archived
+                </span>
+              )}
+              {project.isFeatured && (
+                <span className="text-yellow-400 flex items-center gap-1 font-black bg-yellow-500/10 px-2.5 py-1 border border-yellow-500/20 rounded">
+                  Featured
+                </span>
+              )}
+              <span>{"//"}</span>
+              <span>SYS_DEPLOYMENT</span>
+            </div>
+
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-black tracking-tight text-white mb-4 sm:mb-6 drop-shadow-md">
               {project.title}
             </h1>
@@ -71,13 +106,66 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
                     Project_Overview
                   </h2>
                 </div>
-                <div className="prose prose-invert max-w-none">
+                <div className="prose prose-invert max-w-none text-slate-300">
                   {project.longDescription ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: project.longDescription.replace(/\n/g, "<br/>"),
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({
+                          node: _node,
+                          inline,
+                          className,
+                          children,
+                          ...props
+                        }: ComponentPropsWithoutRef<"code"> & {
+                          inline?: boolean;
+                          node?: unknown;
+                        }) {
+                          const match = /language-(\w+)/.exec(className || "");
+                          return !inline && match ? (
+                            <CodeBlock
+                              language={match[1]}
+                              code={String(children).replace(/\n$/, "")}
+                            />
+                          ) : (
+                            <code
+                              {...props}
+                              className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold border border-primary/20"
+                            >
+                              {children}
+                            </code>
+                          );
+                        },
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-4 border-primary pl-4 py-1 italic bg-primary/5 text-slate-300 my-6">
+                            {children}
+                          </blockquote>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white mt-12 mb-6 flex items-center gap-3">
+                            <span className="w-1 h-6 bg-primary inline-block" />
+                            {children}
+                          </h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="text-xl md:text-2xl font-bold tracking-tight text-white mt-10 mb-4 opacity-90 text-primary">
+                            {children}
+                          </h3>
+                        ),
+                        a: ({ children, href }) => (
+                          <a
+                            href={href}
+                            className="text-primary hover:text-white underline decoration-primary/50 underline-offset-4 transition-colors font-semibold shadow-[0_2px_0_rgba(0,240,255,0.2)]"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {children}
+                          </a>
+                        ),
                       }}
-                    />
+                    >
+                      {autoDetectCodeBlocks(project.longDescription)}
+                    </ReactMarkdown>
                   ) : (
                     <p className="text-slate-400 font-[family-name:var(--font-mono)] italic">
                       [NO_EXTENDED_DATA_AVAILABLE]
@@ -85,34 +173,6 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
                   )}
                 </div>
               </section>
-
-              {project.codeSnippet && (
-                <section>
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="material-symbols-outlined text-primary text-xl">
-                      code_blocks
-                    </span>
-                    <h2 className="text-2xl font-bold text-white font-[family-name:var(--font-mono)]">
-                      Code_Snippet
-                    </h2>
-                  </div>
-                  <div className="bg-[#0d1117] rounded-lg border border-white/10 overflow-hidden text-sm">
-                    <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center gap-2">
-                      <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                        <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                      </div>
-                      <span className="font-[family-name:var(--font-mono)] text-xs text-slate-400 ml-4">
-                        core.sys
-                      </span>
-                    </div>
-                    <pre className="p-4 overflow-x-auto text-green-400 font-[family-name:var(--font-mono)] leading-relaxed">
-                      <code>{project.codeSnippet}</code>
-                    </pre>
-                  </div>
-                </section>
-              )}
             </div>
 
             {/* Sidebar */}

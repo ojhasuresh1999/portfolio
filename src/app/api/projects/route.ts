@@ -180,6 +180,7 @@ export const POST = withAdmin(async (request, { admin, ip }) => {
       "liveUrl",
       "githubUrl",
       "accentColor",
+      "status",
     ];
     for (const field of textFields) {
       const val = formData.get(field);

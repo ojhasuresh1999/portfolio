@@ -164,6 +164,37 @@ function ProjectCard({ project }: { project: Project }) {
 
         {/* Content */}
         <div className="p-5 sm:p-8 flex-1 flex flex-col">
+          {/* Status Badge */}
+          {project.status && (
+            <div className="flex items-center gap-2 mb-3 text-[10px] font-bold font-[family-name:var(--font-mono)] uppercase">
+              {project.status === "ongoing" && (
+                <span className="text-blue-400 border border-blue-500/30 bg-blue-500/5 px-2 py-0.5 rounded-sm">
+                  Ongoing
+                </span>
+              )}
+              {project.status === "completed" && (
+                <span className="text-green-400 border border-green-500/30 bg-green-500/5 px-2 py-0.5 rounded-sm">
+                  Completed
+                </span>
+              )}
+              {project.status === "on-hold" && (
+                <span className="text-yellow-400 border border-yellow-500/30 bg-yellow-500/5 px-2 py-0.5 rounded-sm">
+                  On Hold
+                </span>
+              )}
+              {project.status === "archived" && (
+                <span className="text-slate-400 border border-slate-500/30 bg-slate-500/5 px-2 py-0.5 rounded-sm">
+                  Archived
+                </span>
+              )}
+              {project.isFeatured && (
+                <span className="text-yellow-400 bg-yellow-500/10 px-2 py-0.5 border border-yellow-500/20 rounded-sm">
+                  Featured
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="flex justify-between items-start mb-4">
             <h3
               className={cn(
