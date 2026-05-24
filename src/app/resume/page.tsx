@@ -1,6 +1,4 @@
 import { settingsService } from "@/server/services/settings.service";
-import { Navbar } from "@/components/ui/navbar";
-import { Footer } from "@/components/ui/footer";
 
 export default async function ResumePage() {
   let resumeUrl = "";
@@ -21,8 +19,6 @@ export default async function ResumePage() {
 
   return (
     <>
-      <Navbar />
-
       {/* Background Effects */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 bg-gradient-to-br from-indigo-900/20 via-purple-900/10 to-slate-900 animate-gradient-xy" />
 
@@ -65,8 +61,6 @@ export default async function ResumePage() {
           </div>
         )}
       </main>
-
-      <Footer />
     </>
   );
 }

@@ -665,6 +665,8 @@ export default function AdminProjectsPage() {
                             alt={project.title}
                             fill
                             className="object-cover"
+                            placeholder="blur"
+                            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
                           />
                         </div>
                       ) : (

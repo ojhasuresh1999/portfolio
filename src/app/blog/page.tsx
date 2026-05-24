@@ -1,7 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Navbar } from "@/components/ui/navbar";
-import { Footer } from "@/components/ui/footer";
 import { blogService } from "@/server/services/blog.service";
 import { NewsletterForm } from "@/components/blog/NewsletterForm";
 
@@ -48,8 +46,6 @@ export default async function BlogPage(props: {
 
   return (
     <>
-      <Navbar />
-
       {/* Background Grid */}
       <div className="fixed inset-0 z-0 bg-[size:50px_50px] bg-grid-pattern opacity-[0.07] pointer-events-none" />
 
@@ -58,7 +54,7 @@ export default async function BlogPage(props: {
         <div className="h-full bg-primary w-[35%] shadow-[0_0_15px_rgba(0,240,255,0.8)] animate-pulse" />
       </div>
 
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 pt-28 sm:pt-32 relative z-10 font-[family-name:var(--font-mono)]">
+      <main className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 pt-28 sm:pt-32 relative z-10 font-[family-name:var(--font-mono)] overflow-hidden">
         {/* Header */}
         <div className="mb-12 sm:mb-24 relative">
           <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none leading-none rotate-90 origin-left hidden md:block">
@@ -142,6 +138,8 @@ export default async function BlogPage(props: {
                         fill
                         sizes="(max-width: 768px) 100vw, 30vw"
                         className="object-cover absolute inset-0 z-0 opacity-40 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
+                        placeholder="blur"
+                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
                       />
                       <div className="absolute top-0 w-full h-[2px] bg-primary shadow-[0_0_15px_#00f0ff] opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-[scan_2s_ease-in-out_infinite] z-20" />
                     </div>
@@ -332,8 +330,6 @@ export default async function BlogPage(props: {
           </aside>
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

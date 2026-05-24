@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const sidebarItems = [
   { label: "Blog", href: "/admin/blog", icon: "article" },
   { label: "Analytics", href: "/admin/analytics", icon: "monitoring" },
   { label: "Chat", href: "/admin/chat", icon: "chat" },
+  { label: "Contacts", href: "/admin/contacts", icon: "contact_mail" },
   { label: "About", href: "/admin/about", icon: "info" },
   {
     label: "Email Templates",
@@ -40,6 +41,37 @@ const NO_LAYOUT_ROUTES = [
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated, logout } = useAdminAuth();
+  const [unreadContacts, setUnreadContacts] = useState(0);
+  const [notifications, setNotifications] = useState<Record<string, unknown>[]>(
+    [],
+  );
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const fetchPolling = async () => {
+      try {
+        const token = localStorage.getItem("admin-token");
+        const res = await fetch("/api/admin/contacts/polling", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setUnreadContacts(json.data.count);
+            setNotifications(json.data.recent);
+          }
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
+
+    fetchPolling();
+    const interval = setInterval(fetchPolling, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   // Skip layout for auth pages
   if (NO_LAYOUT_ROUTES.some((route) => pathname === route)) {
@@ -98,7 +130,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 max-h-[calc(100vh-140px)] overflow-y-auto">
           {sidebarItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -109,23 +141,30 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
+                  "flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all",
                   isActive
                     ? "bg-primary/10 text-primary border border-primary/20"
                     : "text-slate-400 hover:bg-white/5 hover:text-white",
                 )}
               >
-                <span className="material-symbols-outlined text-xl">
-                  {item.icon}
-                </span>
-                {item.label}
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-xl">
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </div>
+                {item.label === "Contacts" && unreadContacts > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+                    {unreadContacts}
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-card-dark">
           <Link
             href="/"
             className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"
@@ -137,7 +176,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           </Link>
           <button
             onClick={() => logout()}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 transition-colors w-full"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 transition-colors w-full text-left"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
             Logout
@@ -160,6 +199,80 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             {/* Online Status Toggle */}
             <OnlineToggle />
+
+            {/* Notification Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 text-slate-400 hover:text-white transition-colors flex items-center justify-center rounded-lg hover:bg-white/5"
+                title="View Submissions Notifications"
+              >
+                <span className="material-symbols-outlined text-2xl">
+                  notifications
+                </span>
+                {unreadContacts > 0 && (
+                  <span className="absolute top-1 right-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-card-dark border border-white/10 rounded-xl shadow-2xl p-4 z-50 animate-slide-in">
+                  <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+                    <h3 className="text-sm font-bold text-white">
+                      New Contacts
+                    </h3>
+                    {unreadContacts > 0 && (
+                      <span className="text-xs font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
+                        {unreadContacts} new
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {notifications.length > 0 ? (
+                      notifications.map((notif) => (
+                        <Link
+                          key={notif._id}
+                          href={`/admin/contacts/${notif._id}`}
+                          onClick={() => setShowNotifications(false)}
+                          className="block p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5"
+                        >
+                          <div className="flex justify-between items-start">
+                            <span className="text-xs font-bold text-slate-200 truncate max-w-[150px]">
+                              {notif.name}
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {new Date(notif.createdAt).toLocaleTimeString(
+                                [],
+                                { hour: "2-digit", minute: "2-digit" },
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 truncate mt-0.5">
+                            {notif.subject || notif.message}
+                          </p>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-xs text-slate-500">
+                        No new submissions
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 border-t border-white/5 pt-2 text-center">
+                    <Link
+                      href="/admin/contacts"
+                      onClick={() => setShowNotifications(false)}
+                      className="text-xs font-bold text-primary hover:text-primary/80 transition-colors block"
+                    >
+                      View all contacts
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User */}
             <div className="flex items-center gap-3">
@@ -184,9 +297,6 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
 function OnlineToggle() {
   const [isOnline, setIsOnline] = useState(false);
-
-  // Ideally, fetch initial state here
-  // For now, toggle optimistically
 
   return (
     <button

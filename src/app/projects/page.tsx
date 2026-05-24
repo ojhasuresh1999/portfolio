@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Navbar } from "@/components/ui/navbar";
-import { Footer } from "@/components/ui/footer";
+import Image from "next/image";
 import { projectService } from "@/server/services/project.service";
 
 export default async function ProjectsPage() {
@@ -9,8 +8,6 @@ export default async function ProjectsPage() {
 
   return (
     <>
-      <Navbar />
-
       {/* Background Grid */}
       <div className="fixed inset-0 z-0 bg-[size:50px_50px] bg-grid-pattern opacity-[0.07] pointer-events-none" />
 
@@ -19,7 +16,7 @@ export default async function ProjectsPage() {
         <div className="h-full bg-primary w-[65%] shadow-[0_0_15px_rgba(0,240,255,0.8)] animate-pulse" />
       </div>
 
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 pt-28 sm:pt-32 relative z-10">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16 pt-28 sm:pt-32 relative z-10 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="mb-12 sm:mb-24 relative">
           <div className="absolute -left-20 top-0 text-[10rem] font-black text-white/[0.02] select-none pointer-events-none font-[family-name:var(--font-mono)] leading-none rotate-90 origin-left hidden md:block">
@@ -70,9 +67,15 @@ export default async function ProjectsPage() {
               {/* Image Container */}
               <div className="w-full md:w-5/12 shrink-0 relative h-48 sm:h-64 md:h-80 bg-black border border-white/10 group-hover:border-primary/50 transition-colors overflow-hidden rounded-sm z-10">
                 {project.image ? (
-                  <div
-                    className="absolute inset-0 z-0 opacity-50 group-hover:opacity-100 transition-opacity duration-700 bg-cover bg-center grayscale group-hover:grayscale-0"
-                    style={{ backgroundImage: `url('${project.image}')` }}
+                  <Image
+                    src={project.image}
+                    alt={project.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                    data-full-src={project.image}
+                    className="object-cover absolute inset-0 z-0 opacity-50 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
+                    placeholder="blur"
+                    blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
@@ -195,8 +198,6 @@ export default async function ProjectsPage() {
           )}
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

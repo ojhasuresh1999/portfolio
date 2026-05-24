@@ -5,8 +5,6 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
-import { Navbar } from "@/components/ui/navbar";
-import { Footer } from "@/components/ui/footer";
 import { blogService } from "@/server/services/blog.service";
 import { autoDetectCodeBlocks } from "@/lib/code-detector";
 
@@ -36,8 +34,6 @@ export default async function BlogPostPage({
 
   return (
     <>
-      <Navbar />
-
       <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-20 sm:py-24 pt-28 sm:pt-32 relative z-10 font-[family-name:var(--font-mono)]">
         {/* Back Link */}
         <div className="mb-8">
@@ -93,6 +89,8 @@ export default async function BlogPostPage({
               priority
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 800px"
+              placeholder="blur"
+              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
           </div>
@@ -189,8 +187,6 @@ export default async function BlogPostPage({
 
       {/* Decorative Grid BG */}
       <div className="fixed inset-0 z-0 bg-[size:50px_50px] bg-grid-pattern opacity-[0.03] pointer-events-none" />
-
-      <Footer />
     </>
   );
 }

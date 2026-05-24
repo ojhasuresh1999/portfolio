@@ -463,3 +463,364 @@ body {
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
 }
+
+/* ============================================
+   IMAGE LIGHTBOX
+   ============================================ */
+
+/* ── Overlay ───────────────────────────────── */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Safe area support for notched phones */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── Animations ────────────────────────────── */
+@keyframes lightbox-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lightbox-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lightbox-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lightbox-scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+.lightbox-animate-in {
+  animation: lightbox-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lightbox-animate-in .lightbox-image {
+  animation: lightbox-scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lightbox-animate-out {
+  animation: lightbox-fade-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lightbox-animate-out .lightbox-image {
+  animation: lightbox-scale-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Close button ──────────────────────────── */
+.lightbox-close-btn {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  right: max(16px, env(safe-area-inset-right, 16px));
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lightbox-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(0, 242, 255, 0.3);
+  color: var(--primary);
+  transform: scale(1.05);
+}
+
+.lightbox-close-btn .material-symbols-outlined {
+  font-size: 24px;
+}
+
+/* ── Counter ───────────────────────────────── */
+.lightbox-counter {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* ── Navigation buttons ────────────────────── */
+.lightbox-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lightbox-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(0, 242, 255, 0.3);
+  color: var(--primary);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.lightbox-nav-prev {
+  left: max(16px, env(safe-area-inset-left, 16px));
+}
+
+.lightbox-nav-next {
+  right: max(16px, env(safe-area-inset-right, 16px));
+}
+
+.lightbox-nav-btn .material-symbols-outlined {
+  font-size: 28px;
+}
+
+/* ── Image container ───────────────────────── */
+.lightbox-image-container {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.lightbox-image {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 4px;
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+  image-rendering: auto;
+  -webkit-user-drag: none;
+  pointer-events: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Zoom controls ─────────────────────────── */
+.lightbox-zoom-controls {
+  position: absolute;
+  bottom: max(24px, env(safe-area-inset-bottom, 24px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lightbox-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 40px;
+  min-width: 44px;
+  min-height: 40px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lightbox-zoom-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--primary);
+}
+
+.lightbox-zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.lightbox-zoom-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.lightbox-zoom-reset {
+  width: auto;
+  padding: 0 8px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Dot indicators ────────────────────────── */
+.lightbox-dots {
+  position: absolute;
+  bottom: max(80px, calc(env(safe-area-inset-bottom, 24px) + 56px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lightbox-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.lightbox-dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.lightbox-dot-active {
+  background: var(--primary);
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+  transform: scale(1.25);
+}
+
+/* ── Mobile responsiveness ─────────────────── */
+@media (max-width: 768px) {
+  .lightbox-image {
+    max-width: 96vw;
+    max-height: 80vh;
+    border-radius: 2px;
+  }
+
+  .lightbox-close-btn {
+    top: max(12px, env(safe-area-inset-top, 12px));
+    right: max(12px, env(safe-area-inset-right, 12px));
+    width: 44px;
+    height: 44px;
+  }
+
+  .lightbox-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .lightbox-nav-prev {
+    left: 8px;
+  }
+
+  .lightbox-nav-next {
+    right: 8px;
+  }
+
+  .lightbox-zoom-controls {
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  }
+
+  .lightbox-dots {
+    bottom: max(68px, calc(env(safe-area-inset-bottom, 16px) + 52px));
+  }
+
+  .lightbox-counter {
+    font-size: 11px;
+    padding: 4px 12px;
+  }
+}
+
+/* Prevent iOS Safari bounce */
+.lightbox-overlay {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+}
+
+/* Cursor states for images with lightbox attached */
+img[data-lightbox-attached] {
+  cursor: zoom-in;
+  transition: filter 0.2s ease;
+}
+
+img[data-lightbox-attached]:hover {
+  filter: brightness(1.05);
+}

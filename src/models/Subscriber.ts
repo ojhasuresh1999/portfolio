@@ -33,7 +33,6 @@ const SubscriberSchema = new Schema<ISubscriber>(
 );
 
 // Indexes
-SubscriberSchema.index({ email: 1 });
 SubscriberSchema.index({ isActive: 1 });
 
 export const Subscriber: Model<ISubscriber> =

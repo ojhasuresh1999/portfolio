@@ -5,6 +5,10 @@ import { ChatWidget } from "@/components/chat";
 import { QueryProvider } from "@/providers/query-provider";
 import { SocketHealthProvider } from "@/providers/socket-health-provider";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { Navbar } from "@/components/ui/navbar";
+import { Footer } from "@/components/ui/footer";
+import { NavbarWrapper, FooterWrapper } from "@/components/ui/layout-wrappers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -77,12 +81,19 @@ export default function RootLayout({
 
             {/* Main Content */}
             <div className="relative z-10 flex flex-col min-h-screen">
-              {children}
+              <NavbarWrapper>
+                <Navbar />
+              </NavbarWrapper>
+              <main className="flex-1 flex flex-col">{children}</main>
+              <FooterWrapper>
+                <Footer />
+              </FooterWrapper>
             </div>
 
             {/* Floating Widgets */}
             <ChatWidget />
             <AnalyticsTracker />
+            <ImageLightbox />
           </SocketHealthProvider>
         </QueryProvider>
       </body>

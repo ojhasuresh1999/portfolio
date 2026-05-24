@@ -1,12 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { autoDetectCodeBlocks } from "@/lib/code-detector";
-import { Navbar } from "@/components/ui/navbar";
-import { Footer } from "@/components/ui/footer";
 import { projectService } from "@/server/services/project.service";
 
 interface PageProps {
@@ -25,8 +24,6 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
 
   return (
     <>
-      <Navbar />
-
       <main className="flex-1 flex flex-col items-center px-4 sm:px-6 md:px-8 lg:px-12 py-12 pt-28 sm:pt-32 relative">
         {/* Lamp Light Effect */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-80 bg-gradient-to-b from-primary/20 via-primary/5 to-transparent blur-[80px] pointer-events-none" />
@@ -86,11 +83,18 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
           {/* Image */}
           {project.image && (
             <div className="w-full relative aspect-video md:aspect-[21/9] rounded-xl overflow-hidden border border-white/10 mb-16 shadow-2xl bg-black">
-              <div
-                className="absolute inset-0 bg-cover bg-center opacity-80"
-                style={{ backgroundImage: `url('${project.image}')` }}
+              <Image
+                src={project.image}
+                alt={project.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 960px"
+                data-full-src={project.image}
+                className="object-cover absolute inset-0 opacity-80"
+                priority
+                placeholder="blur"
+                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
             </div>
           )}
 
@@ -238,8 +242,6 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
           </div>
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

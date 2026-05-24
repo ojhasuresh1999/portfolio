@@ -1,49 +1,7 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-// import { apiClient } from "@/lib/api-client";
-import { useSocialLinks, useSettings } from "@/hooks/queries";
-
-// ── Live Latency Hook ────────────────────────
-
-interface LatencyState {
-  latency: number | null;
-  status: "online" | "offline";
-}
-
-const PING_INTERVAL_MS = 30_000; // 30 seconds
-
-function useLatency(): LatencyState {
-  const [state, setState] = useState<LatencyState>({
-    latency: null,
-    status: "online",
-  });
-
-  useEffect(() => {
-    const ping = async () => {
-      const start = performance.now();
-      try {
-        // await apiClient.get("/health", {
-        //   timeout: 5000,
-        // });
-        const elapsed = Math.round(performance.now() - start);
-        setState({ latency: elapsed, status: "online" });
-      } catch {
-        setState((prev) => ({ ...prev, status: "offline" }));
-      }
-    };
-
-    // Initial ping
-    ping();
-
-    // Periodic ping
-    const interval = setInterval(ping, PING_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, []);
-
-  return state;
-}
+import { settingsService } from "@/server/services/settings.service";
+import { socialLinksService } from "@/server/services/social-links.service";
+import { LatencyStatus } from "./latency-status";
 
 // ── Helper: Map Brand to Material Symbol ──────
 
@@ -61,18 +19,23 @@ const getValidIcon = (iconStr: string) => {
 
 // ── Footer Component ─────────────────────────
 
-export function Footer() {
-  const { latency, status } = useLatency();
-  const { data: socialLinks = [] } = useSocialLinks();
-  const { data: settings } = useSettings();
+export async function Footer() {
+  // Fetch data statically at build time (or ISR)
+  const [settingsRes, socialLinksRes] = await Promise.all([
+    settingsService.getPublic(),
+    socialLinksService.getAll(),
+  ]);
 
-  const isOnline = status === "online";
-  const latencyDisplay = latency !== null ? `${latency}ms` : "--ms";
+  const settings: Record<string, unknown> = settingsRes.success
+    ? (settingsRes.data as Record<string, unknown>)
+    : {};
+  const socialLinks: Record<string, unknown>[] =
+    socialLinksRes.success && Array.isArray(socialLinksRes.data)
+      ? socialLinksRes.data
+      : [];
 
   const siteName = settings?.siteName || "SURESH";
-  const statusText = isOnline
-    ? settings?.statusText || "OPERATIONAL"
-    : "OFFLINE";
+  const statusText = settings?.statusText || "OPERATIONAL";
 
   return (
     <footer className="w-full border-t border-white/5 bg-[#020203] px-4 sm:px-6 py-8 sm:py-12 relative z-30">
@@ -86,32 +49,7 @@ export function Footer() {
             <span>{siteName}</span>
           </div>
           <div className="text-slate-600 text-xs font-[family-name:var(--font-mono)] space-y-0.5">
-            <p className="flex items-center gap-1.5">
-              STATUS:
-              <span className="relative flex size-2">
-                <span
-                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    isOnline ? "bg-emerald-400" : "bg-red-400"
-                  }`}
-                />
-                <span
-                  className={`relative inline-flex rounded-full size-2 ${
-                    isOnline ? "bg-emerald-500" : "bg-red-500"
-                  }`}
-                />
-              </span>
-              <span className={isOnline ? "text-emerald-500" : "text-red-400"}>
-                {statusText}
-              </span>
-            </p>
-            <p>
-              LATENCY:{" "}
-              <span
-                className={isOnline ? "text-emerald-500/80" : "text-slate-500"}
-              >
-                {latencyDisplay}
-              </span>
-            </p>
+            <LatencyStatus statusText={statusText} />
             <p>© {new Date().getFullYear()}</p>
           </div>
         </div>
@@ -119,7 +57,7 @@ export function Footer() {
         {/* Social Links */}
         <div className="flex gap-6">
           {socialLinks
-            .filter((l) => l.isVisible)
+            .filter((l) => l.isVisible !== false)
             .map((link) => (
               <Link
                 key={link.platform || link.url}
@@ -130,7 +68,7 @@ export function Footer() {
                 aria-label={link.platform}
               >
                 <span className="material-symbols-outlined text-xl truncate overflow-hidden">
-                  {getValidIcon(link.icon)}
+                  {getValidIcon(link.icon || "")}
                 </span>
               </Link>
             ))}

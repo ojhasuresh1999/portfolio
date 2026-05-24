@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/ui/navbar";
-import { Footer } from "@/components/ui/footer";
 import { cn } from "@/lib/utils";
 import { skillService } from "@/server/services/skill.service";
 import { techStackService } from "@/server/services/tech-stack.service";
@@ -32,8 +30,6 @@ export default async function SkillsPage() {
 
   return (
     <>
-      <Navbar />
-
       <main className="flex-1 flex flex-col items-center px-4 sm:px-6 md:px-8 lg:px-12 py-12 pt-28 sm:pt-32">
         {/* Lamp Header Section */}
         <div className="relative w-full max-w-[960px] flex flex-col items-center text-center mb-16">
@@ -327,8 +323,6 @@ export default async function SkillsPage() {
           </a>
         </div>
       </main>
-
-      <Footer />
     </>
   );
 }

@@ -13,7 +13,15 @@ export { SiteSettings, type ISiteSettings } from "./SiteSettings";
 export {
   ContactSubmission,
   type IContactSubmission,
+  type IContactNote,
+  type IContactReply,
+  type IContactActivity,
 } from "./ContactSubmission";
+export {
+  ContactConfig,
+  type IContactConfig,
+  type IQuickReply,
+} from "./ContactConfig";
 export { Subscriber, type ISubscriber } from "./Subscriber";
 export { EmailTemplate, type IEmailTemplate } from "./EmailTemplate";
 

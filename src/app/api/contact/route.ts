@@ -3,6 +3,7 @@ import { Api } from "@/server/utils/api-response";
 import { handleError } from "@/server/utils/error-handler";
 import { validateBody, contactFormSchema } from "@/server/utils/validation";
 import { checkRateLimit } from "@/server/utils/rate-limit";
+import { getClientIp } from "@/server/utils/auth-middleware";
 import { contactService } from "@/server/services/contact.service";
 import { RateLimit } from "@/server/constants";
 
@@ -64,7 +65,14 @@ export async function POST(request: NextRequest) {
       return Api.validationError(bodyResult.errors);
     }
 
-    const result = await contactService.submit(bodyResult.data);
+    const ip = getClientIp(request);
+    const userAgent = request.headers.get("user-agent") || undefined;
+
+    const result = await contactService.submit({
+      ...bodyResult.data,
+      ip,
+      userAgent,
+    });
 
     if (!result.success) {
       return Api.internalError(result.error);

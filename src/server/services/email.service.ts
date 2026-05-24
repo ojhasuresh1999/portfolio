@@ -37,6 +37,39 @@ export class EmailService {
     return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
   }
 
+  /**
+   * Send a direct custom HTML/Text email
+   */
+  async sendCustomEmail(options: {
+    to: string;
+    subject: string;
+    bodyHtml: string;
+    bodyText?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    if (!this.isConfigured()) {
+      console.warn("Gmail SMTP not configured. Email not sent.");
+      return { success: false, error: "Gmail SMTP not configured" };
+    }
+
+    try {
+      const transporter = this.createTransporter();
+      await transporter.sendMail({
+        from: `"SURESH Support" <${process.env.GMAIL_USER}>`,
+        to: options.to,
+        subject: options.subject,
+        text: options.bodyText || options.bodyHtml.replace(/<[^>]*>/g, ""),
+        html: options.bodyHtml,
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error("Direct Custom Email Error:", error);
+      const message =
+        error instanceof Error ? error.message : "Unknown email error";
+      return { success: false, error: message };
+    }
+  }
+
   // ======================================================================
   // Generic Template Sender
   // ======================================================================

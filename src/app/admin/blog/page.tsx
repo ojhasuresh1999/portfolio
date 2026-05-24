@@ -516,6 +516,8 @@ export default function AdminBlogPage() {
                             fill
                             className="object-cover"
                             sizes="64px"
+                            placeholder="blur"
+                            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
                           />
                         </div>
                       ) : (
