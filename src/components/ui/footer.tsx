@@ -26,12 +26,22 @@ export async function Footer() {
     socialLinksService.getAll(),
   ]);
 
-  const settings: Record<string, unknown> = settingsRes.success
-    ? (settingsRes.data as Record<string, unknown>)
+  interface FooterSettings {
+    siteName?: string;
+    statusText?: string;
+  }
+  interface SocialLink {
+    platform?: string;
+    url: string;
+    icon?: string;
+    isVisible?: boolean;
+  }
+  const settings: FooterSettings = settingsRes.success
+    ? (settingsRes.data as FooterSettings)
     : {};
-  const socialLinks: Record<string, unknown>[] =
+  const socialLinks: SocialLink[] =
     socialLinksRes.success && Array.isArray(socialLinksRes.data)
-      ? socialLinksRes.data
+      ? (socialLinksRes.data as unknown as SocialLink[])
       : [];
 
   const siteName = settings?.siteName || "SURESH";

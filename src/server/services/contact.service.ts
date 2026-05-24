@@ -179,7 +179,8 @@ export class ContactService {
       const limit = Math.min(options?.limit ?? 10, 100);
       const skip = (page - 1) * limit;
 
-      const query: Record<string, unknown> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query: Record<string, any> = {};
 
       // 1. Role-based Access Restriction
       // If the agent is not a SUPER_ADMIN, they can ONLY see tickets assigned to them!
@@ -634,12 +635,12 @@ export class ContactService {
       } else if (options.action === "change_status") {
         updateData.status = options.value;
         auditDescriptionList.push(
-          `Status changed in bulk to ${options.value.toUpperCase()}`,
+          `Status changed in bulk to ${(options.value as string).toUpperCase()}`,
         );
       } else if (options.action === "change_priority") {
         updateData.priority = options.value;
         auditDescriptionList.push(
-          `Priority changed in bulk to ${options.value.toUpperCase()}`,
+          `Priority changed in bulk to ${(options.value as string).toUpperCase()}`,
         );
       } else if (options.action === "assign") {
         if (!options.value || options.value === "") {
@@ -733,7 +734,8 @@ export class ContactService {
     try {
       await this.ensureConnection();
 
-      const query: Record<string, unknown> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query: Record<string, any> = {};
       if (options?.role && options.role !== "SUPER_ADMIN" && options.agentId) {
         query.assignedTo = new Types.ObjectId(options.agentId);
       }

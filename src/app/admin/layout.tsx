@@ -42,9 +42,14 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, isLoading, isAuthenticated, logout } = useAdminAuth();
   const [unreadContacts, setUnreadContacts] = useState(0);
-  const [notifications, setNotifications] = useState<Record<string, unknown>[]>(
-    [],
-  );
+  interface NotificationItem {
+    _id: string;
+    name: string;
+    subject?: string;
+    message?: string;
+    createdAt: string;
+  }
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
