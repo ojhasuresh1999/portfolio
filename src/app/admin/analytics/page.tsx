@@ -59,6 +59,10 @@ interface RecentVisitor {
   os: string;
   device: string;
   country: string;
+  city: string;
+  region: string;
+  latitude: number;
+  longitude: number;
   pages: string[];
   totalVisits: number;
   lastSeen: string;
@@ -604,17 +608,38 @@ export default function AnalyticsPage() {
                         </td>
                         {/* Location */}
                         <td className="px-4 py-3">
-                          <span className="text-sm">
-                            {v.country !== "Unknown" ? (
-                              <span className="text-slate-200">
+                          {v.country !== "Unknown" ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-slate-200 text-sm font-medium">
+                                {v.city !== "Unknown" ? v.city : ""}
+                                {v.region ? `, ${v.region}` : ""}
+                              </span>
+                              <span className="text-xs text-slate-400">
                                 {v.country}
                               </span>
-                            ) : (
-                              <span className="text-slate-500 italic">
-                                Unknown
-                              </span>
-                            )}
-                          </span>
+                              {v.latitude !== 0 && v.longitude !== 0 && (
+                                <a
+                                  href={`https://www.google.com/maps?q=${v.latitude},${v.longitude}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors mt-0.5 w-fit"
+                                >
+                                  <span
+                                    className="material-symbols-outlined"
+                                    style={{ fontSize: "12px" }}
+                                  >
+                                    pin_drop
+                                  </span>
+                                  {v.latitude.toFixed(4)},{" "}
+                                  {v.longitude.toFixed(4)}
+                                </a>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 italic text-sm">
+                              Unknown
+                            </span>
+                          )}
                         </td>
                         {/* Pages */}
                         <td className="px-4 py-3">

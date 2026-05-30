@@ -4,7 +4,7 @@ import {
   validateParams,
   validateBody,
   slugParamSchema,
-  projectSchema,
+  projectUpdateSchema,
 } from "@/server/utils/validation";
 import { projectService } from "@/server/services/project.service";
 import { withAdmin } from "@/server/utils/auth-middleware";
@@ -68,7 +68,7 @@ export const PUT = withAdmin(async (request, { admin, ip, params }) => {
     }
 
     // Validate request body (partial update)
-    const bodyResult = await validateBody(request, projectSchema.partial());
+    const bodyResult = await validateBody(request, projectUpdateSchema);
     if (!bodyResult.success) {
       return Api.validationError(bodyResult.errors);
     }

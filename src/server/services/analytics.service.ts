@@ -77,6 +77,10 @@ interface AdvancedStats {
     os: string;
     device: string;
     country: string;
+    city: string;
+    region: string;
+    latitude: number;
+    longitude: number;
     pages: string[];
     totalVisits: number;
     lastSeen: string;
@@ -118,6 +122,93 @@ function sanitizeMapKey(key: string): string {
   return key.replace(/\./g, "_").replace(/\$/g, "_").slice(0, 80) || "unknown";
 }
 
+// ─── Geo-IP Lookup (ip-api.com — free, no key, 45 req/min) ─────────────────
+
+interface GeoResult {
+  country: string;
+  city: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  countryCode: string;
+}
+
+// Simple in-memory cache to avoid hitting rate limits
+const geoCache = new Map<string, { data: GeoResult; ts: number }>();
+const GEO_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const GEO_CACHE_MAX = 500;
+
+/**
+ * Lookup full geo data from a raw (non-anonymized) IP.
+ * Uses ip-api.com which is free for non-commercial + server-side use.
+ * Returns country, city, region, latitude, longitude, countryCode.
+ * Falls back gracefully to defaults on any failure.
+ */
+async function lookupGeo(ip: string): Promise<GeoResult> {
+  const fallback: GeoResult = {
+    country: "Unknown",
+    city: "Unknown",
+    region: "",
+    latitude: 0,
+    longitude: 0,
+    countryCode: "",
+  };
+
+  if (
+    !ip ||
+    ip === "unknown" ||
+    ip === "::1" ||
+    ip.startsWith("127.") ||
+    ip.startsWith("192.168.") ||
+    ip.startsWith("10.")
+  ) {
+    return fallback;
+  }
+
+  // Check cache
+  const cached = geoCache.get(ip);
+  if (cached && Date.now() - cached.ts < GEO_CACHE_TTL) {
+    return cached.data;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+    const res = await fetch(
+      `http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,lat,lon`,
+      { signal: controller.signal },
+    );
+    clearTimeout(timeout);
+
+    if (!res.ok) return fallback;
+
+    const data = await res.json();
+    if (data.status !== "success") return fallback;
+
+    const result: GeoResult = {
+      country: data.country || "Unknown",
+      city: data.city || "Unknown",
+      region: data.regionName || "",
+      latitude: data.lat || 0,
+      longitude: data.lon || 0,
+      countryCode: data.countryCode || "",
+    };
+
+    // Evict oldest if cache is full
+    if (geoCache.size >= GEO_CACHE_MAX) {
+      const firstKey = geoCache.keys().next().value;
+      if (firstKey) geoCache.delete(firstKey);
+    }
+
+    geoCache.set(ip, { data: result, ts: Date.now() });
+    return result;
+  } catch {
+    // Network error, timeout, etc — fail silently
+    return fallback;
+  }
+}
+
 export class AnalyticsService {
   /**
    * Track a page view — production level:
@@ -154,6 +245,9 @@ export class AnalyticsService {
         }
       }
 
+      // Geo-IP lookup BEFORE anonymization (uses raw IP)
+      const geo = await lookupGeo(input.ip || "");
+
       const anonymizedIp = anonymizeIp(input.ip || "");
 
       // Generate fingerprint hash if client didn't send one (fallback to IP + UA)
@@ -174,6 +268,7 @@ export class AnalyticsService {
       const deviceKey = sanitizeMapKey(device);
       const referrerDomain = this.extractReferrerDomain(input.referrer || "");
       const referrerKey = sanitizeMapKey(referrerDomain || "direct");
+      const countryKey = sanitizeMapKey(geo.country);
 
       // -------------------------------------------------------------------
       // 1) Upsert Visitor
@@ -192,6 +287,11 @@ export class AnalyticsService {
               os,
               device,
               lastIp: anonymizedIp,
+              country: geo.country,
+              city: geo.city,
+              region: geo.region,
+              latitude: geo.latitude,
+              longitude: geo.longitude,
               ...(input.screenResolution && {
                 screenResolution: input.screenResolution,
               }),
@@ -216,6 +316,11 @@ export class AnalyticsService {
           screenResolution: input.screenResolution || "",
           language: input.language || "",
           timezone: input.timezone || "",
+          country: geo.country,
+          city: geo.city,
+          region: geo.region,
+          latitude: geo.latitude,
+          longitude: geo.longitude,
           referrer: input.referrer || "",
           lastIp: anonymizedIp,
         });
@@ -231,6 +336,7 @@ export class AnalyticsService {
           [`devices.${deviceKey}`]: 1,
           [`browsers.${browserKey}`]: 1,
           [`operatingSystems.${osKey}`]: 1,
+          [`countries.${countryKey}`]: 1,
           [`referrers.${referrerKey}`]: 1,
         },
         $addToSet: {
@@ -319,7 +425,7 @@ export class AnalyticsService {
           .sort({ lastSeen: -1 })
           .limit(50)
           .select(
-            "fingerprintHash browser os device country pages totalVisits lastSeen firstSeen",
+            "fingerprintHash browser os device country city region latitude longitude pages totalVisits lastSeen firstSeen",
           )
           .lean(),
 
@@ -469,6 +575,10 @@ export class AnalyticsService {
         os: v.os as string,
         device: v.device as string,
         country: v.country as string,
+        city: (v.city as string) || "Unknown",
+        region: (v.region as string) || "",
+        latitude: (v.latitude as number) || 0,
+        longitude: (v.longitude as number) || 0,
         pages: v.pages as string[],
         totalVisits: v.totalVisits as number,
         lastSeen: (v.lastSeen as Date).toISOString(),

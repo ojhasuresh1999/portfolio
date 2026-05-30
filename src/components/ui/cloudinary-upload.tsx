@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import Image from "next/image";
 
 // ============================================
 // Types

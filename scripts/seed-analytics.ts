@@ -44,6 +44,9 @@ const visitorSchema = new mongoose.Schema(
     timezone: { type: String, default: "" },
     country: { type: String, default: "Unknown" },
     city: { type: String, default: "Unknown" },
+    region: { type: String, default: "" },
+    latitude: { type: Number, default: 0 },
+    longitude: { type: Number, default: 0 },
     referrer: { type: String, default: "" },
     lastIp: { type: String, default: "" },
   },
@@ -130,18 +133,66 @@ const COUNTRIES = [
   "Singapore",
 ];
 
-const CITIES: Record<string, string[]> = {
-  India: ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune"],
-  "United States": ["New York", "San Francisco", "Austin", "Seattle"],
-  Germany: ["Berlin", "Munich"],
-  "United Kingdom": ["London", "Manchester"],
-  Canada: ["Toronto", "Vancouver"],
-  Australia: ["Sydney", "Melbourne"],
-  Japan: ["Tokyo"],
-  France: ["Paris"],
-  Brazil: ["São Paulo"],
-  Netherlands: ["Amsterdam"],
-  Singapore: ["Singapore"],
+interface CityGeo {
+  city: string;
+  region: string;
+  lat: number;
+  lon: number;
+}
+
+const CITY_GEO: Record<string, CityGeo[]> = {
+  India: [
+    { city: "Mumbai", region: "Maharashtra", lat: 19.076, lon: 72.8777 },
+    { city: "Delhi", region: "Delhi", lat: 28.6139, lon: 77.209 },
+    { city: "Bangalore", region: "Karnataka", lat: 12.9716, lon: 77.5946 },
+    { city: "Hyderabad", region: "Telangana", lat: 17.385, lon: 78.4867 },
+    { city: "Pune", region: "Maharashtra", lat: 18.5204, lon: 73.8567 },
+  ],
+  "United States": [
+    { city: "New York", region: "New York", lat: 40.7128, lon: -74.006 },
+    {
+      city: "San Francisco",
+      region: "California",
+      lat: 37.7749,
+      lon: -122.4194,
+    },
+    { city: "Austin", region: "Texas", lat: 30.2672, lon: -97.7431 },
+    { city: "Seattle", region: "Washington", lat: 47.6062, lon: -122.3321 },
+  ],
+  Germany: [
+    { city: "Berlin", region: "Berlin", lat: 52.52, lon: 13.405 },
+    { city: "Munich", region: "Bavaria", lat: 48.1351, lon: 11.582 },
+  ],
+  "United Kingdom": [
+    { city: "London", region: "England", lat: 51.5074, lon: -0.1278 },
+    { city: "Manchester", region: "England", lat: 53.4808, lon: -2.2426 },
+  ],
+  Canada: [
+    { city: "Toronto", region: "Ontario", lat: 43.6532, lon: -79.3832 },
+    {
+      city: "Vancouver",
+      region: "British Columbia",
+      lat: 49.2827,
+      lon: -123.1207,
+    },
+  ],
+  Australia: [
+    { city: "Sydney", region: "New South Wales", lat: -33.8688, lon: 151.2093 },
+    { city: "Melbourne", region: "Victoria", lat: -37.8136, lon: 144.9631 },
+  ],
+  Japan: [{ city: "Tokyo", region: "Tokyo", lat: 35.6762, lon: 139.6503 }],
+  France: [
+    { city: "Paris", region: "Île-de-France", lat: 48.8566, lon: 2.3522 },
+  ],
+  Brazil: [
+    { city: "São Paulo", region: "São Paulo", lat: -23.5505, lon: -46.6333 },
+  ],
+  Netherlands: [
+    { city: "Amsterdam", region: "North Holland", lat: 52.3676, lon: 4.9041 },
+  ],
+  Singapore: [
+    { city: "Singapore", region: "Central Region", lat: 1.3521, lon: 103.8198 },
+  ],
 };
 
 const PAGES = [
@@ -280,6 +331,9 @@ async function seed() {
     timezone: string;
     country: string;
     city: string;
+    region: string;
+    latitude: number;
+    longitude: number;
     referrer: string;
     lastIp: string;
   }> = [];
@@ -306,8 +360,15 @@ async function seed() {
     }
 
     const country = pick(COUNTRIES);
-    const citiesForCountry = CITIES[country] || ["Unknown"];
+    const cityGeos = CITY_GEO[country] || [
+      { city: "Unknown", region: "", lat: 0, lon: 0 },
+    ];
+    const cityGeo = pick(cityGeos);
     const device = pick(DEVICES);
+
+    // Add slight jitter to coordinates so they're not all identical for the same city
+    const latJitter = (Math.random() - 0.5) * 0.1;
+    const lonJitter = (Math.random() - 0.5) * 0.1;
 
     visitors.push({
       fingerprintHash: fingerprint,
@@ -338,7 +399,10 @@ async function seed() {
       language: pick(LANGUAGES),
       timezone: pick(TIMEZONES),
       country,
-      city: pick(citiesForCountry),
+      city: cityGeo.city,
+      region: cityGeo.region,
+      latitude: Math.round((cityGeo.lat + latJitter) * 10000) / 10000,
+      longitude: Math.round((cityGeo.lon + lonJitter) * 10000) / 10000,
       referrer: pick(REFERRERS),
       lastIp: `${randInt(100, 220)}.${randInt(0, 255)}.${randInt(0, 255)}.0`,
     });

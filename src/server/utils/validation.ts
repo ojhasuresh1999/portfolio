@@ -147,7 +147,7 @@ export type ContactFormData = z.infer<typeof contactFormSchema>;
 /**
  * Project creation/update schema
  */
-export const projectSchema = z.object({
+const projectBaseObject = {
   title: z.string().min(1, "Title is required").max(200),
   slug: z
     .string()
@@ -162,9 +162,9 @@ export const projectSchema = z.object({
     .or(z.literal(""))
     .nullable()
     .transform((val) => val || undefined),
-  images: z.array(z.string()).default([]),
+  images: z.array(z.string()).optional(),
   codeSnippet: z.string().max(2000).optional(),
-  technologies: z.array(z.string()).default([]),
+  technologies: z.array(z.string()).optional(),
   liveUrl: z
     .string()
     .url()
@@ -177,6 +177,18 @@ export const projectSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => val ?? undefined),
+  accentColor: z.enum(["primary", "secondary"]).optional(),
+  status: z.enum(["ongoing", "completed", "on-hold", "archived"]).optional(),
+  order: z.number().int().optional(),
+  isFeatured: z.boolean().optional(),
+  isVisible: z.boolean().optional(),
+  isSourceCodeVisible: z.boolean().optional(),
+};
+
+export const projectSchema = z.object({
+  ...projectBaseObject,
+  images: z.array(z.string()).default([]),
+  technologies: z.array(z.string()).default([]),
   accentColor: z.enum(["primary", "secondary"]).default("primary"),
   status: z
     .enum(["ongoing", "completed", "on-hold", "archived"])
@@ -187,12 +199,11 @@ export const projectSchema = z.object({
   isSourceCodeVisible: z.boolean().default(false),
 });
 
+export const projectUpdateSchema = z.object(projectBaseObject).partial();
+
 export type ProjectFormData = z.infer<typeof projectSchema>;
 
-/**
- * Blog post schema
- */
-export const blogPostSchema = z.object({
+const blogPostBaseObject = {
   title: z.string().min(1, "Title is required").max(200),
   slug: z
     .string()
@@ -201,13 +212,23 @@ export const blogPostSchema = z.object({
   excerpt: z.string().min(1, "Excerpt is required").max(500),
   content: z.string().min(1, "Content is required"),
   coverImage: z.string().url().optional(),
-  images: z.array(z.string()).default([]),
+  images: z.array(z.string()).optional(),
   category: z.string().min(1, "Category is required"),
+  tags: z.array(z.string()).optional(),
+  readTime: z.number().int().positive().optional(),
+  isPublished: z.boolean().optional(),
+  publishedAt: z.coerce.date().optional(),
+};
+
+export const blogPostSchema = z.object({
+  ...blogPostBaseObject,
+  images: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
   readTime: z.number().int().positive().default(5),
   isPublished: z.boolean().default(false),
-  publishedAt: z.coerce.date().optional(),
 });
+
+export const blogPostUpdateSchema = z.object(blogPostBaseObject).partial();
 
 export type BlogPostFormData = z.infer<typeof blogPostSchema>;
 

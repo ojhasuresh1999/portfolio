@@ -21,6 +21,9 @@ export interface IVisitor extends Document {
   timezone: string;
   country: string;
   city: string;
+  region: string;
+  latitude: number;
+  longitude: number;
   referrer: string;
   lastIp: string;
   createdAt: Date;
@@ -49,6 +52,9 @@ const visitorSchema = new Schema<IVisitor>(
     timezone: { type: String, default: "" },
     country: { type: String, default: "Unknown" },
     city: { type: String, default: "Unknown" },
+    region: { type: String, default: "" },
+    latitude: { type: Number, default: 0 },
+    longitude: { type: Number, default: 0 },
     referrer: { type: String, default: "" },
     lastIp: { type: String, default: "" },
   },
@@ -63,5 +69,12 @@ visitorSchema.index({ firstSeen: 1 });
 visitorSchema.index({ device: 1 });
 visitorSchema.index({ country: 1 });
 
-export const Visitor: IVisitorModel =
-  mongoose.models.Visitor || mongoose.model<IVisitor>("Visitor", visitorSchema);
+// Delete cached model to force re-registration when schema changes (safe in dev hot reload)
+if (mongoose.models.Visitor) {
+  delete mongoose.models.Visitor;
+}
+
+export const Visitor: IVisitorModel = mongoose.model<IVisitor>(
+  "Visitor",
+  visitorSchema,
+);

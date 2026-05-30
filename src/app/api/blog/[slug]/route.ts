@@ -4,7 +4,7 @@ import {
   validateParams,
   validateBody,
   slugParamSchema,
-  blogPostSchema,
+  blogPostUpdateSchema,
 } from "@/server/utils/validation";
 import { blogService } from "@/server/services/blog.service";
 import { withAdmin } from "@/server/utils/auth-middleware";
@@ -68,7 +68,7 @@ export const PUT = withAdmin(async (request, { admin, ip, params }) => {
     }
 
     // Validate request body (partial update)
-    const bodyResult = await validateBody(request, blogPostSchema.partial());
+    const bodyResult = await validateBody(request, blogPostUpdateSchema);
     if (!bodyResult.success) {
       return Api.validationError(bodyResult.errors);
     }
