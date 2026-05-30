@@ -73,6 +73,7 @@ const TEMPLATE_CONFIGS: Record<
       { key: "{{blogTitle}}", label: "Blog Post Title" },
       { key: "{{blogExcerpt}}", label: "Blog Post Excerpt" },
       { key: "{{blogUrl}}", label: "Blog Post URL" },
+      { key: "{{blogPath}}", label: "Blog Relative Path" },
     ],
   },
 };
@@ -103,6 +104,7 @@ function renderPreviewHtml(form: EmailTemplateForm): string {
     blogTitle: "Next.js 15: What's New?",
     blogExcerpt: "A deep dive into the latest Next.js 15 features...",
     blogUrl: "https://yourportfolio.com/blog/nextjs-15",
+    blogPath: "/blog/nextjs-15",
   };
 
   const resolvedGreeting = interpolate(form.greeting, vars);

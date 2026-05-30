@@ -350,7 +350,7 @@ export class BlogService {
     if (!subsRes.success || !subsRes.data || subsRes.data.length === 0) return;
 
     const emails = subsRes.data.map((s) => s.email);
-    const blogUrl = `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blog/${post.slug}`;
+    const blogUrl = `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://suresh-ojha.vercel.app"}/blog/${post.slug}`;
 
     await emailService.sendTemplateEmail({
       to: emails,
@@ -359,6 +359,7 @@ export class BlogService {
         blogTitle: post.title,
         blogExcerpt: post.excerpt,
         blogUrl: blogUrl,
+        blogPath: `/blog/${post.slug}`,
       },
     });
   }
