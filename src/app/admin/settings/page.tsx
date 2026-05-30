@@ -7,6 +7,7 @@ import {
   useSocialLinks,
   useUpdateSocialLinks,
 } from "@/hooks/queries";
+import { type SocialLinkRecord } from "@/hooks/queries/use-social-links";
 // import CloudinaryUpload, {
 //   type UploadResult,
 // } from "@/components/ui/cloudinary-upload";
@@ -39,15 +40,7 @@ export default function AdminSettingsPage() {
     metaDescription: "",
   });
 
-  const [socialLinks, setSocialLinks] = useState<
-    {
-      platform: string;
-      url: string;
-      icon: string;
-      order: number;
-      isVisible: boolean;
-    }[]
-  >([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLinkRecord[]>([]);
 
   const [saveStatus, setSaveStatus] = useState<{
     message: string;
