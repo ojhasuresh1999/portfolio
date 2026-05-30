@@ -34,6 +34,7 @@ interface BlogFormState {
   tags: string[];
   readTime: number;
   isPublished: boolean;
+  isFeatured: boolean;
 }
 
 const EMPTY_FORM: BlogFormState = {
@@ -48,6 +49,7 @@ const EMPTY_FORM: BlogFormState = {
   tags: [],
   readTime: 5,
   isPublished: false,
+  isFeatured: false,
 };
 
 // Common blog categories
@@ -143,6 +145,7 @@ export default function AdminBlogPage() {
   // ── Stats ──────────────────────────────────
   const published = posts.filter((p) => p.isPublished).length;
   const drafts = posts.filter((p) => !p.isPublished).length;
+  const featuredCount = posts.filter((p) => p.isFeatured).length;
 
   // ── Handlers ───────────────────────────────
   const openNewDrawer = useCallback(() => {
@@ -167,6 +170,7 @@ export default function AdminBlogPage() {
       tags: post.tags || [],
       readTime: post.readTime || 5,
       isPublished: post.isPublished,
+      isFeatured: post.isFeatured || false,
     });
     setEditingSlug(post.slug);
     setSlugManual(true);
@@ -239,6 +243,7 @@ export default function AdminBlogPage() {
           tags: form.tags,
           readTime: form.readTime,
           isPublished: form.isPublished,
+          isFeatured: form.isFeatured,
           images: form.images,
         };
         if (form.coverImage) updateData.coverImage = form.coverImage;
@@ -258,6 +263,7 @@ export default function AdminBlogPage() {
           tags: form.tags,
           readTime: form.readTime,
           isPublished: form.isPublished,
+          isFeatured: form.isFeatured,
           publishedAt: form.isPublished ? new Date().toISOString() : undefined,
         } as Omit<BlogPostData, "_id" | "createdAt" | "updatedAt">);
         setToast({ message: "Post created successfully", type: "success" });
@@ -393,7 +399,7 @@ export default function AdminBlogPage() {
       </div>
 
       {/* ── Stats ──────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-card-dark border border-white/5 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-400">Total Posts</span>
@@ -414,6 +420,14 @@ export default function AdminBlogPage() {
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-400">Drafts</span>
             <span className="text-2xl font-bold text-yellow-400">{drafts}</span>
+          </div>
+        </div>
+        <div className="bg-card-dark border border-white/5 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-400">Featured</span>
+            <span className="text-2xl font-bold text-primary">
+              {featuredCount}
+            </span>
           </div>
         </div>
       </div>
@@ -1104,6 +1118,34 @@ export default function AdminBlogPage() {
                   <span
                     className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${
                       form.isPublished ? "translate-x-5" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Featured toggle */}
+              <div className="flex items-center justify-between py-3 px-4 bg-white/[0.02] rounded-xl border border-white/5 mt-3">
+                <div>
+                  <p className="text-sm font-medium text-white">Featured</p>
+                  <p className="text-xs text-slate-500">
+                    Display this post on the homepage
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm((p) => ({
+                      ...p,
+                      isFeatured: !p.isFeatured,
+                    }))
+                  }
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    form.isFeatured ? "bg-primary" : "bg-white/10"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                      form.isFeatured ? "translate-x-5" : ""
                     }`}
                   />
                 </button>

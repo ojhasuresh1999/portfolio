@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 import { useProjects, type ProjectData } from "@/hooks/queries";
@@ -13,52 +12,17 @@ interface DeploymentsSectionProps {
   projects?: Project[];
 }
 
-const defaultProjects: Project[] = [
-  {
-    _id: "1",
-    title: "Microservices Gateway",
-    isSourceCodeVisible: true,
-    slug: "microservices-gateway",
-    description:
-      "A custom API Gateway supporting rate limiting, request transformation, and centralized authentication using JWT and Redis. Handles 10k+ concurrent connections.",
-    codeSnippet: `class APIGateway {
-  constructor() {
-    // Init Redis Cluster
-    this.cache = new Redis();
-  }
-}`,
-    technologies: ["Fastify", "Redis", "Docker"],
-    accentColor: "primary",
-    order: 0,
-    isFeatured: true,
-    isVisible: true,
-    createdAt: "",
-    updatedAt: "",
-  },
-  {
-    _id: "2",
-    title: "Real-time Analytics Engine",
-    slug: "analytics-engine",
-    isSourceCodeVisible: true,
-    description:
-      "Low-latency processing engine for IoT sensor data, capable of handling 50k+ events per second with persistent storage.",
-    technologies: ["WebSocket", "BullMQ", "TimescaleDB"],
-    accentColor: "secondary",
-    hasChart: true,
-    order: 0,
-    isFeatured: true,
-    isVisible: true,
-    createdAt: "",
-    updatedAt: "",
-  },
-];
-
 export function DeploymentsSection({
   projects: initialProjects,
 }: DeploymentsSectionProps) {
-  const { data: apiProjects } = useProjects(
-    { limit: 4, featured: true },
-    { initialData: initialProjects as ProjectData[] },
+  // Use SSR-seeded initialData; if empty, refetch from API
+  const { data: apiProjects, isLoading } = useProjects(
+    { limit: 100, featured: true },
+    {
+      initialData: initialProjects?.length
+        ? (initialProjects as ProjectData[])
+        : undefined,
+    },
   );
 
   const displayProjects: Project[] =
@@ -67,7 +31,10 @@ export function DeploymentsSection({
           ...p,
           accentColor: p.accentColor || "primary",
         }))
-      : defaultProjects;
+      : (initialProjects ?? []).map((p) => ({
+          ...p,
+          accentColor: p.accentColor || "primary",
+        }));
 
   return (
     <section id="projects" className="mt-20 sm:mt-32">
@@ -86,12 +53,69 @@ export function DeploymentsSection({
         </p>
       </div>
 
+      {/* Loading State */}
+      {isLoading && displayProjects.length === 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="bg-[#0a0a0f] border border-white/5 rounded-2xl overflow-hidden h-80 animate-pulse"
+            >
+              <div className="h-48 bg-white/5" />
+              <div className="p-6 space-y-3">
+                <div className="h-3 bg-white/5 rounded w-1/4" />
+                <div className="h-5 bg-white/5 rounded w-3/4" />
+                <div className="h-3 bg-white/5 rounded w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && displayProjects.length === 0 && (
+        <div className="p-12 text-center border border-white/5 bg-white/[0.02] rounded-2xl">
+          <span className="material-symbols-outlined text-4xl text-gray-600 mb-4 block">
+            code_blocks
+          </span>
+          <p className="text-gray-400 font-[family-name:var(--font-mono)] text-sm">
+            [NO_FEATURED_DEPLOYMENTS_FOUND]
+          </p>
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-2 mt-4 text-xs font-bold font-[family-name:var(--font-mono)] text-primary hover:text-white transition-colors uppercase tracking-wider"
+          >
+            Browse All Projects
+            <span className="material-symbols-outlined text-sm">
+              arrow_forward
+            </span>
+          </Link>
+        </div>
+      )}
+
       {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
-        {displayProjects.map((project) => (
-          <ProjectCard key={project._id} project={project} />
-        ))}
-      </div>
+      {displayProjects.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
+            {displayProjects.map((project) => (
+              <ProjectCard key={project._id} project={project} />
+            ))}
+          </div>
+
+          {/* View All Link */}
+          <div className="mt-8 sm:mt-12 flex justify-center">
+            <Link
+              href="/projects"
+              className="group inline-flex items-center gap-3 px-6 py-3 border border-white/10 text-sm font-[family-name:var(--font-mono)] text-gray-400 hover:text-primary hover:border-primary/40 transition-all duration-300 tracking-wider uppercase"
+            >
+              <span>View All Projects</span>
+              <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">
+                arrow_forward
+              </span>
+            </Link>
+          </div>
+        </>
+      )}
     </section>
   );
 }

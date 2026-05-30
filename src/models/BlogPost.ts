@@ -20,6 +20,7 @@ export interface IBlogPost {
   tags: string[];
   readTime: number;
   isPublished: boolean;
+  isFeatured: boolean;
   publishedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -40,6 +41,7 @@ const BlogPostSchema = new Schema<IBlogPost>(
     tags: { type: [String], default: [] },
     readTime: { type: Number, default: 5 },
     isPublished: { type: Boolean, default: false },
+    isFeatured: { type: Boolean, default: false },
     publishedAt: { type: Date },
   },
   { timestamps: true },

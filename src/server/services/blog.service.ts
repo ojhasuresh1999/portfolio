@@ -16,6 +16,7 @@ interface BlogPostDoc {
   tags: string[];
   readTime: number;
   isPublished: boolean;
+  isFeatured: boolean;
   publishedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -41,6 +42,7 @@ export class BlogService {
     limit?: number;
     category?: string;
     tag?: string;
+    featured?: boolean;
   }): Promise<ServiceResult<{ items: BlogPostDoc[]; total: number }>> {
     try {
       await this.ensureConnection();
@@ -55,6 +57,9 @@ export class BlogService {
       }
       if (options?.tag) {
         where.tags = options.tag;
+      }
+      if (options?.featured !== undefined) {
+        where.isFeatured = options.featured;
       }
 
       const [items, total] = await Promise.all([
@@ -232,6 +237,7 @@ export class BlogService {
     tags?: string[];
     readTime?: number;
     isPublished?: boolean;
+    isFeatured?: boolean;
     publishedAt?: Date;
   }): Promise<ServiceResult<BlogPostDoc>> {
     try {

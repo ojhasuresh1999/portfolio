@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
 
     const { page, limit } = queryResult.data;
     const category = request.nextUrl.searchParams.get("category") ?? undefined;
+    const featured = request.nextUrl.searchParams.get("featured");
     const includeAll =
       request.nextUrl.searchParams.get("includeAll") === "true";
 
@@ -85,7 +86,13 @@ export async function GET(request: NextRequest) {
       // Admin: include all posts (published + drafts)
       result = await blogService.getAll({ page, limit });
     } else {
-      result = await blogService.getPublished({ page, limit, category });
+      result = await blogService.getPublished({
+        page,
+        limit,
+        category,
+        featured:
+          featured === "true" ? true : featured === "false" ? false : undefined,
+      });
     }
 
     if (!result.success) {

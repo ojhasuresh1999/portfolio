@@ -15,29 +15,16 @@ interface SystemLogsSectionProps {
   posts?: BlogPost[];
 }
 
-const defaultPosts: BlogPost[] = [
-  {
-    _id: "1",
-    title: "Optimizing SQL Queries for Large Datasets",
-    slug: "optimizing-sql-queries",
-    category: "Query Optimization",
-    publishedAt: "2023-10-24",
-  },
-  {
-    _id: "2",
-    title: "Mastering Node.js Streams and Pipelines",
-    slug: "mastering-nodejs-streams",
-    category: "Stream API",
-    publishedAt: "2023-09-12",
-  },
-];
-
 export function SystemLogsSection({
   posts: initialPosts,
 }: SystemLogsSectionProps) {
-  const { data: apiPosts } = useBlogPosts(
-    { limit: 2 },
-    { initialData: initialPosts as BlogPostData[] },
+  const { data: apiPosts, isLoading } = useBlogPosts(
+    { limit: 100, featured: true },
+    {
+      initialData: initialPosts?.length
+        ? (initialPosts as BlogPostData[])
+        : undefined,
+    },
   );
 
   const displayPosts: BlogPost[] =
@@ -49,7 +36,13 @@ export function SystemLogsSection({
           category: p.category,
           publishedAt: p.publishedAt || p.createdAt,
         }))
-      : defaultPosts;
+      : (initialPosts ?? []).map((p) => ({
+          _id: p._id,
+          title: p.title,
+          slug: p.slug,
+          category: p.category,
+          publishedAt: p.publishedAt,
+        }));
 
   return (
     <section className="mt-20 sm:mt-32 mb-16 sm:mb-20">
@@ -74,12 +67,41 @@ export function SystemLogsSection({
         </Link>
       </div>
 
+      {/* Loading State */}
+      {isLoading && displayPosts.length === 0 && (
+        <div className="space-y-4">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="bg-white/[0.02] border border-white/5 p-4 sm:p-6 rounded-xl animate-pulse"
+            >
+              <div className="h-3 bg-white/5 rounded w-1/4 mb-3" />
+              <div className="h-5 bg-white/5 rounded w-3/4" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && displayPosts.length === 0 && (
+        <div className="p-8 text-center border border-white/5 bg-white/[0.02] rounded-xl">
+          <span className="material-symbols-outlined text-3xl text-gray-600 mb-3 block">
+            article
+          </span>
+          <p className="text-gray-400 font-[family-name:var(--font-mono)] text-sm">
+            [NO_PUBLISHED_LOGS_YET]
+          </p>
+        </div>
+      )}
+
       {/* Blog Posts */}
-      <div className="space-y-4">
-        {displayPosts.map((post) => (
-          <BlogPostPreview key={post._id} post={post} />
-        ))}
-      </div>
+      {displayPosts.length > 0 && (
+        <div className="space-y-4">
+          {displayPosts.map((post) => (
+            <BlogPostPreview key={post._id} post={post} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

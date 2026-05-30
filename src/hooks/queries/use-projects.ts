@@ -1,5 +1,6 @@
 import {
   useQuery,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
   type UseQueryOptions,
@@ -58,6 +59,8 @@ export const projectKeys = {
   lists: () => [...projectKeys.all, "list"] as const,
   list: (params: Record<string, unknown>) =>
     [...projectKeys.lists(), params] as const,
+  infinite: (params: Record<string, unknown>) =>
+    [...projectKeys.all, "infinite", params] as const,
   admin: () => ["admin-projects"] as const,
   adminList: (page: number, limit: number) =>
     [...projectKeys.admin(), { page, limit }] as const,
@@ -90,6 +93,36 @@ export function useProjects(
       return response.data.data;
     },
     ...queryOptions,
+  });
+}
+
+/**
+ * Infinite scroll for public projects page
+ */
+export function useInfiniteProjects(options?: {
+  limit?: number;
+  featured?: boolean;
+}) {
+  const limit = options?.limit ?? 6;
+
+  return useInfiniteQuery<PaginatedResponse<ProjectData>, Error>({
+    queryKey: projectKeys.infinite(options ?? {}),
+    queryFn: async ({ pageParam }) => {
+      const page = pageParam as number;
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (options?.featured !== undefined)
+        params.set("featured", String(options.featured));
+
+      const response = await apiClient.get<PaginatedResponse<ProjectData>>(
+        `/projects?${params.toString()}`,
+      );
+      return response.data;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.hasMore ? lastPage.meta.page + 1 : undefined,
   });
 }
 

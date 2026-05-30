@@ -5,6 +5,7 @@
 // Projects
 export {
   useProjects,
+  useInfiniteProjects,
   useProject,
   useAdminProjects,
   useCreateProject,
@@ -17,6 +18,7 @@ export {
 // Blog
 export {
   useBlogPosts,
+  useInfiniteBlogPosts,
   useAdminBlogPosts,
   useBlogPost,
   useCreateBlogPost,

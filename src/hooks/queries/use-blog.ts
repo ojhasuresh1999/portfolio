@@ -1,5 +1,6 @@
 import {
   useQuery,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
   type UseQueryOptions,
@@ -22,6 +23,7 @@ export interface BlogPostData {
   tags: string[];
   readTime: number;
   isPublished: boolean;
+  isFeatured: boolean;
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -53,6 +55,8 @@ export const blogKeys = {
   lists: () => [...blogKeys.all, "list"] as const,
   list: (params: Record<string, unknown>) =>
     [...blogKeys.lists(), params] as const,
+  infinite: (params: Record<string, unknown>) =>
+    [...blogKeys.all, "infinite", params] as const,
   detail: (slug: string) => [...blogKeys.all, "detail", slug] as const,
 };
 
@@ -64,12 +68,14 @@ export const blogKeys = {
  * Fetch public blog posts
  */
 export function useBlogPosts(
-  options?: { limit?: number; category?: string },
+  options?: { limit?: number; category?: string; featured?: boolean },
   queryOptions?: Partial<UseQueryOptions<BlogPostData[]>>,
 ) {
   const params = new URLSearchParams();
   if (options?.limit) params.set("limit", String(options.limit));
   if (options?.category) params.set("category", options.category);
+  if (options?.featured !== undefined)
+    params.set("featured", String(options.featured));
 
   return useQuery<BlogPostData[]>({
     queryKey: blogKeys.list(options ?? {}),
@@ -80,6 +86,40 @@ export function useBlogPosts(
       return response.data.data;
     },
     ...queryOptions,
+  });
+}
+
+/**
+ * Infinite scroll for public blog page
+ */
+export function useInfiniteBlogPosts(options?: {
+  limit?: number;
+  category?: string;
+  tag?: string;
+  featured?: boolean;
+}) {
+  const limit = options?.limit ?? 8;
+
+  return useInfiniteQuery<PaginatedResponse<BlogPostData>, Error>({
+    queryKey: blogKeys.infinite(options ?? {}),
+    queryFn: async ({ pageParam }) => {
+      const page = pageParam as number;
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("limit", String(limit));
+      if (options?.category) params.set("category", options.category);
+      if (options?.tag) params.set("tag", options.tag);
+      if (options?.featured !== undefined)
+        params.set("featured", String(options.featured));
+
+      const response = await apiClient.get<PaginatedResponse<BlogPostData>>(
+        `/blog?${params.toString()}`,
+      );
+      return response.data;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.hasMore ? lastPage.meta.page + 1 : undefined,
   });
 }
 

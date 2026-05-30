@@ -172,11 +172,11 @@ export default async function BlogPostPage({
                 Chronicle_Gallery
               </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-4 sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {post.images.map((imgUrl, index) => (
                 <div
                   key={index}
-                  className="relative aspect-video rounded-lg overflow-hidden border border-white/5 bg-white/[0.02] hover:border-primary/50 transition-all shadow-lg group cursor-pointer"
+                  className="relative w-[85vw] sm:w-auto shrink-0 snap-center aspect-video rounded-lg overflow-hidden border border-white/5 bg-white/[0.02] hover:border-primary/50 transition-all shadow-lg group cursor-pointer"
                 >
                   <img
                     src={imgUrl}

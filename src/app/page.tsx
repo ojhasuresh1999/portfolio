@@ -9,8 +9,8 @@ import { blogService } from "@/server/services/blog.service";
 
 export default async function HomePage() {
   const [projectsResult, blogsResult] = await Promise.all([
-    projectService.getAll({ limit: 4, featured: true }),
-    blogService.getAll({ limit: 2 }),
+    projectService.getAll({ limit: 100, featured: true }),
+    blogService.getPublished({ limit: 100, featured: true }),
   ]);
 
   // Serialize Mongoose documents to plain objects to fix React Server Component serialization error

@@ -217,6 +217,7 @@ const blogPostBaseObject = {
   tags: z.array(z.string()).optional(),
   readTime: z.number().int().positive().optional(),
   isPublished: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
   publishedAt: z.coerce.date().optional(),
 };
 
@@ -226,6 +227,7 @@ export const blogPostSchema = z.object({
   tags: z.array(z.string()).default([]),
   readTime: z.number().int().positive().default(5),
   isPublished: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
 });
 
 export const blogPostUpdateSchema = z.object(blogPostBaseObject).partial();
