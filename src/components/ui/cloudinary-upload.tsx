@@ -246,14 +246,10 @@ export default function CloudinaryUpload({
     return (
       <div className={`relative group ${className}`}>
         <div className="relative w-full h-48 rounded-xl overflow-hidden border border-white/10 bg-obsidian">
-          <Image
+          <img
             src={displayUrl}
             alt="Uploaded image"
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            placeholder="blur"
-            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+            className="object-cover w-full h-full"
           />
 
           {/* Overlay with actions */}

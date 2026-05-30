@@ -155,7 +155,7 @@ export const projectSchema = z.object({
     .optional(),
   description: z.string().min(1, "Description is required").max(500),
   longDescription: z.string().max(5000).optional(),
-  image: z.string().url().optional(),
+  image: z.string().url().optional().or(z.literal("")).nullable(),
   codeSnippet: z.string().max(2000).optional(),
   technologies: z.array(z.string()).default([]),
   liveUrl: z

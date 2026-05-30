@@ -67,15 +67,10 @@ export default async function ProjectsPage() {
               {/* Image Container */}
               <div className="w-full md:w-5/12 shrink-0 relative h-48 sm:h-64 md:h-80 bg-black border border-white/10 group-hover:border-primary/50 transition-colors overflow-hidden rounded-sm z-10">
                 {project.image ? (
-                  <Image
+                  <img
                     src={project.image}
                     alt={project.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 40vw"
-                    data-full-src={project.image}
-                    className="object-cover absolute inset-0 z-0 opacity-50 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
-                    placeholder="blur"
-                    blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+                    className="object-cover absolute inset-0 w-full h-full z-0 opacity-50 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-slate-900">

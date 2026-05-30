@@ -419,7 +419,7 @@ export default function AdminProjectsPage() {
           isVisible: form.isVisible,
           isSourceCodeVisible: form.isSourceCodeVisible,
         } as Partial<ProjectData>;
-        if (form.image) updateData.image = form.image;
+        updateData.image = form.image || "";
 
         await updateProject.mutateAsync({
           slug: editingSlug,
@@ -660,13 +660,10 @@ export default function AdminProjectsPage() {
                     <td className="px-6 py-4">
                       {project.image ? (
                         <div className="w-20 h-14 rounded-lg overflow-hidden border border-white/10 relative">
-                          <Image
+                          <img
                             src={project.image}
                             alt={project.title}
-                            fill
-                            className="object-cover"
-                            placeholder="blur"
-                            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+                            className="object-cover w-full h-full"
                           />
                         </div>
                       ) : (

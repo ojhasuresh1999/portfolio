@@ -112,14 +112,10 @@ function ProjectCard({ project }: { project: Project }) {
           {project.image ? (
             // Project Image
             <>
-              <Image
+              <img
                 src={project.image}
                 alt={project.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+                className="object-cover absolute inset-0 w-full h-full opacity-60 group-hover:opacity-100 transition-opacity duration-700 grayscale group-hover:grayscale-0"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent" />
               {/* Scan-line hover effect */}

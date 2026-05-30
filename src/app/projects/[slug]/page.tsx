@@ -83,16 +83,10 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
           {/* Image */}
           {project.image && (
             <div className="w-full relative aspect-video md:aspect-[21/9] rounded-xl overflow-hidden border border-white/10 mb-16 shadow-2xl bg-black">
-              <Image
+              <img
                 src={project.image}
                 alt={project.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 960px"
-                data-full-src={project.image}
-                className="object-cover absolute inset-0 opacity-80"
-                priority
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+                className="object-cover absolute inset-0 w-full h-full opacity-80"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
             </div>
