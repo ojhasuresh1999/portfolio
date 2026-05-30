@@ -1,16 +1,16 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { notFound, useParams } from "next/navigation";
 import type { ComponentPropsWithoutRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
-import { blogService } from "@/server/services/blog.service";
+import { useBlogPost } from "@/hooks/queries/use-blog";
 import { autoDetectCodeBlocks } from "@/lib/code-detector";
 
-export const revalidate = 60; // optionally revalidate every 60 seconds
-
-function formatDate(date: Date) {
+function formatDate(date: string | Date) {
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "long",
@@ -18,19 +18,22 @@ function formatDate(date: Date) {
   }).format(new Date(date));
 }
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const resolvedParams = await params;
-  const postRes = await blogService.getBySlug(resolvedParams.slug, true);
+export default function BlogPostPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const { data: post, isLoading, isError } = useBlogPost(slug);
 
-  if (!postRes.success || !postRes.data) {
-    notFound();
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
   }
 
-  const post = postRes.data;
+  if (isError || !post) {
+    notFound();
+  }
 
   return (
     <>

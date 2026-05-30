@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { Api } from "@/server/utils/api-response";
 import { handleError } from "@/server/utils/error-handler";
 import { validateBody, timelineEntrySchema } from "@/server/utils/validation";
@@ -68,6 +69,8 @@ export const POST = withAdmin(async (request, { admin, ip }) => {
       { title: result.data.title },
       ip,
     );
+
+    revalidatePath("/", "layout");
 
     return Api.created(result.data);
   } catch (error) {

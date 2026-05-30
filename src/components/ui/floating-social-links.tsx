@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { socialLinksService } from "@/server/services/social-links.service";
+import { useSocialLinks } from "@/hooks/queries/use-social-links";
+import { useSettings } from "@/hooks/queries/use-settings";
 
 // Material Symbols icon map for social links
 const iconMap: Record<string, string> = {
@@ -26,25 +29,13 @@ function getSocialIcon(icon: string, platform: string): string {
   return iconMap[pKey] || iconMap[iKey] || iKey || "link";
 }
 
-interface SocialLinkRecord {
-  _id?: string;
-  platform: string;
-  url: string;
-  icon: string;
-  isVisible?: boolean;
-  order?: number;
-}
+export function FloatingSocialLinks() {
+  const { data: socialLinksData = [] } = useSocialLinks();
+  const { data: settings } = useSettings();
 
-export async function FloatingSocialLinks() {
-  const socialResult = await socialLinksService.getAll();
+  const socialLinks = socialLinksData.filter((l) => l.isVisible !== false);
 
-  const socialLinks = (
-    socialResult.success
-      ? (socialResult.data as unknown as SocialLinkRecord[])
-      : []
-  ).filter((l) => l.isVisible !== false);
-
-  if (socialLinks.length === 0) {
+  if (socialLinks.length === 0 && !settings?.resumeUrl) {
     return null;
   }
 
@@ -66,6 +57,23 @@ export async function FloatingSocialLinks() {
           </span>
         </Link>
       ))}
+
+      {/* Resume Link */}
+      {settings?.resumeUrl && (
+        <Link
+          href={`https://docs.google.com/viewerng/viewer?url=${encodeURIComponent(settings.resumeUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-800 hover:bg-primary hover:-translate-y-2 transition-all duration-300 shrink-0"
+        >
+          <span className="material-symbols-outlined text-2xl text-slate-200 group-hover:text-black">
+            description
+          </span>
+          <span className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform bg-black text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
+            Resume
+          </span>
+        </Link>
+      )}
     </div>
   );
 }

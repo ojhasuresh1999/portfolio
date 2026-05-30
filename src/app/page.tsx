@@ -1,25 +1,17 @@
+"use client";
+
 import { LeftSidebar } from "@/components/ui/left-sidebar";
 import { HeroSection } from "@/components/sections/hero-section";
 import { TechArsenal } from "@/components/sections/tech-arsenal";
 import { DeploymentsSection } from "@/components/sections/deployments-section";
 import { SystemLogsSection } from "@/components/sections/system-logs-section";
 
-import { projectService } from "@/server/services/project.service";
-import { blogService } from "@/server/services/blog.service";
+import { useProjects } from "@/hooks/queries/use-projects";
+import { useBlogPosts } from "@/hooks/queries/use-blog";
 
-export default async function HomePage() {
-  const [projectsResult, blogsResult] = await Promise.all([
-    projectService.getAll({ limit: 100, featured: true }),
-    blogService.getPublished({ limit: 100, featured: true }),
-  ]);
-
-  // Serialize Mongoose documents to plain objects to fix React Server Component serialization error
-  const projects = projectsResult.success
-    ? JSON.parse(JSON.stringify(projectsResult.data.items))
-    : [];
-  const posts = blogsResult.success
-    ? JSON.parse(JSON.stringify(blogsResult.data.items))
-    : [];
+export default function HomePage() {
+  const { data: projects = [] } = useProjects({ limit: 100, featured: true });
+  const { data: posts = [] } = useBlogPosts({ limit: 100, featured: true });
 
   return (
     <>

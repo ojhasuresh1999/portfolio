@@ -1,26 +1,31 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
-import { notFound } from "next/navigation";
+
+import { notFound, useParams } from "next/navigation";
 import type { ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { autoDetectCodeBlocks } from "@/lib/code-detector";
-import { projectService } from "@/server/services/project.service";
+import { useProject } from "@/hooks/queries/use-projects";
 
-interface PageProps {
-  params: Promise<{ slug: string }>;
-}
+export default function ProjectDetailsPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const { data: project, isLoading, isError } = useProject(slug);
 
-export default async function ProjectDetailsPage({ params }: PageProps) {
-  const { slug } = await params;
-  const result = await projectService.getBySlug(slug);
-
-  if (!result.success || !result.data || !result.data.isVisible) {
-    notFound();
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
   }
 
-  const project = result.data;
+  if (isError || !project || !project.isVisible) {
+    notFound();
+  }
 
   return (
     <>
@@ -83,6 +88,7 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
           {/* Image */}
           {project.image && (
             <div className="w-full relative aspect-video md:aspect-[21/9] rounded-xl overflow-hidden border border-white/10 mb-12 shadow-2xl bg-black">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={project.image}
                 alt={project.title}
@@ -109,6 +115,7 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
                     key={index}
                     className="relative w-[85vw] sm:w-auto shrink-0 snap-center aspect-video rounded-xl overflow-hidden border border-white/5 bg-surface-dark hover:border-primary/50 transition-all shadow-lg group cursor-pointer"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={imgUrl}
                       alt={`${project.title} Gallery ${index + 1}`}

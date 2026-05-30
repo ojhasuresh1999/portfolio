@@ -18,12 +18,12 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
+            staleTime: 0, // Always consider data stale
             gcTime: 5 * 60 * 1000, // 5 minutes
             retry: 3,
             retryDelay: (attemptIndex) =>
               Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-            refetchOnWindowFocus: false,
+            refetchOnWindowFocus: true, // Refetch when tab is focused
           },
           mutations: {
             retry: 0,

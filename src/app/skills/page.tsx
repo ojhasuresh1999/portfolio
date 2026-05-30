@@ -1,29 +1,16 @@
+"use client";
+
 import { cn } from "@/lib/utils";
-import { skillService } from "@/server/services/skill.service";
-import { techStackService } from "@/server/services/tech-stack.service";
+import { useSkills } from "@/hooks/queries/use-skills";
+import { useTechStack } from "@/hooks/queries/use-tech-stack";
 
-// Enable revalidation Every 60 seconds or make it dynamic if we want to
-export const revalidate = 60;
-
-export default async function SkillsPage() {
-  const [skillsRes, techStacksRes] = await Promise.all([
-    skillService.getAllSkills(),
-    techStackService.getAllTechStack(),
-  ]);
-
-  const allSkills = skillsRes.success
-    ? skillsRes.data!.filter((s) => s.isVisible)
-    : [];
-  const architecturePatterns = techStacksRes.success
-    ? techStacksRes.data!.filter((t) => t.isVisible)
-    : [];
+export default function SkillsPage() {
+  const { data: allSkills = [] } = useSkills(false);
+  const { data: architecturePatterns = [] } = useTechStack(false);
 
   const languages = allSkills.filter((s) => s.category === "LANGUAGE");
   const databases = allSkills.filter((s) => s.category === "DATABASE");
   const devopsCloud = allSkills.filter((s) => s.category === "DEVOPS");
-  // Frameworks and Tools might just be combined or omitted based on the layout,
-  // but let's include them if they exist maybe inside DevOps or under Languages
-  // For now, let's keep the layout similar and we'll add them to an Extra section if needed.
   const toolsAndFrameworks = allSkills.filter(
     (s) => s.category === "FRAMEWORK" || s.category === "TOOL",
   );

@@ -1,48 +1,21 @@
+"use client";
+
 import Link from "next/link";
-import { blogService } from "@/server/services/blog.service";
+import { Suspense } from "react";
 import { NewsletterForm } from "@/components/blog/NewsletterForm";
 import { BlogList } from "@/components/blog/blog-list";
+import { useSearchParams } from "next/navigation";
+import { useBlogCategories, useBlogTags } from "@/hooks/queries/use-blog";
 
-export const revalidate = 60; // 60s cache revalidation
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(date));
-}
-
-// ── Page Component ─────────────────────────────
-export default async function BlogPage(props: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const searchParams = await props.searchParams;
+function BlogContent() {
+  const searchParams = useSearchParams();
 
   // Parse filters from URL
-  const page = parseInt(searchParams.page as string) || 1;
-  const categoryFilter = searchParams.category as string | undefined;
-  const tagFilter = searchParams.tag as string | undefined;
+  const categoryFilter = searchParams.get("category") || undefined;
+  const tagFilter = searchParams.get("tag") || undefined;
 
-  // Fetch concurrently
-  const [postsRes, categoriesRes, tagsRes] = await Promise.all([
-    blogService.getPublished({
-      page,
-      limit: 10,
-      category: categoryFilter,
-      tag: tagFilter,
-    }),
-    blogService.getCategories(),
-    blogService.getTags(),
-  ]);
-
-  const posts = postsRes.success && postsRes.data ? postsRes.data.items : [];
-  const total = postsRes.success && postsRes.data ? postsRes.data.total : 0;
-  const totalPages = Math.ceil(total / 10);
-
-  const categoryStats =
-    categoriesRes.success && categoriesRes.data ? categoriesRes.data : [];
-  const dynamicTags = tagsRes.success && tagsRes.data ? tagsRes.data : [];
+  const { data: categoryStats = [] } = useBlogCategories();
+  const { data: dynamicTags = [] } = useBlogTags();
 
   return (
     <>
@@ -114,7 +87,7 @@ export default async function BlogPage(props: {
             </div>
 
             <BlogList
-              initialPosts={JSON.parse(JSON.stringify(posts))}
+              initialPosts={[]}
               categoryFilter={categoryFilter}
               tagFilter={tagFilter}
             />
@@ -204,5 +177,20 @@ export default async function BlogPage(props: {
         </div>
       </main>
     </>
+  );
+}
+
+// ── Page Component ─────────────────────────────
+export default function BlogPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+          <div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      <BlogContent />
+    </Suspense>
   );
 }

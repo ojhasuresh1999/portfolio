@@ -1,4 +1,7 @@
 import { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
 import { Api } from "@/server/utils/api-response";
 import { handleError } from "@/server/utils/error-handler";
 import {
@@ -306,6 +309,8 @@ export const POST = withAdmin(async (request, { admin, ip }) => {
       },
       ip,
     );
+
+    revalidatePath("/", "layout");
 
     return Api.created(result.data);
   } catch (error) {

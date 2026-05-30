@@ -1,4 +1,5 @@
 import { Api } from "@/server/utils/api-response";
+import { revalidatePath } from "next/cache";
 import { handleError } from "@/server/utils/error-handler";
 import {
   validateBody,
@@ -47,6 +48,8 @@ export const PUT = withAdmin(async (request, { params, admin, ip }) => {
 
     auditLog.update(admin, "techStack", paramsResult.data.id, undefined, ip);
 
+    revalidatePath("/", "layout");
+
     return Api.success(result.data);
   } catch (error) {
     return handleError(error);
@@ -79,6 +82,8 @@ export const DELETE = withAdmin(async (request, { params, admin, ip }) => {
     }
 
     auditLog.delete(admin, "techStack", paramsResult.data.id, ip);
+
+    revalidatePath("/", "layout");
 
     return Api.success(null, "Tech stack item deleted successfully");
   } catch (error) {

@@ -3,16 +3,10 @@
 import Link from "next/link";
 import { useBlogPosts, type BlogPostData } from "@/hooks/queries";
 
-interface BlogPost {
-  _id: string;
-  title: string;
-  slug: string;
-  category: string;
-  publishedAt: Date | string;
-}
+type BlogPost = BlogPostData;
 
 interface SystemLogsSectionProps {
-  posts?: BlogPost[];
+  posts?: BlogPostData[];
 }
 
 export function SystemLogsSection({
@@ -30,18 +24,12 @@ export function SystemLogsSection({
   const displayPosts: BlogPost[] =
     apiPosts && apiPosts.length > 0
       ? apiPosts.map((p) => ({
-          _id: p._id,
-          title: p.title,
-          slug: p.slug,
-          category: p.category,
+          ...p,
           publishedAt: p.publishedAt || p.createdAt,
         }))
       : (initialPosts ?? []).map((p) => ({
-          _id: p._id,
-          title: p.title,
-          slug: p.slug,
-          category: p.category,
-          publishedAt: p.publishedAt,
+          ...p,
+          publishedAt: p.publishedAt || p.createdAt,
         }));
 
   return (
@@ -107,7 +95,9 @@ export function SystemLogsSection({
 }
 
 function BlogPostPreview({ post }: { post: BlogPost }) {
-  const date = new Date(post.publishedAt).toLocaleDateString("en-US", {
+  const dateStr =
+    post.publishedAt || post.createdAt || new Date().toISOString();
+  const date = new Date(dateStr).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",

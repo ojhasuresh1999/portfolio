@@ -1,4 +1,7 @@
 import { Api } from "@/server/utils/api-response";
+import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
 import { handleError } from "@/server/utils/error-handler";
 import {
   validateParams,
@@ -94,6 +97,8 @@ export const PUT = withAdmin(async (request, { admin, ip, params }) => {
       ip,
     );
 
+    revalidatePath("/", "layout");
+
     return Api.success(result.data);
   } catch (error) {
     return handleError(error);
@@ -125,6 +130,8 @@ export const DELETE = withAdmin(async (_request, { admin, ip, params }) => {
 
     // Audit log
     auditLog.delete(admin, "project", existing.data._id.toString(), ip);
+
+    revalidatePath("/", "layout");
 
     return Api.success(null, "Project deleted successfully");
   } catch (error) {

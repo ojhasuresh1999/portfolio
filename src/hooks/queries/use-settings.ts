@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { ISocialLink } from "@/models";
+
 import { ISiteSettings } from "@/models";
 
 // =============================================================================
@@ -37,45 +37,6 @@ export function useUpdateSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.all });
-    },
-  });
-}
-
-// =============================================================================
-// Social Links
-// =============================================================================
-
-export const socialLinksKeys = {
-  all: ["social-links"] as const,
-};
-
-export function useSocialLinks() {
-  return useQuery<ISocialLink[]>({
-    queryKey: socialLinksKeys.all,
-    queryFn: async () => {
-      const response = await apiClient.get<{
-        success: boolean;
-        data: ISocialLink[];
-      }>("/social-links");
-      return response.data.data;
-    },
-    initialData: [],
-  });
-}
-
-export function useUpdateSocialLinks() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: Partial<ISocialLink>[]) => {
-      const response = await apiClient.put<{
-        success: boolean;
-        data: ISocialLink[];
-      }>("/social-links", data);
-      return response.data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: socialLinksKeys.all });
     },
   });
 }

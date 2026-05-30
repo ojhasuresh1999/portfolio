@@ -58,6 +58,8 @@ export const blogKeys = {
   infinite: (params: Record<string, unknown>) =>
     [...blogKeys.all, "infinite", params] as const,
   detail: (slug: string) => [...blogKeys.all, "detail", slug] as const,
+  categories: () => [...blogKeys.all, "categories"] as const,
+  tags: () => [...blogKeys.all, "tags"] as const,
 };
 
 // =============================================================================
@@ -166,6 +168,38 @@ export function useBlogPost(slug: string) {
       return response.data.data;
     },
     enabled: !!slug,
+  });
+}
+
+/**
+ * Fetch all categories with post count
+ */
+export function useBlogCategories() {
+  return useQuery({
+    queryKey: blogKeys.categories(),
+    queryFn: async () => {
+      const response =
+        await apiClient.get<
+          SingleResponse<{ category: string; count: number }[]>
+        >("/blog/categories");
+      return response.data.data;
+    },
+  });
+}
+
+/**
+ * Fetch all tags with post count
+ */
+export function useBlogTags() {
+  return useQuery({
+    queryKey: blogKeys.tags(),
+    queryFn: async () => {
+      const response =
+        await apiClient.get<SingleResponse<{ tag: string; count: number }[]>>(
+          "/blog/tags",
+        );
+      return response.data.data;
+    },
   });
 }
 

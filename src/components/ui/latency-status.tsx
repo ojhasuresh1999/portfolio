@@ -20,9 +20,7 @@ export function LatencyStatus({ statusText }: { statusText: string }) {
       const start = performance.now();
       try {
         // Simple client-side health check, or just check standard endpoint
-        await fetch("/api/admin/profile/presence", { method: "HEAD" }).catch(
-          () => {},
-        );
+        await fetch("/api/health", { method: "GET" }).catch(() => {});
         const elapsed = Math.round(performance.now() - start);
         setState({ latency: elapsed, status: "online" });
       } catch {

@@ -583,6 +583,11 @@ export default function AdminBlogPage() {
                             Draft
                           </span>
                         )}
+                        {post.isFeatured && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-primary/10 text-primary border border-primary/20">
+                            Featured
+                          </span>
+                        )}
                       </div>
                     </td>
                     {/* Updated */}

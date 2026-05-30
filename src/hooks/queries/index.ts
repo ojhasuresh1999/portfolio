@@ -33,12 +33,12 @@ export * from "./use-chat";
 export * from "./use-skills";
 export * from "./use-tech-stack";
 
-// Settings & Social Links
+// Settings
+export { useSettings, useUpdateSettings, settingsKeys } from "./use-settings";
+
+// Social Links
 export {
-  useSettings,
-  useUpdateSettings,
-  settingsKeys,
   useSocialLinks,
   useUpdateSocialLinks,
   socialLinksKeys,
-} from "./use-settings";
+} from "./use-social-links";

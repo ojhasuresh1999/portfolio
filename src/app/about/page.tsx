@@ -1,38 +1,27 @@
-import { aboutService } from "@/server/services/about.service";
-import { settingsService } from "@/server/services/settings.service";
-import { techStackService } from "@/server/services/tech-stack.service";
+"use client";
+
 import { AboutContactForm } from "@/components/about/about-contact-form";
 import { FloatingSocialLinks } from "@/components/ui/floating-social-links";
 
-export default async function AboutPage() {
-  const [aboutResult, timelineResult, settingsResult, techStackResult] =
-    await Promise.all([
-      aboutService.getAboutContent(),
-      aboutService.getVisibleTimeline(),
-      settingsService.getPublic(),
-      techStackService.getAllTechStack(),
-    ]);
+import { useAboutContent, useTimeline } from "@/hooks/queries/use-about";
+import { useSettings } from "@/hooks/queries/use-settings";
+import { useTechStack } from "@/hooks/queries/use-tech-stack";
 
-  const aboutContent =
-    aboutResult.success && aboutResult.data
-      ? aboutResult.data
-      : {
-          title: "More Than Just Code",
-          subtitle: "About Me",
-          description:
-            "I am a Senior Developer obsessed with system architecture.",
-          resumeUrl: "",
-        };
+export default function AboutPage() {
+  const { data: aboutData } = useAboutContent();
+  const { data: timelineEntries = [] } = useTimeline(false);
+  const { data: settings } = useSettings();
+  const { data: techStackData = [] } = useTechStack(false);
 
-  const timelineEntries = timelineResult.success ? timelineResult.data : [];
+  const aboutContent = aboutData || {
+    title: "More Than Just Code",
+    subtitle: "About Me",
+    description: "I am a Senior Developer obsessed with system architecture.",
+    resumeUrl: "",
+  };
 
-  // Global CV URL from settings takes priority
-  const settings = settingsResult.success
-    ? (settingsResult.data as { resumeUrl?: string })
-    : null;
   const resumeUrl = settings?.resumeUrl || aboutContent.resumeUrl || "";
 
-  // Tech stack - only visible ones
   interface TechStackRecord {
     _id?: string;
     name: string;
@@ -41,11 +30,10 @@ export default async function AboutPage() {
     isVisible?: boolean;
     order?: number;
   }
-  const techStack = (
-    techStackResult.success
-      ? (techStackResult.data as unknown as TechStackRecord[])
-      : []
-  ).filter((t) => t.isVisible !== false);
+
+  const techStack = (techStackData as unknown as TechStackRecord[]).filter(
+    (t) => t.isVisible !== false,
+  );
 
   const centerNode = techStack.length > 0 ? techStack[0] : null;
   const orbitNodes = techStack.length > 1 ? techStack.slice(1) : [];
