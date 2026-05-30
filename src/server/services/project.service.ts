@@ -10,6 +10,7 @@ interface ProjectDoc {
   description: string;
   longDescription?: string;
   image?: string;
+  images?: string[];
   codeSnippet?: string;
   technologies: string[];
   liveUrl?: string;
@@ -142,6 +143,7 @@ export class ProjectService {
     description: string;
     longDescription?: string;
     image?: string;
+    images?: string[];
     codeSnippet?: string;
     technologies?: string[];
     liveUrl?: string;
@@ -180,6 +182,7 @@ export class ProjectService {
       description: string;
       longDescription?: string;
       image?: string;
+      images?: string[];
       codeSnippet?: string;
       technologies?: string[];
       liveUrl?: string;

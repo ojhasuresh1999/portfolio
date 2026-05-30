@@ -11,6 +11,7 @@ interface BlogPostDoc {
   excerpt: string;
   content: string;
   coverImage?: string;
+  images?: string[];
   category: string;
   tags: string[];
   readTime: number;
@@ -226,6 +227,7 @@ export class BlogService {
     excerpt: string;
     content: string;
     coverImage?: string;
+    images?: string[];
     category: string;
     tags?: string[];
     readTime?: number;

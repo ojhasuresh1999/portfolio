@@ -111,6 +111,10 @@ export const getApiDocs = async () => {
               },
               longDescription: { type: "string" },
               image: { type: "string", format: "uri" },
+              images: {
+                type: "array",
+                items: { type: "string", format: "uri" },
+              },
               codeSnippet: { type: "string" },
               technologies: {
                 type: "array",
@@ -150,6 +154,10 @@ export const getApiDocs = async () => {
               },
               content: { type: "string" },
               coverImage: { type: "string", format: "uri" },
+              images: {
+                type: "array",
+                items: { type: "string", format: "uri" },
+              },
               category: { type: "string", example: "Development" },
               tags: {
                 type: "array",

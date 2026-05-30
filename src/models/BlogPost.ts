@@ -15,6 +15,7 @@ export interface IBlogPost {
   excerpt: string;
   content: string;
   coverImage?: string;
+  images?: string[];
   category: string;
   tags: string[];
   readTime: number;
@@ -34,6 +35,7 @@ const BlogPostSchema = new Schema<IBlogPost>(
     excerpt: { type: String, required: true },
     content: { type: String, required: true },
     coverImage: { type: String },
+    images: { type: [String], default: [] },
     category: { type: String, required: true },
     tags: { type: [String], default: [] },
     readTime: { type: Number, default: 5 },

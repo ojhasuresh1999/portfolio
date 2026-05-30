@@ -37,3 +37,9 @@ export {
 
 // Analytics models
 export { Analytics, type IAnalytics, type IAnalyticsModel } from "./Analytics";
+export { Visitor, type IVisitor, type IVisitorModel } from "./Visitor";
+export {
+  DailyAnalytics,
+  type IDailyAnalytics,
+  type IDailyAnalyticsModel,
+} from "./DailyAnalytics";

@@ -15,6 +15,7 @@ export interface IProject {
   description: string;
   longDescription?: string;
   image?: string;
+  images?: string[];
   codeSnippet?: string;
   technologies: string[];
   liveUrl?: string;
@@ -37,6 +38,7 @@ const ProjectSchema = new Schema<IProject>(
     description: { type: String, required: true },
     longDescription: { type: String },
     image: { type: String },
+    images: { type: [String], default: [] },
     codeSnippet: { type: String },
     technologies: { type: [String], default: [] },
     liveUrl: { type: String },

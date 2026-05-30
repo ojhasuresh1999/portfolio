@@ -181,6 +181,7 @@ export const POST = withAdmin(async (request, { admin, ip }) => {
       "githubUrl",
       "accentColor",
       "status",
+      "image",
     ];
     for (const field of textFields) {
       const val = formData.get(field);
@@ -220,6 +221,28 @@ export const POST = withAdmin(async (request, { admin, ip }) => {
         }
       } else {
         rawData.technologies = techs;
+      }
+    }
+
+    const imageEntries = formData.getAll("images");
+    if (imageEntries.length > 0) {
+      const imgs = imageEntries
+        .map((img) => img.toString().trim())
+        .filter((img) => img !== "");
+
+      if (
+        imgs.length === 1 &&
+        imgs[0].startsWith("[") &&
+        imgs[0].endsWith("]")
+      ) {
+        try {
+          const parsed = JSON.parse(imgs[0]);
+          if (Array.isArray(parsed)) rawData.images = parsed;
+        } catch (_) {
+          rawData.images = imgs;
+        }
+      } else {
+        rawData.images = imgs;
       }
     }
 

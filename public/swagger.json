@@ -138,6 +138,13 @@
             "type": "string",
             "format": "uri"
           },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
           "codeSnippet": {
             "type": "string"
           },
@@ -213,6 +220,13 @@
           "coverImage": {
             "type": "string",
             "format": "uri"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
           },
           "category": {
             "type": "string",

@@ -6,6 +6,7 @@ import { BlogPost } from "@/models/BlogPost";
 import { Skill } from "@/models/Skill";
 import { ContactSubmission } from "@/models/ContactSubmission";
 import { Analytics } from "@/models/Analytics";
+import { Visitor } from "@/models/Visitor";
 import { Subscriber } from "@/models/Subscriber";
 
 export async function GET(request: NextRequest) {
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
       messageCount,
       subscriberCount,
       hitsCount,
+      uniqueVisitorCount,
     ] = await Promise.all([
       Project.countDocuments(),
       BlogPost.countDocuments(),
@@ -33,6 +35,7 @@ export async function GET(request: NextRequest) {
       ContactSubmission.countDocuments(),
       Subscriber.countDocuments({ isActive: true }),
       Analytics.countDocuments(),
+      Visitor.countDocuments(),
     ]);
 
     // 2. Category Distributions
@@ -119,6 +122,7 @@ export async function GET(request: NextRequest) {
           messages: messageCount,
           subscribers: subscriberCount,
           hits: hitsCount,
+          uniqueVisitors: uniqueVisitorCount,
         },
         distributions: {
           blogCategories:

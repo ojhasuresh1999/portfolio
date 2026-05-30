@@ -53,7 +53,7 @@ export function HeroSection({
           </Link>
 
           <Link
-            href="https://github.com"
+            href="https://github.com/ojhasuresh1999/portfolio"
             target="_blank"
             className="flex items-center gap-2 sm:gap-3 px-5 sm:px-8 h-12 sm:h-14 rounded-full border border-white/20 text-white font-medium text-sm sm:text-base hover:bg-white/5 hover:border-white/40 transition-colors"
           >

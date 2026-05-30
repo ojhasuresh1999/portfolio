@@ -162,6 +162,7 @@ export const projectSchema = z.object({
     .or(z.literal(""))
     .nullable()
     .transform((val) => val || undefined),
+  images: z.array(z.string()).default([]),
   codeSnippet: z.string().max(2000).optional(),
   technologies: z.array(z.string()).default([]),
   liveUrl: z
@@ -200,6 +201,7 @@ export const blogPostSchema = z.object({
   excerpt: z.string().min(1, "Excerpt is required").max(500),
   content: z.string().min(1, "Content is required"),
   coverImage: z.string().url().optional(),
+  images: z.array(z.string()).default([]),
   category: z.string().min(1, "Category is required"),
   tags: z.array(z.string()).default([]),
   readTime: z.number().int().positive().default(5),

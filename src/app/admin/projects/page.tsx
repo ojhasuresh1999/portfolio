@@ -39,6 +39,7 @@ interface ProjectFormState {
   isSourceCodeVisible: boolean;
   image: string;
   imagePublicId: string;
+  images: string[];
 }
 
 const emptyForm: ProjectFormState = {
@@ -58,6 +59,7 @@ const emptyForm: ProjectFormState = {
   isSourceCodeVisible: false,
   image: "",
   imagePublicId: "",
+  images: [],
 };
 
 // =============================================================================
@@ -377,6 +379,7 @@ export default function AdminProjectsPage() {
       isSourceCodeVisible: project.isSourceCodeVisible ?? false,
       image: project.image || "",
       imagePublicId: "",
+      images: project.images || [],
     });
     setAutoSlug(false);
     setActiveTab("write");
@@ -418,6 +421,7 @@ export default function AdminProjectsPage() {
           isFeatured: form.isFeatured,
           isVisible: form.isVisible,
           isSourceCodeVisible: form.isSourceCodeVisible,
+          images: form.images,
         } as Partial<ProjectData>;
         updateData.image = form.image || "";
 
@@ -451,6 +455,11 @@ export default function AdminProjectsPage() {
         }
         if (form.image) {
           formData.append("image", form.image);
+        }
+        if (form.images && form.images.length > 0) {
+          form.images.forEach((img) => {
+            formData.append("images", img);
+          });
         }
         await createProject.mutateAsync(formData);
         setToast({ message: "Project created successfully", type: "success" });
@@ -1216,6 +1225,60 @@ export default function AdminProjectsPage() {
                   label="Upload Image"
                   onUpload={handleImageUpload}
                   onRemove={handleImageRemove}
+                />
+              </div>
+
+              {/* Gallery Images */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-slate-300">
+                  Gallery Images
+                </label>
+
+                {form.images && form.images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {form.images.map((imgUrl, index) => (
+                      <div
+                        key={index}
+                        className="relative group rounded-xl overflow-hidden border border-white/10 aspect-video bg-obsidian"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imgUrl}
+                          alt={`Gallery image ${index + 1}`}
+                          className="object-cover w-full h-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              images: prev.images.filter(
+                                (_, idx) => idx !== index,
+                              ),
+                            }));
+                          }}
+                          className="absolute inset-0 bg-red-600/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <CloudinaryUpload
+                  folder="projects/gallery"
+                  label="Add Gallery Image"
+                  onUpload={(result) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      images: [...(prev.images || []), result.secureUrl],
+                    }));
+                    setToast({
+                      message: "Image added to gallery!",
+                      type: "success",
+                    });
+                  }}
                 />
               </div>
 

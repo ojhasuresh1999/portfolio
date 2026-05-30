@@ -17,6 +17,7 @@ export interface ProjectData {
   description: string;
   longDescription?: string;
   image?: string;
+  images?: string[];
   codeSnippet?: string;
   technologies: string[];
   liveUrl?: string;

@@ -4,7 +4,14 @@ import { analyticsService } from "@/server/services/analytics.service";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { path, referrer } = body;
+    const {
+      path,
+      referrer,
+      fingerprint,
+      screenResolution,
+      language,
+      timezone,
+    } = body;
 
     if (!path) {
       return NextResponse.json(
@@ -16,8 +23,8 @@ export async function POST(request: NextRequest) {
     // Extract basic headers for analytics
     const userAgent = request.headers.get("user-agent") || "";
 
-    // Ignore simple bots (optional but recommended)
-    const botPatterns = /bot|crawler|spider|crawling/i;
+    // Ignore bots
+    const botPatterns = /bot|crawler|spider|crawling|headless|puppet|phantom/i;
     if (botPatterns.test(userAgent)) {
       return NextResponse.json({
         success: true,
@@ -25,7 +32,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get IP
+    // Get IP from various headers
     const cfIp = request.headers.get("cf-connecting-ip");
     const forwardedFor = request.headers.get("x-forwarded-for");
     const realIp = request.headers.get("x-real-ip");
@@ -39,12 +46,16 @@ export async function POST(request: NextRequest) {
       referrer,
       userAgent,
       ip,
+      fingerprint: fingerprint || "",
+      screenResolution: screenResolution || "",
+      language: language || "",
+      timezone: timezone || "",
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[Analytics Track API Error]", error);
-    // Don't leak error details to public endpoint, and don't fail the client
+    // Don't leak error details to public endpoint
     return NextResponse.json(
       { success: false, error: "Failed to track hit" },
       { status: 500 },

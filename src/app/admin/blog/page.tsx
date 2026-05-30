@@ -29,6 +29,7 @@ interface BlogFormState {
   content: string;
   coverImage: string;
   coverImagePublicId: string;
+  images: string[];
   category: string;
   tags: string[];
   readTime: number;
@@ -42,6 +43,7 @@ const EMPTY_FORM: BlogFormState = {
   content: "",
   coverImage: "",
   coverImagePublicId: "",
+  images: [],
   category: "",
   tags: [],
   readTime: 5,
@@ -160,6 +162,7 @@ export default function AdminBlogPage() {
       content: post.content,
       coverImage: post.coverImage || "",
       coverImagePublicId: "",
+      images: post.images || [],
       category: post.category,
       tags: post.tags || [],
       readTime: post.readTime || 5,
@@ -236,6 +239,7 @@ export default function AdminBlogPage() {
           tags: form.tags,
           readTime: form.readTime,
           isPublished: form.isPublished,
+          images: form.images,
         };
         if (form.coverImage) updateData.coverImage = form.coverImage;
 
@@ -249,6 +253,7 @@ export default function AdminBlogPage() {
           excerpt: form.excerpt,
           content: formattedContent,
           coverImage: form.coverImage || undefined,
+          images: form.images,
           category: form.category,
           tags: form.tags,
           readTime: form.readTime,
@@ -1013,6 +1018,60 @@ export default function AdminBlogPage() {
                 onUpload={handleImageUpload}
                 onRemove={handleImageRemove}
               />
+
+              {/* Gallery Images */}
+              <div className="space-y-3 mt-4">
+                <label className="block text-sm font-medium text-slate-400">
+                  Gallery Images
+                </label>
+
+                {form.images && form.images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {form.images.map((imgUrl, index) => (
+                      <div
+                        key={index}
+                        className="relative group rounded-xl overflow-hidden border border-white/10 aspect-video bg-obsidian"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imgUrl}
+                          alt={`Gallery image ${index + 1}`}
+                          className="object-cover w-full h-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              images: prev.images.filter(
+                                (_, idx) => idx !== index,
+                              ),
+                            }));
+                          }}
+                          className="absolute inset-0 bg-red-600/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <CloudinaryUpload
+                  folder="blog/gallery"
+                  label="Add Gallery Image"
+                  onUpload={(result) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      images: [...(prev.images || []), result.secureUrl],
+                    }));
+                    setToast({
+                      message: "Image added to gallery!",
+                      type: "success",
+                    });
+                  }}
+                />
+              </div>
 
               {/* ── Status ───────────────────── */}
               <div className="space-y-1">

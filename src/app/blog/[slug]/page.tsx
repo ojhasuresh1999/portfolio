@@ -161,6 +161,39 @@ export default async function BlogPostPage({
           </ReactMarkdown>
         </article>
 
+        {/* Gallery Images Grid */}
+        {post.images && post.images.length > 0 && (
+          <div className="mt-16 pt-8 border-t border-white/5">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="material-symbols-outlined text-primary text-xl">
+                photo_library
+              </span>
+              <h2 className="text-xl font-bold text-white font-[family-name:var(--font-mono)] uppercase tracking-wider">
+                Chronicle_Gallery
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {post.images.map((imgUrl, index) => (
+                <div
+                  key={index}
+                  className="relative aspect-video rounded-lg overflow-hidden border border-white/5 bg-white/[0.02] hover:border-primary/50 transition-all shadow-lg group cursor-pointer"
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`${post.title} Gallery ${index + 1}`}
+                    className="object-cover w-full h-full opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none">
+                    <span className="text-xs text-white font-mono uppercase tracking-widest">
+                      Zoom_Image
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Footer separator line */}
         <div className="mt-20 pt-8 border-t border-white/10 flex items-center justify-between">
           <Link

@@ -17,6 +17,7 @@ export interface BlogPostData {
   excerpt: string;
   content: string;
   coverImage?: string;
+  images?: string[];
   category: string;
   tags: string[];
   readTime: number;
