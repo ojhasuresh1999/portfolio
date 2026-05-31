@@ -37,7 +37,7 @@ export default function BlogPostPage() {
 
   return (
     <>
-      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-20 sm:py-24 pt-28 sm:pt-32 relative z-10 font-[family-name:var(--font-mono)]">
+      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-24 pt-28 sm:pt-32 relative z-10 font-[family-name:var(--font-mono)]">
         {/* Back Link */}
         <div className="mb-8">
           <Link
@@ -100,7 +100,7 @@ export default function BlogPostPage() {
         )}
 
         {/* Markdown Content */}
-        <article className="prose prose-invert prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 max-w-none text-gray-300 leading-relaxed marker:text-primary">
+        <article className="prose prose-invert max-w-[100vw] sm:max-w-none overflow-hidden prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 text-gray-300 prose-p:text-[14px] prose-p:sm:text-base prose-p:leading-relaxed prose-pre:overflow-x-auto prose-pre:max-w-[calc(100vw-2rem)] sm:prose-pre:max-w-none prose-img:rounded-lg leading-relaxed marker:text-primary">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -123,12 +123,17 @@ export default function BlogPostPage() {
                 ) : (
                   <code
                     {...props}
-                    className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold border border-primary/20"
+                    className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-[family-name:var(--font-mono)] text-sm border border-primary/20 break-words whitespace-pre-wrap break-all sm:break-normal"
                   >
                     {children}
                   </code>
                 );
               },
+              table: ({ children }) => (
+                <div className="overflow-x-auto max-w-[calc(100vw-2rem)] sm:max-w-none w-full mb-6">
+                  <table className="min-w-full text-sm">{children}</table>
+                </div>
+              ),
               // Style blockquotes
               blockquote: ({ children }) => (
                 <blockquote className="border-l-4 border-primary pl-4 py-1 italic bg-primary/5 text-gray-300 my-6">
@@ -171,7 +176,7 @@ export default function BlogPostPage() {
               <span className="material-symbols-outlined text-primary text-xl">
                 photo_library
               </span>
-              <h2 className="text-xl font-bold text-white font-[family-name:var(--font-mono)] uppercase tracking-wider">
+              <h2 className="text-lg sm:text-xl font-bold text-white font-[family-name:var(--font-mono)] uppercase tracking-wider">
                 Chronicle_Gallery
               </h2>
             </div>
@@ -179,7 +184,7 @@ export default function BlogPostPage() {
               {post.images.map((imgUrl, index) => (
                 <div
                   key={index}
-                  className="relative w-[85vw] sm:w-auto shrink-0 snap-center aspect-video rounded-lg overflow-hidden border border-white/5 bg-white/[0.02] hover:border-primary/50 transition-all shadow-lg group cursor-pointer"
+                  className="relative w-[80vw] sm:w-auto shrink-0 snap-center aspect-video rounded-lg overflow-hidden border border-white/5 bg-white/[0.02] hover:border-primary/50 transition-all shadow-lg group cursor-pointer"
                 >
                   <img
                     src={imgUrl}
@@ -198,7 +203,7 @@ export default function BlogPostPage() {
         )}
 
         {/* Footer separator line */}
-        <div className="mt-20 pt-8 border-t border-white/10 flex items-center justify-between">
+        <div className="mt-16 sm:mt-20 pt-6 sm:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-primary transition-colors cursor-pointer"

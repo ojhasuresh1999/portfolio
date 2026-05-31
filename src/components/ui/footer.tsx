@@ -295,8 +295,7 @@ export function Footer() {
               {/* CTA Glow on hover */}
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 via-transparent to-secondary/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl -z-10" />
 
-              <div className="relative px-6 py-10 sm:px-10 sm:py-14 lg:px-16 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-                {/* CTA Icon */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-8 relative z-10 px-6 py-10 sm:px-10 sm:py-14 lg:px-16">
                 <div className="shrink-0 size-14 sm:size-16 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 border border-white/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-2xl sm:text-3xl text-primary">
                     rocket_launch
@@ -352,7 +351,7 @@ export function Footer() {
                 </div>
 
                 {/* Right side: Subscribe + CTA (desktop) */}
-                <div className="shrink-0 flex flex-col gap-3 items-center sm:items-end">
+                <div className="shrink-0 flex flex-col gap-3 items-center sm:items-end w-full sm:w-auto mt-4 sm:mt-0">
                   {/* Desktop newsletter */}
                   <form
                     onSubmit={newsletter.subscribe}
@@ -391,7 +390,7 @@ export function Footer() {
                   {/* Contact CTA */}
                   <Link
                     href="/about#contact"
-                    className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary font-semibold text-sm hover:bg-primary hover:text-black hover:shadow-[0_0_30px_rgba(0,242,255,0.3)] hover:border-primary transition-all duration-400 group/btn"
+                    className="flex sm:inline-flex w-full sm:w-auto justify-center items-center gap-2.5 px-6 py-3 rounded-xl bg-primary/10 border border-primary/20 text-primary font-semibold text-sm hover:bg-primary hover:text-black hover:shadow-[0_0_30px_rgba(0,242,255,0.3)] hover:border-primary transition-all duration-400 group/btn"
                   >
                     <span className="material-symbols-outlined text-lg">
                       mail
@@ -406,7 +405,7 @@ export function Footer() {
             </div>
 
             {/* ── Grid Content ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-12 gap-8 sm:gap-10 md:gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-12 gap-8 sm:gap-10 md:gap-8 px-2 sm:px-4 lg:px-6">
               {/* ── Brand Column ── */}
               <div
                 className={cn(
@@ -445,7 +444,7 @@ export function Footer() {
                 </p>
 
                 {/* Site Stats */}
-                <div className="flex items-center gap-4 mb-5">
+                <div className="flex items-center gap-16 sm:gap-20 mb-6">
                   {[
                     {
                       label: "Projects",
@@ -531,7 +530,7 @@ export function Footer() {
                       className={cn(
                         "group flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg transition-all duration-300 text-[13px] sm:text-sm",
                         isActive(item.href)
-                          ? "bg-primary/10 text-white"
+                          ? "text-white font-bold"
                           : "text-slate-400 hover:text-white hover:bg-white/[0.03]",
                       )}
                     >
@@ -699,9 +698,9 @@ export function Footer() {
               </div>
 
               {/* Tech & Version Stack */}
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+              <div className="flex items-center flex-wrap gap-2 sm:gap-3 justify-center">
                 {/* Tech Badge */}
-                <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-slate-500 font-[family-name:var(--font-mono)] bg-white/[0.02] border border-white/5 rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-slate-500 font-[family-name:var(--font-mono)] bg-white/[0.02] border border-white/5 rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5">
                   <span className="material-symbols-outlined text-[10px] sm:text-xs text-primary/60">
                     code
                   </span>
