@@ -115,12 +115,13 @@ function useLiveClock() {
         new Date().toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
+          second: "2-digit",
           timeZoneName: "short",
         }),
       );
     };
     update();
-    const id = setInterval(update, 30_000);
+    const id = setInterval(update, 1_000);
     return () => clearInterval(id);
   }, []);
 
@@ -720,11 +721,11 @@ export function Footer() {
 
                 {/* Live Clock */}
                 {liveClock && (
-                  <div className="hidden sm:flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-600 font-[family-name:var(--font-mono)] bg-white/[0.02] border border-white/5 rounded-full px-2.5 py-1">
+                  <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-600 font-[family-name:var(--font-mono)] bg-white/[0.02] border border-white/5 rounded-full px-2.5 py-1">
                     <span className="material-symbols-outlined text-[10px] text-primary/50">
                       schedule
                     </span>
-                    <span>{liveClock}</span>
+                    <span className="tabular-nums">{liveClock}</span>
                   </div>
                 )}
               </div>
@@ -737,7 +738,7 @@ export function Footer() {
       <button
         onClick={scrollToTop}
         className={cn(
-          "fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-50 size-12 sm:size-11 rounded-xl flex items-center justify-center transition-all duration-500",
+          "fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 size-12 sm:size-11 rounded-xl flex items-center justify-center transition-all duration-500",
           "bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl",
           "hover:bg-primary/20 hover:border-primary/30 hover:shadow-[0_0_24px_rgba(0,242,255,0.2)]",
           "text-slate-400 hover:text-primary",
