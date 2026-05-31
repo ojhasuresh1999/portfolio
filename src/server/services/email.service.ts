@@ -83,6 +83,7 @@ export class EmailService {
     templateType: string;
     vars: Record<string, string>;
     subjectPrefix?: string;
+    unsubscribeUrl?: string;
   }): Promise<{ success: boolean; error?: string }> {
     if (!this.isConfigured()) {
       console.warn("Gmail SMTP not configured. Email not sent.");
@@ -140,6 +141,7 @@ export class EmailService {
       ctaText: resolvedCtaText,
       ctaUrl: resolvedCtaUrl,
       footerText: resolvedFooter,
+      unsubscribeUrl: options.unsubscribeUrl,
     });
 
     try {
@@ -176,9 +178,17 @@ export class EmailService {
     ctaText: string;
     ctaUrl: string;
     footerText: string;
+    unsubscribeUrl?: string;
   }): string {
-    const { subject, greeting, bodyHtml, ctaText, ctaUrl, footerText } =
-      options;
+    const {
+      subject,
+      greeting,
+      bodyHtml,
+      ctaText,
+      ctaUrl,
+      footerText,
+      unsubscribeUrl,
+    } = options;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -238,6 +248,7 @@ export class EmailService {
           <tr>
             <td style="background:linear-gradient(135deg,#0f172a,#0a0f1e);border-radius:0 0 16px 16px;padding:30px 40px;border:1px solid rgba(99,102,241,0.2);border-top:none;">
               <p style="margin:0 0 8px;font-size:12px;color:#64748b;text-align:center;line-height:1.6;">${footerText}</p>
+              ${unsubscribeUrl ? `<p style="margin:0 0 12px;font-size:12px;text-align:center;"><a href="${unsubscribeUrl}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe from these emails</a></p>` : ""}
               <p style="margin:0;font-size:11px;color:#334155;text-align:center;">
                 &copy; ${new Date().getFullYear()} SURESH Portfolio. Built with ❤️ and Node.js.
               </p>

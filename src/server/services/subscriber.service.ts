@@ -1,6 +1,7 @@
 import { Subscriber, ISubscriber } from "@/models/Subscriber";
 import { connectToDatabase } from "@/lib/mongodb";
 import type { ServiceResult } from "../types";
+import { generateUnsubscribeToken } from "../utils/jwt.util";
 
 import { emailService } from "./email.service";
 
@@ -11,6 +12,12 @@ export class SubscriberService {
 
   private triggerSubscriptionEmails(email: string) {
     const vars = { email };
+    const token = generateUnsubscribeToken(email);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://suresh-ojha.vercel.app";
+    const unsubscribeUrl = `${baseUrl}/unsubscribe?token=${token}`;
 
     // 1. To User
     emailService
@@ -18,6 +25,7 @@ export class SubscriberService {
         to: email,
         templateType: "subscribe_user_welcome",
         vars,
+        unsubscribeUrl,
       })
       .catch((err) =>
         console.error("[SubscriberService] Welcome email failed:", err),

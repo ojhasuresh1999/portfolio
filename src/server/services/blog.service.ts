@@ -2,6 +2,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { BlogPost } from "@/models";
 import { subscriberService, emailService } from "./index";
 import type { ServiceResult } from "../types";
+import { generateUnsubscribeToken } from "../utils/jwt.util";
 
 // Return type for lean queries
 interface BlogPostDoc {
@@ -355,19 +356,37 @@ export class BlogService {
     const subsRes = await subscriberService.getActiveSubscribers();
     if (!subsRes.success || !subsRes.data || subsRes.data.length === 0) return;
 
-    const emails = subsRes.data.map((s) => s.email);
-    const blogUrl = `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://suresh-ojha.vercel.app"}/blog/${post.slug}`;
+    const subscribers = subsRes.data;
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://suresh-ojha.vercel.app";
+    const blogUrl = `${baseUrl}/blog/${post.slug}`;
 
-    await emailService.sendTemplateEmail({
-      to: emails,
-      templateType: "blog_newsletter",
-      vars: {
-        blogTitle: post.title,
-        blogExcerpt: post.excerpt,
-        blogUrl: blogUrl,
-        blogPath: `/blog/${post.slug}`,
-      },
-    });
+    // Send emails individually to include personalized unsubscribe link
+    for (const sub of subscribers) {
+      const token = generateUnsubscribeToken(sub.email);
+      const unsubscribeUrl = `${baseUrl}/unsubscribe?token=${token}`;
+
+      await emailService
+        .sendTemplateEmail({
+          to: sub.email,
+          templateType: "blog_newsletter",
+          vars: {
+            blogTitle: post.title,
+            blogExcerpt: post.excerpt,
+            blogUrl: blogUrl,
+            blogPath: `/blog/${post.slug}`,
+          },
+          unsubscribeUrl,
+        })
+        .catch((err) => {
+          console.error(
+            `[BlogService] Failed to send newsletter to ${sub.email}:`,
+            err,
+          );
+        });
+    }
   }
 
   /**

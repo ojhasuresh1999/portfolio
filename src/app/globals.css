@@ -824,3 +824,124 @@ img[data-lightbox-attached] {
 img[data-lightbox-attached]:hover {
   filter: brightness(1.05);
 }
+
+/* ============================================
+   FOOTER STYLES
+   ============================================ */
+
+/* Animated gradient border */
+.footer-gradient-border {
+  position: absolute;
+  inset: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 242, 255, 0.08) 10%,
+    rgba(0, 242, 255, 0.35) 25%,
+    rgba(168, 85, 247, 0.35) 50%,
+    rgba(0, 242, 255, 0.35) 75%,
+    rgba(0, 242, 255, 0.08) 90%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: footer-border-shimmer 8s ease-in-out infinite;
+}
+
+@keyframes footer-border-shimmer {
+  0%,
+  100% {
+    background-position: -200% 0;
+  }
+  50% {
+    background-position: 200% 0;
+  }
+}
+
+/* Heart beat animation */
+.footer-heart {
+  display: inline-block;
+  animation: footer-heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes footer-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.2);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.15);
+  }
+  56% {
+    transform: scale(1);
+  }
+}
+
+/* Social icon hover glow */
+.footer-social-icon::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 0.75rem;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 242, 255, 0.15),
+    rgba(168, 85, 247, 0.15)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.footer-social-icon:hover::before {
+  opacity: 1;
+}
+
+/* ── Mobile-specific footer adjustments ────── */
+@media (max-width: 639px) {
+  #site-footer .footer-social-icon {
+    /* Ensure minimum 44px touch target on mobile */
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Smooth focus outline for accessibility */
+#site-footer a:focus-visible,
+#site-footer button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Infinite scrolling tech marquee */
+.footer-marquee {
+  animation: footer-scroll 25s linear infinite;
+  width: max-content;
+}
+
+.footer-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes footer-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Newsletter input glow on focus */
+#site-footer input[type="email"]:focus {
+  box-shadow:
+    0 0 0 1px rgba(0, 242, 255, 0.2),
+    0 0 12px rgba(0, 242, 255, 0.08);
+}

@@ -181,3 +181,34 @@ export function verifyTwoFactorToken(
     return null;
   }
 }
+
+/**
+ * Generate an unsubscribe token
+ */
+export function generateUnsubscribeToken(email: string): string {
+  return jwt.sign(
+    { email, type: "unsubscribe" },
+    JWT_SECRET,
+    { expiresIn: "30d" }, // 30 days expiry
+  );
+}
+
+/**
+ * Verify an unsubscribe token
+ */
+export function verifyUnsubscribeToken(
+  token: string,
+): { email: string } | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      email: string;
+      type: string;
+    };
+    if (decoded.type !== "unsubscribe") {
+      return null;
+    }
+    return { email: decoded.email };
+  } catch {
+    return null;
+  }
+}
