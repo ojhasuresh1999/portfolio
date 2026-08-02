@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "pnpm docs:generate && next build",
+    "build": "next build",
     "db:logs": "docker compose logs -f mongodb",
     "db:reset": "docker compose down -v && docker compose up -d",
     "db:seed": "tsx scripts/seed.ts",
